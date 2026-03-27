@@ -103,10 +103,10 @@
 
 ### Fund Entity
 
-- [ ] **FUND-01**: A funds table exists with: id, org_id, fund_name (String), fundraise_status_id (FK to ref_data, category=fund_status), target_fund_size_amount (Numeric 18,2), target_fund_size_currency (String 3), vintage_year (Integer)
-- [ ] **FUND-02**: `GET /funds` returns all funds for the org
-- [ ] **FUND-03**: `POST /funds` creates a new fund
-- [ ] **FUND-04**: `PATCH /funds/{id}` updates a fund
+- [x] **FUND-01**: A funds table exists with: id, org_id, fund_name (String), fundraise_status_id (FK to ref_data, category=fund_status), target_fund_size_amount (Numeric 18,2), target_fund_size_currency (String 3), vintage_year (Integer)
+- [x] **FUND-02**: `GET /funds` returns all funds for the org
+- [x] **FUND-03**: `POST /funds` creates a new fund
+- [x] **FUND-04**: `PATCH /funds/{id}` updates a fund
 - [ ] **FUND-05**: Fund dropdown is available on the Deal edit form (deal_id FK on deal links to fund)
 
 ### Admin UI
@@ -217,10 +217,10 @@
 | DEAL-10 | Phase 4 | Pending |
 | DEAL-11 | Phase 4 | Pending |
 | DEAL-12 | Phase 4 | Pending |
-| FUND-01 | Phase 4 | Pending |
-| FUND-02 | Phase 4 | Pending |
-| FUND-03 | Phase 4 | Pending |
-| FUND-04 | Phase 4 | Pending |
+| FUND-01 | Phase 4 | Complete |
+| FUND-02 | Phase 4 | Complete |
+| FUND-03 | Phase 4 | Complete |
+| FUND-04 | Phase 4 | Complete |
 | FUND-05 | Phase 4 | Pending |
 | CPARTY-01 | Phase 5 | Pending |
 | CPARTY-02 | Phase 5 | Pending |

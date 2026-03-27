@@ -90,7 +90,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md — Fund entity: Alembic 0007_fund.py (funds table + fund_status ref_data seeds), Fund ORM model, FundService, FundCreate/Update/Response schemas, GET/POST/PATCH /funds routes, test stubs
+- [x] 04-01-PLAN.md — Fund entity: Alembic 0007_fund.py (funds table + fund_status ref_data seeds), Fund ORM model, FundService, FundCreate/Update/Response schemas, GET/POST/PATCH /funds routes, test stubs
 - [ ] 04-02-PLAN.md — Deal migrations: Alembic 0008_deal_pe_fields.py (~30 PE columns on deals) + 0009_deal_team_members.py (M2M table), DealTeamMember ORM class, Deal model expansion with all PE columns and relationships
 - [ ] 04-03-PLAN.md — Deal service and API: DealResponse/DealUpdate schema expansion, aliased RefData joins for label resolution, deal_team loading/setting, source_company/individual/originator name resolution, PE field tests
 - [ ] 04-04-PLAN.md — Deal UI: DealDetailPage rewrite with 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile section cards with per-card edit/save, fund selector with inline create modal, deal team chips, date milestone grid, visual verification checkpoint
@@ -145,6 +145,6 @@ Plans:
 | 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
 | 2. Reference Data System | 3/3 | Complete   | 2026-03-27 |
 | 3. Contact & Company Model Expansion | 2/6 | In Progress|  |
-| 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
+| 4. Deal Model Expansion & Fund Entity | 1/4 | In Progress|  |
 | 5. DealCounterparty & DealFunding | 0/4 | Not started | - |
 | 6. Admin Reference Data UI | 0/3 | Not started | - |

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 03-contact-company-model-expansion plan 03
-last_updated: "2026-03-27T20:48:15.574Z"
+status: Executing Phase 04
+stopped_at: "Completed 04-deal-model-expansion-fund-entity plan 01 — Fund entity: funds table, Fund ORM, FundService, GET/POST/PATCH /api/v1/funds, fund_status ref_data seeded"
+last_updated: "2026-03-27T23:14:37.501Z"
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 16
+  completed_plans: 13
 ---
 
 # Project State
@@ -19,13 +19,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 03 — contact-company-model-expansion
+**Current focus:** Phase 04 — deal-model-expansion-fund-entity
 
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 03 — Contact & Company Expansion (in progress — plan 01 complete)
-**Last action:** Completed 03-01 — Contact PE Blueprint model expansion. 18 new nullable columns added to Contact via migration 0003 (phones, address, contact_type_id FK, JSONB fields, linkedin_url, legacy_id). contact_coverage_persons M2M table created via migration 0004 with composite PK. ContactCoveragePerson ORM model + Contact.coverage_persons selectin relationship added to models.py.
+**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 01 complete)
+**Last action:** Completed 04-01 — Fund entity: funds table (migration 0007), Fund ORM model, fund_id FK on Deal, fund_status ref_data seeded (4 values), FundService with list/create/update and aliased(RefData) label join, GET/POST/PATCH /api/v1/funds endpoints registered. 4 tests pass.
 
 ## Phase Completion
 
@@ -33,10 +33,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 |-------|------|--------|
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
-| 3 | Contact & Company Expansion | 🔄 In progress (1/6 plans complete) |
-| 4 | Deal Expansion & Fund Entity | ⬜ Not started |
-| 5 | DealCounterparty & DealFunding | ⬜ Not started |
-| 6 | Admin Reference Data UI | ⬜ Not started |
+| 3 | Contact & Company Expansion | Done (6/6 plans complete) |
+| 4 | Deal Expansion & Fund Entity | In progress (1/4 plans complete) |
+| 5 | DealCounterparty & DealFunding | Not started |
+| 6 | Admin Reference Data UI | Not started |
 
 ## Key Files
 
@@ -68,6 +68,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 03-03: 0005 migration branches from 0002_pe_ref_data for parallel execution — merge migration needed after Phase 3 all plans complete
 - 03-03: Company parent_company_id self-ref FK uses String(36) + remote_side='Company.id' string form for forward-ref compatibility
 - 03-03: uq_companies_org_legacy_id UniqueConstraint placed in both migration and ORM __table_args__ for consistency
+- 04-01: Fund ORM UUID comparisons use UUID type directly (not str) — SQLite stores UUIDs without hyphens; str conversion breaks IN queries via Uuid() type processor
+- 04-01: fund_id FK added to Deal model in Plan 01 (not Plan 02) to keep migration chain clean
+- 04-01: FundService aliased(RefData) label-join pattern established — reuse for DealCounterparty and DealFunding services in Phase 5
 
 ## Notes
 
@@ -89,11 +92,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 02-reference-data-system | 03 | 5min | 2 | 4 |
 | 03-contact-company-model-expansion | 01 | 2min | 2 | 3 |
 | 03-contact-company-model-expansion | 03 | 2min | 2 | 2 |
+| 04-deal-model-expansion-fund-entity | 01 | 2min | 2 | 8 |
 
 ## Session Continuity
 
-Last session: 2026-03-27T20:16:13Z
-Stopped at: Completed 03-contact-company-model-expansion plan 03
+Last session: 2026-03-27T23:14:37.497Z
+Stopped at: Completed 04-deal-model-expansion-fund-entity plan 01 — Fund entity: funds table, Fund ORM, FundService, GET/POST/PATCH /api/v1/funds, fund_status ref_data seeded
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*
