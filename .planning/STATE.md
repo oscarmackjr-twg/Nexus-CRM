@@ -18,19 +18,19 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 01 — ui-polish
+**Current focus:** Phase 02 — Reference Data System
 
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 01 — ui-polish (plan 3/3 complete — awaiting visual verification checkpoint)
-**Last action:** Completed 01-ui-polish plan 03 — dashboard polish. Checkpoint Task 2 pending user visual verification.
+**Active phase:** 02 — Reference Data System
+**Last action:** Completed 01-ui-polish plan 03 — dashboard polish + light theme reversal + login page centering (user-directed post-checkpoint). Phase 1 complete.
 
 ## Phase Completion
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | UI Polish | 🔄 In progress (3/3 plans done, checkpoint pending) |
+| 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | ⬜ Not started |
 | 3 | Contact & Company Expansion | ⬜ Not started |
 | 4 | Deal Expansion & Fund Entity | ⬜ Not started |
@@ -47,7 +47,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 ## Key Decisions
 
-- 01-ui-polish-01: Dark mode locked permanently via classList.add('dark') — no user toggle, no theme state in store
+- 01-ui-polish-03: Light theme adopted per user feedback — dark mode lock reversed. Sidebar bg-slate-900 (dark blue), content area white. CSS variable infrastructure kept for future toggle capability.
 - 01-ui-polish-01: Email label on login (htmlFor=email) while keeping form.register('username') for API compat
 - 01-ui-polish-01: vi.hoisted() pattern required in vitest for mock factories referencing top-level variables
 - 01-ui-polish-03: Dashboard heading changed to "Deal command center" matching PE advisory context; metric computation logic left unchanged as already live-wired correctly
@@ -59,7 +59,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - Seed data enabled (`.env`: `RUN_SEED_DATA=true`) — demo login: `admin@demo.local` / `password123`
 - Backend `db.bind` SQLAlchemy 2.0 bug fixed in `deals.py` and `ai_service.py`
 - Run `make dev` to start the app
-- Phase 1 automated work complete — visual verification checkpoint outstanding (Task 2 of plan 01-03)
+- Phase 1 fully complete. Light theme active: white content, dark blue sidebar, centered login page.
+- Phase 2 (Reference Data System) ready to begin.
 
 ## Performance Metrics
 
@@ -67,7 +68,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 |-------|------|----------|-------|-------|
 | 01-ui-polish | 01 | 2min | 2 | 6 |
 | 01-ui-polish | 02 | 8min | 2 | 3 |
-| 01-ui-polish | 03 | 5min | 1 | 1 |
+| 01-ui-polish | 03 | 15min | 3 | 4 |
 
 ---
-*Last updated: 2026-03-27 after plan 01-01 execution*
+*Last updated: 2026-03-26 after plan 01-03 completion (Phase 1 done)*
