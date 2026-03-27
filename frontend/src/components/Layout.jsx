@@ -43,7 +43,7 @@ export default function Layout() {
   const [commandOpen, setCommandOpen] = useState(false);
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   }, []);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function Layout() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-primary/8 via-transparent to-accent/10" />
       <div className="fixed inset-0 -z-10 surface-grid opacity-50" />
-      <aside className={cn('fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card/80 backdrop-blur transition-all', sidebarCollapsed ? 'w-16' : 'w-60')}>
+      <aside className={cn('fixed inset-y-0 left-0 z-30 flex flex-col bg-slate-900 text-slate-100 transition-all', sidebarCollapsed ? 'w-16' : 'w-60')}>
         <div className="flex items-center justify-between px-4 py-4">
           <Link to="/" className="flex items-center gap-3 overflow-hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary font-bold text-white">N</div>
@@ -74,13 +74,13 @@ export default function Layout() {
         <div className="flex-1 space-y-6 overflow-auto px-3 pb-4">
           {navSections.map((section) => (
             <div key={section.label} className="space-y-2">
-              {!sidebarCollapsed && <p className="px-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{section.label}</p>}
+              {!sidebarCollapsed && <p className="px-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{section.label}</p>}
               <div className="space-y-1">
                 {section.items.map((item) => (
                   <NavLink
                     key={item.href}
                     to={item.href}
-                    className={({ isActive }) => cn('flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-muted', isActive && 'bg-primary/10 text-primary')}
+                    className={({ isActive }) => cn('flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-700/60 hover:text-white', isActive && 'bg-blue-600/30 text-blue-300')}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     {!sidebarCollapsed && <span>{item.name}</span>}
@@ -90,14 +90,14 @@ export default function Layout() {
             </div>
           ))}
         </div>
-        <div className="space-y-3 border-t p-3">
+        <div className="space-y-3 border-t border-slate-700 p-3">
           {!sidebarCollapsed && <TeamSelector />}
-          <div className="flex items-center gap-3 rounded-2xl bg-muted/60 p-2">
+          <div className="flex items-center gap-3 rounded-2xl bg-slate-800 p-2">
             <Avatar alt={user?.full_name || user?.username} src={user?.avatar_url} />
             {!sidebarCollapsed && (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{user?.full_name || user?.username}</p>
-                <Link to="/settings/team" className="text-xs text-muted-foreground hover:text-foreground">Settings</Link>
+                <p className="truncate text-sm font-medium text-slate-100">{user?.full_name || user?.username}</p>
+                <Link to="/settings/team" className="text-xs text-slate-400 hover:text-slate-200">Settings</Link>
               </div>
             )}
           </div>
