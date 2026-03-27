@@ -31,7 +31,7 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 
 <!-- Current milestone scope -->
 
-- [ ] UI polish — login screen cleaned up, consistent spacing/typography/layout across all screens
+- [x] UI polish — login screen cleaned up, consistent spacing/typography/layout across all screens (Validated in Phase 1: UI Polish — 2026-03-27)
 - [ ] Contact data model expanded to PE Blueprint fields (phones, assistant, coverage persons, contact type, sector preferences, previous employment, board memberships, LinkedIn URL, legacy ID)
 - [ ] Company data model expanded to PE Blueprint fields (type/sub-type, AUM, EBITDA, bite sizes, investment preferences, tier, sector/sub-sector, co-invest, watchlist, coverage person, legacy ID)
 - [ ] Deal data model expanded to PE deal fields (transaction type, deal team, fund, platform/add-on, source tracking, financial metrics: revenue/EBITDA/EV/equity investment, date milestones: CIM/IOI/LOI/management presentation/live diligence/portfolio company, passed/dead reasons, legacy ID)
@@ -51,7 +51,7 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 
 ## Context
 
-**Codebase state:** Full-stack CRM with backend (FastAPI, SQLAlchemy 2.0, PostgreSQL), React frontend (Vite, TanStack Query, Recharts), Celery workers. Known bugs fixed: `self.db.bind` SQLAlchemy 2.0 incompatibility, dashboard toast firing on every render. Seed data disabled (now re-enabled). UI described as needing polish.
+**Codebase state:** Full-stack CRM with backend (FastAPI, SQLAlchemy 2.0, PostgreSQL), React frontend (Vite, TanStack Query, Recharts), Celery workers. Phase 1 complete — UI polished: light theme (white bg, dark blue sidebar), login page centered with TWG branding + staging banner + backend status indicator, consistent text-3xl headings and spacing across all screens, dashboard live-wired metrics.
 
 **Domain:** Private Equity deal advisory / capital markets. TWG Asia is a deal team that manages capital raises (equity, credit, preferred equity). Their workflow centers on tracking counterparties (investors) through a diligence pipeline for each deal — who got the NDA, who signed, who's in the VDR, what's the feedback.
 
