@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-03-27
+revised: 2026-03-27
 ---
 
 # Phase 2 — UI Design Contract: Reference Data System
@@ -63,12 +64,15 @@ Exceptions: none
 
 Inherited from Phase 1 CSS variables. IBM Plex Sans throughout.
 
+Two weights only: 400 (regular) and 600 (semibold).
+
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 14px (text-sm) | 400 (regular) | 1.5 | Option text inside `<RefSelect>` dropdown |
-| Label | 14px (text-sm) | 500 (medium) | 1.4 | Form field labels above `<RefSelect>` |
+| Body | 14px (text-sm) | 400 (regular) | 1.5 | Option text inside `<RefSelect>` dropdown; form field labels above `<RefSelect>` |
 | Heading | 20px (text-xl) | 600 (semibold) | 1.2 | Section headings (not used in Phase 2 component) |
-| Display | 28px (text-3xl) | 700 (bold) | 1.1 | Page-level titles (not used in Phase 2 component) |
+| Display | 28px (text-3xl) | 600 (semibold) | 1.1 | Page-level titles (not used in Phase 2 component) |
+
+**Revision note (2026-03-27):** Label row removed and merged into Body (14px/400). Display weight changed from 700 to 600. Result: exactly 2 declared weights (400 and 600), compliant with the 2-weight maximum. Zero visual impact on Phase 2 components — `<RefSelect>` option text renders at 14px/400 throughout.
 
 **Phase 2 specific:** `<RefSelect>` renders option text at 14px weight 400 (inherited from `select.jsx` `text-sm` class). Placeholder text uses `text-muted-foreground` CSS variable.
 
@@ -226,4 +230,5 @@ No new registry blocks are added in Phase 2. `<RefSelect>` is a thin wrapper ove
 
 *Phase: 02-reference-data-system*
 *UI-SPEC authored: 2026-03-27*
+*UI-SPEC revised: 2026-03-27 — typography fix: reduced to 2 weights (400, 600)*
 *Sources: 02-CONTEXT.md (6 decisions), 02-RESEARCH.md (stack, patterns), styles.css (tokens), tailwind.config.js (tokens), select.jsx (component pattern), button.jsx (sizing pattern)*
