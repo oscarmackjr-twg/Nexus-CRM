@@ -47,7 +47,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Test scaffold (Wave 0 stubs + seed_ref_data fixture) + RefData ORM model + Alembic migration 0002_pe_ref_data.py with all 10 categories seeded
+- [x] 02-01-PLAN.md — Test scaffold (Wave 0 stubs + seed_ref_data fixture) + RefData ORM model + Alembic migration 0002_pe_ref_data.py with all 10 categories seeded
 - [ ] 02-02-PLAN.md — Pydantic schemas (RefDataCreate/Update/Response) + RefDataService + GET/POST/PATCH routes at /admin/ref-data + main.py registration
 - [ ] 02-03-PLAN.md — Frontend API module (refData.js) + useRefData hook (queryKey ['ref', category], staleTime 5min) + RefSelect component + component tests
 
@@ -142,7 +142,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
-| 2. Reference Data System | 0/3 | Not started | - |
+| 2. Reference Data System | 1/3 | In Progress|  |
 | 3. Contact & Company Model Expansion | 0/5 | Not started | - |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
 | 5. DealCounterparty & DealFunding | 0/4 | Not started | - |

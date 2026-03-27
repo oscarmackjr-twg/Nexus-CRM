@@ -15,16 +15,16 @@
 
 ### Reference Data System
 
-- [ ] **REFDATA-01**: A `ref_data` table exists in the database with columns: id, org_id (nullable for system defaults), category, value, label, position, is_active, created_at
-- [ ] **REFDATA-02**: The following categories are pre-seeded with TWG values at migration time: sector, sub_sector, transaction_type, tier, contact_type, company_type, company_sub_type, deal_source_type, passed_dead_reason, investor_type
-- [ ] **REFDATA-03**: sector is seeded with: Financial Services, Technology, Healthcare, Real Estate, Infrastructure, Consumer, Industrials, Energy, Media & Telecom, Business Services
-- [ ] **REFDATA-04**: transaction_type is seeded with: Equity, Credit, Preferred Equity, Mezzanine, Growth Equity, Buyout, Debt Advisory, M&A Advisory
-- [ ] **REFDATA-05**: tier is seeded with: Tier 1, Tier 2, Tier 3
-- [ ] **REFDATA-06**: contact_type is seeded with: LP, GP, Advisor, Management, Lender, Co-Investor, Strategic
-- [ ] **REFDATA-07**: company_type is seeded with: Financial Sponsor, Strategic, Family Office, Sovereign Wealth Fund, Pension Fund, Insurance Company, Bank, Operating Company
-- [ ] **REFDATA-08**: deal_source_type is seeded with: Proprietary, Bank, Advisor, Management, Portfolio Company, Existing LP
-- [ ] **REFDATA-09**: passed_dead_reason is seeded with: Valuation, Diligence, Market Conditions, Competitive, Strategic Fit, Timing, Management, No Follow-Up
-- [ ] **REFDATA-10**: investor_type is seeded with: SWF, Pension/Super, Corporate, Family Office, Financial Sponsor, Insurance, Bank
+- [x] **REFDATA-01**: A `ref_data` table exists in the database with columns: id, org_id (nullable for system defaults), category, value, label, position, is_active, created_at
+- [x] **REFDATA-02**: The following categories are pre-seeded with TWG values at migration time: sector, sub_sector, transaction_type, tier, contact_type, company_type, company_sub_type, deal_source_type, passed_dead_reason, investor_type
+- [x] **REFDATA-03**: sector is seeded with: Financial Services, Technology, Healthcare, Real Estate, Infrastructure, Consumer, Industrials, Energy, Media & Telecom, Business Services
+- [x] **REFDATA-04**: transaction_type is seeded with: Equity, Credit, Preferred Equity, Mezzanine, Growth Equity, Buyout, Debt Advisory, M&A Advisory
+- [x] **REFDATA-05**: tier is seeded with: Tier 1, Tier 2, Tier 3
+- [x] **REFDATA-06**: contact_type is seeded with: LP, GP, Advisor, Management, Lender, Co-Investor, Strategic
+- [x] **REFDATA-07**: company_type is seeded with: Financial Sponsor, Strategic, Family Office, Sovereign Wealth Fund, Pension Fund, Insurance Company, Bank, Operating Company
+- [x] **REFDATA-08**: deal_source_type is seeded with: Proprietary, Bank, Advisor, Management, Portfolio Company, Existing LP
+- [x] **REFDATA-09**: passed_dead_reason is seeded with: Valuation, Diligence, Market Conditions, Competitive, Strategic Fit, Timing, Management, No Follow-Up
+- [x] **REFDATA-10**: investor_type is seeded with: SWF, Pension/Super, Corporate, Family Office, Financial Sponsor, Insurance, Bank
 - [ ] **REFDATA-11**: `GET /admin/ref-data?category=<category>` returns all active items for a category (org-scoped + system defaults), ordered by position then label
 - [ ] **REFDATA-12**: `POST /admin/ref-data` allows org admins to create a new reference item in any category
 - [ ] **REFDATA-13**: `PATCH /admin/ref-data/{id}` allows org admins to update label, position, or is_active on any reference item
@@ -168,16 +168,16 @@
 | UI-01 | Phase 1 | Complete |
 | UI-02 | Phase 1 | Complete |
 | UI-03 | Phase 5 | Complete |
-| REFDATA-01 | Phase 2 | Pending |
-| REFDATA-02 | Phase 2 | Pending |
-| REFDATA-03 | Phase 2 | Pending |
-| REFDATA-04 | Phase 2 | Pending |
-| REFDATA-05 | Phase 2 | Pending |
-| REFDATA-06 | Phase 2 | Pending |
-| REFDATA-07 | Phase 2 | Pending |
-| REFDATA-08 | Phase 2 | Pending |
-| REFDATA-09 | Phase 2 | Pending |
-| REFDATA-10 | Phase 2 | Pending |
+| REFDATA-01 | Phase 2 | Complete |
+| REFDATA-02 | Phase 2 | Complete |
+| REFDATA-03 | Phase 2 | Complete |
+| REFDATA-04 | Phase 2 | Complete |
+| REFDATA-05 | Phase 2 | Complete |
+| REFDATA-06 | Phase 2 | Complete |
+| REFDATA-07 | Phase 2 | Complete |
+| REFDATA-08 | Phase 2 | Complete |
+| REFDATA-09 | Phase 2 | Complete |
+| REFDATA-10 | Phase 2 | Complete |
 | REFDATA-11 | Phase 2 | Pending |
 | REFDATA-12 | Phase 2 | Pending |
 | REFDATA-13 | Phase 2 | Pending |
