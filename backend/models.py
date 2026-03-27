@@ -102,6 +102,16 @@ class User(Base):
     ai_queries: Mapped[list[AIQuery]] = relationship(back_populates="user")
 
 
+class ContactCoveragePerson(Base):
+    __tablename__ = "contact_coverage_persons"
+    contact_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("contacts.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
 class Contact(Base):
     __tablename__ = "contacts"
     __table_args__ = (
@@ -155,6 +165,11 @@ class Contact(Base):
     company: Mapped[Optional[Company]] = relationship(back_populates="contacts")
     owner: Mapped[Optional[User]] = relationship(back_populates="owned_contacts", foreign_keys=[owner_id])
     deals: Mapped[list[Deal]] = relationship(back_populates="contact")
+    coverage_persons: Mapped[list["User"]] = relationship(
+        "User",
+        secondary="contact_coverage_persons",
+        lazy="selectin",
+    )
 
 
 class Company(Base):
