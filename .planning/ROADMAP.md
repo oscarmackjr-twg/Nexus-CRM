@@ -25,13 +25,13 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
   1. Login page renders with correct spacing, typography, and visual hierarchy — no layout shifts or unstyled elements
   2. Contact, Company, Deal, and Dashboard screens share consistent heading sizes, input spacing, and card padding — no visible mismatches between screens
   3. Dashboard stat cards display correct deal and pipeline metrics (no stale or hardcoded values)
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 01-01: Login screen styling — audit and fix login page layout, spacing, typography, and visual consistency with the rest of the app
-- [ ] 01-02: App-wide spacing and typography pass — audit and fix spacing, font weight, and layout alignment across Contact, Company, Deal list and detail views, and Dashboard
-- [ ] 01-03: Dashboard metrics wiring — verify stat cards pull live data and update display to reflect any metric gaps
+- [ ] 01-01-PLAN.md — Dark mode lock + login page redesign (TWG branding, staging banner, backend status indicator)
+- [ ] 01-02-PLAN.md — Spacing and typography consistency pass across ContactDetail, CompanyDetail, Contacts, and DealDetail pages
+- [ ] 01-03-PLAN.md — Dashboard stat card polish, PE heading, empty state hardening, and visual verification checkpoint
 
 ---
 
