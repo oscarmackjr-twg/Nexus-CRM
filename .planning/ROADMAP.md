@@ -86,14 +86,14 @@ Plans:
   3. Deal detail screen shows all new PE fields organized into sections (Deal Identity, Financials, Process Milestones, Source & Team, Passed/Dead); edit form exposes all fields with correct input types
   4. All ref_data FK fields in deal responses return resolved labels alongside their UUIDs
   5. Deal team field returns display names for all assigned users
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01: Fund entity migration and API — write `0006_fund.py`: CREATE TABLE funds (id, org_id, fund_name, fundraise_status_id FK ref_data, target_fund_size_amount Numeric 18,2, target_fund_size_currency, vintage_year); implement FundService with list, create, update; add GET/POST/PATCH routes at `/funds`; write Pydantic schemas
-- [ ] 04-02: Deal migration — write `0007_deal_pe_fields.py`: add all PE deal columns (description, new_deal_date, transaction_type_id FK, fund_id FK, platform_or_addon String, platform_company_id FK, source_type_id FK, source_company_id FK, source_individual_id FK, originator_id FK, all financial Numeric+currency columns, all date milestone Date columns, passed_dead_date, passed_dead_reasons JSONB, passed_dead_commentary, legacy_id); write `0008_deal_team_members.py`: CREATE TABLE deal_team_members (deal_id, user_id, role); write explicit downgrades; all new columns nullable
-- [ ] 04-03: Deal service and API — update DealService and DealResponse schema to include all new fields with resolved labels and deal_team display names; update PATCH /deals/{id} to accept all new fields; Pydantic validators for currency codes and amount+currency pairing
-- [ ] 04-04: Deal UI — update DealDetailPage: group new fields into section tabs (Deal Identity, Financials, Process Milestones, Source & Team, Passed/Dead); wire all dropdown fields to `<RefSelect>`; add deal team multi-user selector; add fund selector dropdown; render date milestone fields with date pickers
+- [ ] 04-01-PLAN.md — Fund entity: Alembic 0007_fund.py (funds table + fund_status ref_data seeds), Fund ORM model, FundService, FundCreate/Update/Response schemas, GET/POST/PATCH /funds routes, test stubs
+- [ ] 04-02-PLAN.md — Deal migrations: Alembic 0008_deal_pe_fields.py (~30 PE columns on deals) + 0009_deal_team_members.py (M2M table), DealTeamMember ORM class, Deal model expansion with all PE columns and relationships
+- [ ] 04-03-PLAN.md — Deal service and API: DealResponse/DealUpdate schema expansion, aliased RefData joins for label resolution, deal_team loading/setting, source_company/individual/originator name resolution, PE field tests
+- [ ] 04-04-PLAN.md — Deal UI: DealDetailPage rewrite with 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile section cards with per-card edit/save, fund selector with inline create modal, deal team chips, date milestone grid, visual verification checkpoint
 
 ---
 
