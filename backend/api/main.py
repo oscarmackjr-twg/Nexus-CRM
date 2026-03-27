@@ -16,7 +16,7 @@ from backend.api.middleware import (
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
-from backend.api.routes import admin, ai_query, analytics, auth, automations, boards, companies, contacts, deals, linkedin, orgs, pages, pipelines, tasks, teams, webhooks
+from backend.api.routes import admin, ai_query, analytics, auth, automations, boards, companies, contacts, deals, funds, linkedin, orgs, pages, pipelines, tasks, teams, webhooks
 from backend.config import settings
 from backend.database import Base, get_engine, get_session_maker
 from backend.utils.graceful_shutdown import install_signal_handlers
@@ -83,6 +83,7 @@ for router in [
     companies.router,
     pipelines.router,
     deals.router,
+    funds.router,
     boards.router,
     tasks.router,
     pages.router,
