@@ -386,6 +386,10 @@ async def seed_ref_data(db_session, seeded_org):
         ("deal_source_type", "proprietary", "Proprietary"),
         ("passed_dead_reason", "valuation", "Valuation"),
         ("investor_type", "swf", "SWF"),
+        ("fund_status", "fundraising", "Fundraising"),
+        ("fund_status", "closed", "Closed"),
+        ("fund_status", "deployed", "Deployed"),
+        ("fund_status", "returning_capital", "Returning Capital"),
     ]
     rows = [
         RefData(org_id=None, category=cat, value=val, label=lbl, position=0, is_active=True)

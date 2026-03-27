@@ -37,6 +37,7 @@ class Organization(Base):
     pages: Mapped[list[Page]] = relationship(back_populates="org", cascade="all, delete-orphan")
     automations: Mapped[list[Automation]] = relationship(back_populates="org", cascade="all, delete-orphan")
     ai_queries: Mapped[list[AIQuery]] = relationship(back_populates="org", cascade="all, delete-orphan")
+    funds: Mapped[list["Fund"]] = relationship(back_populates="org", cascade="all, delete-orphan")
 
 
 class Team(Base):
@@ -294,6 +295,25 @@ class PipelineStage(Base):
     deals: Mapped[list[Deal]] = relationship(back_populates="stage")
 
 
+class Fund(Base):
+    __tablename__ = "funds"
+    __table_args__ = (
+        Index("ix_funds_org_id", "org_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    fund_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    fundraise_status_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    target_fund_size_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    target_fund_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    vintage_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    org: Mapped[Organization] = relationship(back_populates="funds")
+    deals: Mapped[list["Deal"]] = relationship(back_populates="fund")
+
+
 class Deal(Base):
     __tablename__ = "deals"
     __table_args__ = (
@@ -317,6 +337,7 @@ class Deal(Base):
     owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     contact_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True, index=True)
     company_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("companies.id", ondelete="SET NULL"), nullable=True, index=True)
+    fund_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("funds.id", ondelete="SET NULL"), nullable=True, index=True)
     ai_score: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2), nullable=True)
     ai_score_updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     ai_next_action: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -333,6 +354,7 @@ class Deal(Base):
     owner: Mapped[User] = relationship(back_populates="owned_deals", foreign_keys=[owner_id])
     contact: Mapped[Optional[Contact]] = relationship(back_populates="deals")
     company: Mapped[Optional[Company]] = relationship(back_populates="deals")
+    fund: Mapped[Optional["Fund"]] = relationship(back_populates="deals")
     activities: Mapped[list[DealActivity]] = relationship(back_populates="deal", cascade="all, delete-orphan")
 
 
