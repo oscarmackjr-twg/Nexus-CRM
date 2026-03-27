@@ -343,7 +343,8 @@ class DealActivity(Base):
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    deal_id: Mapped[UUID] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=False, index=True)
+    deal_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=True, index=True)
+    contact_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True, index=True)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     activity_type: Mapped[str] = mapped_column(String(30), nullable=False)
     title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -353,7 +354,7 @@ class DealActivity(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
-    deal: Mapped[Deal] = relationship(back_populates="activities")
+    deal: Mapped[Optional[Deal]] = relationship(back_populates="activities", foreign_keys=[deal_id])
     user: Mapped[User] = relationship(back_populates="activities")
 
 
