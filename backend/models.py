@@ -176,6 +176,7 @@ class Company(Base):
     __tablename__ = "companies"
     __table_args__ = (
         Index("ix_companies_org_name", "org_id", "name"),
+        UniqueConstraint("org_id", "legacy_id", name="uq_companies_org_legacy_id"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -195,10 +196,57 @@ class Company(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # PE Blueprint fields (Phase 3) — COMPANY-01 through COMPANY-09
+    # COMPANY-01: Identity fields
+    company_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    company_sub_type_ids: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # COMPANY-02: Phone + parent
+    main_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    parent_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    # COMPANY-03: Address fields (country not in original model)
+    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    # COMPANY-04: Ref_data FK fields
+    tier_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    sector_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    sub_sector_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    # COMPANY-05: Investment preference fields
+    sector_preferences: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    sub_sector_preferences: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    preference_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # COMPANY-06: Financial fields
+    aum_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    aum_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    ebitda_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    ebitda_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    # COMPANY-07: Bite size + co-invest
+    typical_bite_size_low: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    typical_bite_size_high: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    bite_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    co_invest: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    target_deal_size_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    # COMPANY-08: Deal preference fields
+    transaction_types: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    min_ebitda: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    max_ebitda: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    ebitda_range_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    # COMPANY-09: Relationship fields
+    watchlist: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    coverage_person_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    contact_frequency: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     org: Mapped[Organization] = relationship(back_populates="companies")
     owner: Mapped[Optional[User]] = relationship(back_populates="owned_companies", foreign_keys=[owner_id])
     contacts: Mapped[list[Contact]] = relationship(back_populates="company")
     deals: Mapped[list[Deal]] = relationship(back_populates="company")
+    parent_company: Mapped[Optional["Company"]] = relationship(
+        "Company", remote_side="Company.id", foreign_keys=[parent_company_id]
+    )
 
 
 class Pipeline(Base):
