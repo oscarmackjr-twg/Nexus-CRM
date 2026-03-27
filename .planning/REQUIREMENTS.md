@@ -61,15 +61,15 @@
 
 ### Deal Data Model
 
-- [ ] **DEAL-01**: Deal model has: description (Text), new_deal_date (Date), transaction_type_id (FK to ref_data, category=transaction_type)
-- [ ] **DEAL-02**: Deal model has: deal_team as a M2M association table to users (deal_team_members)
-- [ ] **DEAL-03**: Deal model has: fund_id (FK to new Fund entity), platform_or_addon (enum/string: "platform", "addon", null), platform_company_id (FK to companies)
-- [ ] **DEAL-04**: Deal model has source tracking fields: source_type_id (FK to ref_data, category=deal_source_type), source_company_id (FK to companies), source_individual_id (FK to contacts), originator_id (FK to users)
-- [ ] **DEAL-05**: Deal model has financial fields: revenue_amount (Numeric 18,2), revenue_currency (String 3), ebitda_amount (Numeric 18,2), ebitda_currency (String 3), enterprise_value_amount (Numeric 18,2), enterprise_value_currency (String 3), equity_investment_amount (Numeric 18,2), equity_investment_currency (String 3)
-- [ ] **DEAL-06**: Deal model has bid fields: loi_bid_amount (Numeric 18,2), loi_bid_currency (String 3), ioi_bid_amount (Numeric 18,2), ioi_bid_currency (String 3)
-- [ ] **DEAL-07**: Deal model has date milestone fields: cim_received_date, ioi_due_date, ioi_submitted_date, management_presentation_date, loi_due_date, loi_submitted_date, live_diligence_date, portfolio_company_date (all Date, nullable)
-- [ ] **DEAL-08**: Deal model has passed/dead fields: passed_dead_date (Date), passed_dead_reasons (JSONB array of ref_data IDs), passed_dead_commentary (Text)
-- [ ] **DEAL-09**: Deal model has: legacy_id (String, org-scoped unique index)
+- [x] **DEAL-01**: Deal model has: description (Text), new_deal_date (Date), transaction_type_id (FK to ref_data, category=transaction_type)
+- [x] **DEAL-02**: Deal model has: deal_team as a M2M association table to users (deal_team_members)
+- [x] **DEAL-03**: Deal model has: fund_id (FK to new Fund entity), platform_or_addon (enum/string: "platform", "addon", null), platform_company_id (FK to companies)
+- [x] **DEAL-04**: Deal model has source tracking fields: source_type_id (FK to ref_data, category=deal_source_type), source_company_id (FK to companies), source_individual_id (FK to contacts), originator_id (FK to users)
+- [x] **DEAL-05**: Deal model has financial fields: revenue_amount (Numeric 18,2), revenue_currency (String 3), ebitda_amount (Numeric 18,2), ebitda_currency (String 3), enterprise_value_amount (Numeric 18,2), enterprise_value_currency (String 3), equity_investment_amount (Numeric 18,2), equity_investment_currency (String 3)
+- [x] **DEAL-06**: Deal model has bid fields: loi_bid_amount (Numeric 18,2), loi_bid_currency (String 3), ioi_bid_amount (Numeric 18,2), ioi_bid_currency (String 3)
+- [x] **DEAL-07**: Deal model has date milestone fields: cim_received_date, ioi_due_date, ioi_submitted_date, management_presentation_date, loi_due_date, loi_submitted_date, live_diligence_date, portfolio_company_date (all Date, nullable)
+- [x] **DEAL-08**: Deal model has passed/dead fields: passed_dead_date (Date), passed_dead_reasons (JSONB array of ref_data IDs), passed_dead_commentary (Text)
+- [x] **DEAL-09**: Deal model has: legacy_id (String, org-scoped unique index)
 - [ ] **DEAL-10**: Deal API responses include resolved labels for all FK ref_data fields and deal_team display names
 - [ ] **DEAL-11**: Deal detail screen displays all new PE fields grouped by section (Deal Identity, Financials, Process Milestones, Source & Team, Passed/Dead)
 - [ ] **DEAL-12**: Deal detail edit form supports all new fields with appropriate input types
@@ -205,15 +205,15 @@
 | COMPANY-10 | Phase 3 | Pending |
 | COMPANY-11 | Phase 3 | Pending |
 | COMPANY-12 | Phase 3 | Pending |
-| DEAL-01 | Phase 4 | Pending |
-| DEAL-02 | Phase 4 | Pending |
-| DEAL-03 | Phase 4 | Pending |
-| DEAL-04 | Phase 4 | Pending |
-| DEAL-05 | Phase 4 | Pending |
-| DEAL-06 | Phase 4 | Pending |
-| DEAL-07 | Phase 4 | Pending |
-| DEAL-08 | Phase 4 | Pending |
-| DEAL-09 | Phase 4 | Pending |
+| DEAL-01 | Phase 4 | Complete |
+| DEAL-02 | Phase 4 | Complete |
+| DEAL-03 | Phase 4 | Complete |
+| DEAL-04 | Phase 4 | Complete |
+| DEAL-05 | Phase 4 | Complete |
+| DEAL-06 | Phase 4 | Complete |
+| DEAL-07 | Phase 4 | Complete |
+| DEAL-08 | Phase 4 | Complete |
+| DEAL-09 | Phase 4 | Complete |
 | DEAL-10 | Phase 4 | Pending |
 | DEAL-11 | Phase 4 | Pending |
 | DEAL-12 | Phase 4 | Pending |

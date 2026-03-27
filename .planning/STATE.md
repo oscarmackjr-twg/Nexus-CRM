@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 04
-stopped_at: "Completed 04-deal-model-expansion-fund-entity plan 01 — Fund entity: funds table, Fund ORM, FundService, GET/POST/PATCH /api/v1/funds, fund_status ref_data seeded"
-last_updated: "2026-03-27T23:14:37.501Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-27T23:21:10.482Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 16
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 01 complete)
-**Last action:** Completed 04-01 — Fund entity: funds table (migration 0007), Fund ORM model, fund_id FK on Deal, fund_status ref_data seeded (4 values), FundService with list/create/update and aliased(RefData) label join, GET/POST/PATCH /api/v1/funds endpoints registered. 4 tests pass.
+**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 02 complete)
+**Last action:** Completed 04-02 — Deal PE fields: migrations 0008 (32 PE columns on deals table) and 0009 (deal_team_members M2M), DealTeamMember ORM class, Deal class expanded with all PE Blueprint fields (identity, source tracking, 6 financial pairs, 8 date milestones, passed/dead, legacy_id). Fixed AmbiguousForeignKeysError. 17 tests pass.
 
 ## Phase Completion
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
-| 4 | Deal Expansion & Fund Entity | In progress (1/4 plans complete) |
+| 4 | Deal Expansion & Fund Entity | In progress (2/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Not started |
 | 6 | Admin Reference Data UI | Not started |
 
@@ -71,6 +71,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 04-01: Fund ORM UUID comparisons use UUID type directly (not str) — SQLite stores UUIDs without hyphens; str conversion breaks IN queries via Uuid() type processor
 - 04-01: fund_id FK added to Deal model in Plan 01 (not Plan 02) to keep migration chain clean
 - 04-01: FundService aliased(RefData) label-join pattern established — reuse for DealCounterparty and DealFunding services in Phase 5
+- 04-02: Named FK constraints via separate create_foreign_key() calls enable targeted drop_constraint() by name in downgrade()
+- 04-02: Multiple FKs to same table require foreign_keys= on ALL relationship sides: Contact.deals, Company.deals, Deal.contact, Deal.company
+- 04-02: fund_id already added to Deal ORM in Plan 01 — migration 0008 adds it to DB table; ORM type kept as Mapped[Optional[UUID]]
 
 ## Notes
 
@@ -93,11 +96,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 03-contact-company-model-expansion | 01 | 2min | 2 | 3 |
 | 03-contact-company-model-expansion | 03 | 2min | 2 | 2 |
 | 04-deal-model-expansion-fund-entity | 01 | 2min | 2 | 8 |
+| 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:14:37.497Z
-Stopped at: Completed 04-deal-model-expansion-fund-entity plan 01 — Fund entity: funds table, Fund ORM, FundService, GET/POST/PATCH /api/v1/funds, fund_status ref_data seeded
+Last session: 2026-03-27T23:21:10.478Z
+Stopped at: Completed 04-02-PLAN.md
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*
