@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 04
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-27T23:21:10.482Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-27T23:33:23Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 02 complete)
-**Last action:** Completed 04-02 — Deal PE fields: migrations 0008 (32 PE columns on deals table) and 0009 (deal_team_members M2M), DealTeamMember ORM class, Deal class expanded with all PE Blueprint fields (identity, source tracking, 6 financial pairs, 8 date milestones, passed/dead, legacy_id). Fixed AmbiguousForeignKeysError. 17 tests pass.
+**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 03 complete)
+**Last action:** Completed 04-03 — Deal service/schema expansion: DealResponse + DealUpdate with all PE fields, aliased RefData joins resolving 7 label fields in _base_deal_stmt, _load_deal_team/_set_deal_team helpers, PATCH /deals/{id} endpoint, 4 new tests (PE persistence, label resolution, deal_team CRUD, backward compat).
 
 ## Phase Completion
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
-| 4 | Deal Expansion & Fund Entity | In progress (2/4 plans complete) |
+| 4 | Deal Expansion & Fund Entity | In progress (3/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Not started |
 | 6 | Admin Reference Data UI | Not started |
 
@@ -74,6 +74,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 04-02: Named FK constraints via separate create_foreign_key() calls enable targeted drop_constraint() by name in downgrade()
 - 04-02: Multiple FKs to same table require foreign_keys= on ALL relationship sides: Contact.deals, Company.deals, Deal.contact, Deal.company
 - 04-02: fund_id already added to Deal ORM in Plan 01 — migration 0008 adds it to DB table; ORM type kept as Mapped[Optional[UUID]]
+- 04-03: deal_team loaded only on get_deal (detail), not list_deals — avoids N+1 query per deal
+- 04-03: PATCH /deals/{id} added alongside existing PUT — same service method, needed for PE field updates
+- 04-03: source_individual_name uses func.trim + literal() concatenation matching existing contact_name_expr pattern
+- 04-03: Test UUIDs use .hex format to match SQLite UUID storage (no hyphens) for FK join correctness
 
 ## Notes
 
@@ -97,11 +101,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 03-contact-company-model-expansion | 03 | 2min | 2 | 2 |
 | 04-deal-model-expansion-fund-entity | 01 | 2min | 2 | 8 |
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
+| 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:21:10.478Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-27T23:33:23Z
+Stopped at: Completed 04-03-PLAN.md
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*

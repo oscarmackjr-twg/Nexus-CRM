@@ -70,7 +70,7 @@
 - [x] **DEAL-07**: Deal model has date milestone fields: cim_received_date, ioi_due_date, ioi_submitted_date, management_presentation_date, loi_due_date, loi_submitted_date, live_diligence_date, portfolio_company_date (all Date, nullable)
 - [x] **DEAL-08**: Deal model has passed/dead fields: passed_dead_date (Date), passed_dead_reasons (JSONB array of ref_data IDs), passed_dead_commentary (Text)
 - [x] **DEAL-09**: Deal model has: legacy_id (String, org-scoped unique index)
-- [ ] **DEAL-10**: Deal API responses include resolved labels for all FK ref_data fields and deal_team display names
+- [x] **DEAL-10**: Deal API responses include resolved labels for all FK ref_data fields and deal_team display names
 - [ ] **DEAL-11**: Deal detail screen displays all new PE fields grouped by section (Deal Identity, Financials, Process Milestones, Source & Team, Passed/Dead)
 - [ ] **DEAL-12**: Deal detail edit form supports all new fields with appropriate input types
 
@@ -214,7 +214,7 @@
 | DEAL-07 | Phase 4 | Complete |
 | DEAL-08 | Phase 4 | Complete |
 | DEAL-09 | Phase 4 | Complete |
-| DEAL-10 | Phase 4 | Pending |
+| DEAL-10 | Phase 4 | Complete |
 | DEAL-11 | Phase 4 | Pending |
 | DEAL-12 | Phase 4 | Pending |
 | FUND-01 | Phase 4 | Complete |
