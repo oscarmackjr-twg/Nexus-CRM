@@ -107,6 +107,7 @@ class Contact(Base):
     __table_args__ = (
         Index("ix_contacts_org_lifecycle", "org_id", "lifecycle_stage"),
         Index("ix_contacts_org_archived", "org_id", "is_archived"),
+        UniqueConstraint("org_id", "legacy_id", name="uq_contacts_org_legacy_id"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -128,6 +129,27 @@ class Contact(Base):
     is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # PE Blueprint fields (Phase 3)
+    business_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    mobile_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    assistant_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    assistant_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    assistant_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    contact_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    primary_contact: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    contact_frequency: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    sector: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    sub_sector: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    previous_employment: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    board_memberships: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    linkedin_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     org: Mapped[Organization] = relationship(back_populates="contacts")
     company: Mapped[Optional[Company]] = relationship(back_populates="contacts")
