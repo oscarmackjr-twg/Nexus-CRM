@@ -46,15 +46,15 @@
 
 ### Company Data Model
 
-- [ ] **COMPANY-01**: Company model has: company_type_id (FK to ref_data, category=company_type), company_sub_type_ids (JSONB array of ref_data IDs for multi-select sub-types), description (Text)
-- [ ] **COMPANY-02**: Company model has: main_phone (String), parent_company_id (self-referential FK to companies, nullable)
-- [ ] **COMPANY-03**: Company model has address fields: address, city, state, postal_code (existing country field retained)
-- [ ] **COMPANY-04**: Company model has: tier_id (FK to ref_data, category=tier), sector_id (FK to ref_data, category=sector), sub_sector_id (FK to ref_data, category=sub_sector)
-- [ ] **COMPANY-05**: Company model has investment preference fields: sector_preferences (JSONB array of ref_data IDs), sub_sector_preferences (JSONB array of ref_data IDs), preference_notes (Text)
-- [ ] **COMPANY-06**: Company model has financial fields: aum_amount (Numeric 18,2), aum_currency (String 3), ebitda_amount (Numeric 18,2), ebitda_currency (String 3)
-- [ ] **COMPANY-07**: Company model has deal sizing fields: typical_bite_size_low (Numeric 18,2), typical_bite_size_high (Numeric 18,2), bite_size_currency (String 3), co_invest (Boolean), target_deal_size_id (FK to ref_data)
-- [ ] **COMPANY-08**: Company model has deal preference fields: transaction_types (JSONB array of ref_data IDs), min_ebitda (Numeric 18,2), max_ebitda (Numeric 18,2), ebitda_range_currency (String 3)
-- [ ] **COMPANY-09**: Company model has relationship fields: watchlist (Boolean), coverage_person_id (FK to users), contact_frequency (Integer), legacy_id (String, org-scoped unique index)
+- [x] **COMPANY-01**: Company model has: company_type_id (FK to ref_data, category=company_type), company_sub_type_ids (JSONB array of ref_data IDs for multi-select sub-types), description (Text)
+- [x] **COMPANY-02**: Company model has: main_phone (String), parent_company_id (self-referential FK to companies, nullable)
+- [x] **COMPANY-03**: Company model has address fields: address, city, state, postal_code (existing country field retained)
+- [x] **COMPANY-04**: Company model has: tier_id (FK to ref_data, category=tier), sector_id (FK to ref_data, category=sector), sub_sector_id (FK to ref_data, category=sub_sector)
+- [x] **COMPANY-05**: Company model has investment preference fields: sector_preferences (JSONB array of ref_data IDs), sub_sector_preferences (JSONB array of ref_data IDs), preference_notes (Text)
+- [x] **COMPANY-06**: Company model has financial fields: aum_amount (Numeric 18,2), aum_currency (String 3), ebitda_amount (Numeric 18,2), ebitda_currency (String 3)
+- [x] **COMPANY-07**: Company model has deal sizing fields: typical_bite_size_low (Numeric 18,2), typical_bite_size_high (Numeric 18,2), bite_size_currency (String 3), co_invest (Boolean), target_deal_size_id (FK to ref_data)
+- [x] **COMPANY-08**: Company model has deal preference fields: transaction_types (JSONB array of ref_data IDs), min_ebitda (Numeric 18,2), max_ebitda (Numeric 18,2), ebitda_range_currency (String 3)
+- [x] **COMPANY-09**: Company model has relationship fields: watchlist (Boolean), coverage_person_id (FK to users), contact_frequency (Integer), legacy_id (String, org-scoped unique index)
 - [ ] **COMPANY-10**: Company API responses include resolved labels for all FK ref_data fields and the coverage person display name
 - [ ] **COMPANY-11**: Company detail screen displays all new PE fields grouped by section (Identity, Investment Profile, Financials, Internal)
 - [ ] **COMPANY-12**: Company detail edit form supports all new fields with appropriate input types
@@ -193,15 +193,15 @@
 | CONTACT-08 | Phase 3 | Pending |
 | CONTACT-09 | Phase 3 | Pending |
 | CONTACT-10 | Phase 3 | Pending |
-| COMPANY-01 | Phase 3 | Pending |
-| COMPANY-02 | Phase 3 | Pending |
-| COMPANY-03 | Phase 3 | Pending |
-| COMPANY-04 | Phase 3 | Pending |
-| COMPANY-05 | Phase 3 | Pending |
-| COMPANY-06 | Phase 3 | Pending |
-| COMPANY-07 | Phase 3 | Pending |
-| COMPANY-08 | Phase 3 | Pending |
-| COMPANY-09 | Phase 3 | Pending |
+| COMPANY-01 | Phase 3 | Complete |
+| COMPANY-02 | Phase 3 | Complete |
+| COMPANY-03 | Phase 3 | Complete |
+| COMPANY-04 | Phase 3 | Complete |
+| COMPANY-05 | Phase 3 | Complete |
+| COMPANY-06 | Phase 3 | Complete |
+| COMPANY-07 | Phase 3 | Complete |
+| COMPANY-08 | Phase 3 | Complete |
+| COMPANY-09 | Phase 3 | Complete |
 | COMPANY-10 | Phase 3 | Pending |
 | COMPANY-11 | Phase 3 | Pending |
 | COMPANY-12 | Phase 3 | Pending |

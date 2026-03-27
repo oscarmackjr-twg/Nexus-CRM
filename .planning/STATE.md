@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 03
-stopped_at: Phase 03 UI-SPEC approved
-last_updated: "2026-03-27T20:16:57.469Z"
+stopped_at: Completed 03-contact-company-model-expansion plan 01
+last_updated: "2026-03-27T20:18:04.386Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 12
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -65,6 +65,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 03-01: All 18 new Contact columns are nullable per D-14 — additive schema expansion with no defaults
 - 03-01: contact_type_id FK uses ondelete=SET NULL per REFDATA-15 pattern — no orphan records
 - 03-01: coverage_persons uses lazy=selectin — acceptable for detail views; service layer avoids N+1 on list queries
+- 03-03: 0005 migration branches from 0002_pe_ref_data for parallel execution — merge migration needed after Phase 3 all plans complete
+- 03-03: Company parent_company_id self-ref FK uses String(36) + remote_side='Company.id' string form for forward-ref compatibility
+- 03-03: uq_companies_org_legacy_id UniqueConstraint placed in both migration and ORM __table_args__ for consistency
 
 ## Notes
 
@@ -85,11 +88,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 02-reference-data-system | 02 | 2min | 2 | 4 |
 | 02-reference-data-system | 03 | 5min | 2 | 4 |
 | 03-contact-company-model-expansion | 01 | 2min | 2 | 3 |
+| 03-contact-company-model-expansion | 03 | 2min | 2 | 2 |
 
 ## Session Continuity
 
 Last session: 2026-03-27T20:16:13Z
-Stopped at: Completed 03-contact-company-model-expansion plan 01
+Stopped at: Completed 03-contact-company-model-expansion plan 03
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*

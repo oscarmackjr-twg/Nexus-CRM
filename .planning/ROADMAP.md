@@ -69,7 +69,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md — Contact migration: Alembic 0003 (18 PE columns) + 0004 (contact_coverage_persons M2M table) + ORM model updates
 - [ ] 03-02-PLAN.md — Contact service and API: schema expansion, label resolution via aliased RefData join, coverage_persons loading, activity deal_id nullable migration, POST /contacts/{id}/activities route, open GET /users to all authenticated
-- [ ] 03-03-PLAN.md — Company migration: Alembic 0005 (~32 PE columns including financials, self-ref parent FK, ref_data FKs) + ORM model updates
+- [x] 03-03-PLAN.md — Company migration: Alembic 0005 (~32 PE columns including financials, self-ref parent FK, ref_data FKs) + ORM model updates
 - [ ] 03-04-PLAN.md — Company service and API: schema expansion, multi-alias ref_data joins (4 aliases + coverage_person user join), field mapping in _company_response
 - [ ] 03-05-PLAN.md — Contact UI: ContactDetailPage Profile tab with 5 cards (Identity, Employment History, Board Memberships, Investment Preferences, Internal Coverage), per-card editing, chips+RefSelect, updated activity dialog
 - [ ] 03-06-PLAN.md — Company UI: CompanyDetailPage Profile tab with 3 cards (Identity, Investment Profile, Internal), per-card editing, amount+currency pairs, chips+RefSelect
@@ -144,7 +144,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
 | 2. Reference Data System | 3/3 | Complete   | 2026-03-27 |
-| 3. Contact & Company Model Expansion | 1/6 | In Progress|  |
+| 3. Contact & Company Model Expansion | 2/6 | In Progress|  |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
 | 5. DealCounterparty & DealFunding | 0/4 | Not started | - |
 | 6. Admin Reference Data UI | 0/3 | Not started | - |
