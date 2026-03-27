@@ -6,7 +6,7 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 
 ## Phases
 
-- [ ] **Phase 1: UI Polish** - Clean up login screen styling and standardize spacing, typography, and layout across all existing screens
+- [x] **Phase 1: UI Polish** - Clean up login screen styling and standardize spacing, typography, and layout across all existing screens (completed 2026-03-27)
 - [ ] **Phase 2: Reference Data System** - Build the ref_data table, seed all TWG lookup values via migration, and expose CRUD API endpoints
 - [ ] **Phase 3: Contact & Company Model Expansion** - Add all PE Blueprint fields to Contact and Company with migrations, API, and updated detail screens
 - [ ] **Phase 4: Deal Model Expansion & Fund Entity** - Add PE deal fields and milestones to Deal, create the Fund entity, and update the deal detail screen
@@ -29,7 +29,7 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 **UI hint**: yes
 
 Plans:
-- [ ] 01-01-PLAN.md — Dark mode lock + login page redesign (TWG branding, staging banner, backend status indicator)
+- [x] 01-01-PLAN.md — Dark mode lock + login page redesign (TWG branding, staging banner, backend status indicator)
 - [x] 01-02-PLAN.md — Spacing and typography consistency pass across ContactDetail, CompanyDetail, Contacts, and DealDetail pages
 - [x] 01-03-PLAN.md — Dashboard stat card polish, PE heading, empty state hardening, and visual verification checkpoint
 
@@ -141,7 +141,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. UI Polish | 2/3 | In Progress|  |
+| 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
 | 2. Reference Data System | 0/3 | Not started | - |
 | 3. Contact & Company Model Expansion | 0/5 | Not started | - |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |

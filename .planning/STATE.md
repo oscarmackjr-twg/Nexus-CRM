@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-27T02:43:37.392Z"
+last_updated: "2026-03-27T02:44:55.871Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -47,6 +47,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 ## Key Decisions
 
+- 01-ui-polish-01: Dark mode locked permanently via classList.add('dark') — no user toggle, no theme state in store
+- 01-ui-polish-01: Email label on login (htmlFor=email) while keeping form.register('username') for API compat
+- 01-ui-polish-01: vi.hoisted() pattern required in vitest for mock factories referencing top-level variables
 - 01-ui-polish-03: Dashboard heading changed to "Deal command center" matching PE advisory context; metric computation logic left unchanged as already live-wired correctly
 - 01-ui-polish-02: ContactDetailPage uses page-level h1 at top of space-y-6 wrapper with Log activity button alongside it; sidebar card name kept as p.text-3xl to avoid duplicate heading semantics
 - 01-ui-polish-02: DealDetailPage Input-as-title inline editing pattern preserved; only activity timeline row padding normalized (p-4 → px-4 py-3)
@@ -62,8 +65,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 01-ui-polish | 01 | 2min | 2 | 6 |
 | 01-ui-polish | 02 | 8min | 2 | 3 |
 | 01-ui-polish | 03 | 5min | 1 | 1 |
 
 ---
-*Last updated: 2026-03-27 after plan 01-02 execution*
+*Last updated: 2026-03-27 after plan 01-01 execution*
