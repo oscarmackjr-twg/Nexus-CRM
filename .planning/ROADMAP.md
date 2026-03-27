@@ -63,15 +63,16 @@ Plans:
   3. Contact detail screen shows new fields organized into sections; edit form exposes all new fields with correct input types (dropdowns pull from ref_data, multi-selects work, numeric fields accept decimals)
   4. Company detail screen shows new fields organized into sections; edit form exposes all new fields with correct input types
   5. All ref_data FK fields return both the UUID and the resolved label in API responses (e.g., contact_type_label alongside contact_type_id)
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01: Contact migration — write `0003_contact_pe_fields.py`: add all PE contact columns (phones, assistant, address, contact_type_id FK, primary_contact bool, contact_frequency int, linkedin_url, legacy_id); write `0004_contact_coverage_persons.py`: CREATE TABLE contact_coverage_persons (contact_id, user_id); write explicit downgrades; all new columns nullable
-- [ ] 03-02: Contact service and API — update ContactService and ContactResponse schema to include all new fields with resolved labels; update PATCH /contacts/{id} to accept all new fields; add coverage_persons as a separate sub-resource or embedded list; Pydantic validators for currency codes on any amount fields
-- [ ] 03-03: Company migration — write `0005_company_pe_fields.py`: add all PE company columns (company_type_id FK, company_sub_type_ids JSONB, description, main_phone, parent_company_id self-ref FK, address fields, tier_id FK, sector_id FK, sub_sector_id FK, preference fields, AUM/EBITDA/bite-size Numerics with paired _currency columns, co_invest bool, watchlist bool, coverage_person_id FK, contact_frequency, legacy_id); write explicit downgrade
-- [ ] 03-04: Company service and API — update CompanyService and CompanyResponse schema to include all new fields with resolved labels; update PATCH /companies/{id} to accept all new fields
-- [ ] 03-05: Contact and Company UI — update ContactDetailPage and CompanyDetailPage: group fields into tabbed or sectioned edit/view layouts; replace flat field list with section-grouped field configs; wire all dropdown fields to `<RefSelect>` components; ensure multi-select fields (sector_preferences, sub_sector_preferences, coverage_persons) render correctly
+- [ ] 03-01-PLAN.md — Contact migration: Alembic 0003 (18 PE columns) + 0004 (contact_coverage_persons M2M table) + ORM model updates
+- [ ] 03-02-PLAN.md — Contact service and API: schema expansion, label resolution via aliased RefData join, coverage_persons loading, activity deal_id nullable migration, POST /contacts/{id}/activities route, open GET /users to all authenticated
+- [ ] 03-03-PLAN.md — Company migration: Alembic 0005 (~32 PE columns including financials, self-ref parent FK, ref_data FKs) + ORM model updates
+- [ ] 03-04-PLAN.md — Company service and API: schema expansion, multi-alias ref_data joins (4 aliases + coverage_person user join), field mapping in _company_response
+- [ ] 03-05-PLAN.md — Contact UI: ContactDetailPage Profile tab with 5 cards (Identity, Employment History, Board Memberships, Investment Preferences, Internal Coverage), per-card editing, chips+RefSelect, updated activity dialog
+- [ ] 03-06-PLAN.md — Company UI: CompanyDetailPage Profile tab with 3 cards (Identity, Investment Profile, Internal), per-card editing, amount+currency pairs, chips+RefSelect
 
 ---
 
@@ -105,7 +106,7 @@ Plans:
   2. A deal team member can add a counterparty, set stage dates (NDA sent, NDA signed, NRL, materials, VDR, feedback), update next steps, and remove the counterparty — all without leaving the deal detail screen
   3. A deal team member can add a capital provider to the Funding tab with projected and actual commitment amounts and currency, status, and terms — all without leaving the deal detail screen
   4. Counterparty and funding list endpoints enforce a 50-row default page size so full-table fetches cannot occur accidentally
-  5. Deactivating a ref_data item used by a counterparty (e.g., tier) does not break the counterparty list — the label renders as "—" gracefully
+  5. Deactivating a ref_data item used by a counterparty (e.g., tier) does not break the counterparty list — the label renders as "---" gracefully
 **Plans**: TBD
 **UI hint**: yes
 
@@ -113,7 +114,7 @@ Plans:
 - [ ] 05-01: DealCounterparty migration — write `0009_deal_counterparties.py`: CREATE TABLE deal_counterparties with all fields (id, org_id, deal_id FK cascade, company_id FK set null, primary_contact_name/email/phone, nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at as Date columns, tier_id FK, investor_type_id FK, check_size_amount/currency, aum_amount/currency, next_steps, notes, position); add UniqueConstraint(deal_id, company_id); add indexes on deal_id and company_id; write explicit downgrade
 - [ ] 05-02: DealCounterparty service and API — implement DealCounterpartyService with list_for_deal (single JOIN query resolving company name, tier label, investor_type label; default page size 50), create, update, delete; add nested routes at `/deals/{deal_id}/counterparties`; write Pydantic Create/Update/Response schemas; declare relationship with `lazy="raise"` on ORM model
 - [ ] 05-03: DealFunding migration and API — write `0010_deal_funding.py`: CREATE TABLE deal_funding (id, org_id, deal_id FK cascade, capital_provider_id FK set null, status_id FK ref_data, projected_commitment_amount/currency, actual_commitment_amount/currency, actual_commitment_date, terms, comments_next_steps); implement DealFundingService with list_for_deal, create, update, delete; add nested routes at `/deals/{deal_id}/funding`; write Pydantic schemas; write explicit downgrade
-- [ ] 05-04: Counterparties and Funding UI — add Counterparties tab to DealDetailPage: grid with stage date columns (boolean visual with date tooltip), inline row editing for next_steps and stage dates, add/remove counterparty via modal; add Funding tab: table with provider name (company link), status dropdown, commitment amounts, add/edit/remove via modal; both tabs use TanStack Query with deal_id in query key; handle null ref_data labels gracefully with "—"
+- [ ] 05-04: Counterparties and Funding UI — add Counterparties tab to DealDetailPage: grid with stage date columns (boolean visual with date tooltip), inline row editing for next_steps and stage dates, add/remove counterparty via modal; add Funding tab: table with provider name (company link), status dropdown, commitment amounts, add/edit/remove via modal; both tabs use TanStack Query with deal_id in query key; handle null ref_data labels gracefully with "---"
 
 ---
 
@@ -143,7 +144,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
 | 2. Reference Data System | 3/3 | Complete   | 2026-03-27 |
-| 3. Contact & Company Model Expansion | 0/5 | Not started | - |
+| 3. Contact & Company Model Expansion | 0/6 | Not started | - |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
 | 5. DealCounterparty & DealFunding | 0/4 | Not started | - |
 | 6. Admin Reference Data UI | 0/3 | Not started | - |
