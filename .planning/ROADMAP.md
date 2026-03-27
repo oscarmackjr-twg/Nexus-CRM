@@ -31,7 +31,7 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 Plans:
 - [ ] 01-01-PLAN.md — Dark mode lock + login page redesign (TWG branding, staging banner, backend status indicator)
 - [ ] 01-02-PLAN.md — Spacing and typography consistency pass across ContactDetail, CompanyDetail, Contacts, and DealDetail pages
-- [ ] 01-03-PLAN.md — Dashboard stat card polish, PE heading, empty state hardening, and visual verification checkpoint
+- [x] 01-03-PLAN.md — Dashboard stat card polish, PE heading, empty state hardening, and visual verification checkpoint
 
 ---
 
@@ -141,7 +141,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. UI Polish | 0/3 | Not started | - |
+| 1. UI Polish | 1/3 | In Progress|  |
 | 2. Reference Data System | 0/3 | Not started | - |
 | 3. Contact & Company Model Expansion | 0/5 | Not started | - |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
