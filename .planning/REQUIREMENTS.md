@@ -33,13 +33,13 @@
 
 ### Contact Data Model
 
-- [ ] **CONTACT-01**: Contact model has: business_phone (String), mobile_phone (String), assistant_name (String), assistant_email (String), assistant_phone (String)
-- [ ] **CONTACT-02**: Contact model has address fields: address, city, state, postal_code, country
-- [ ] **CONTACT-03**: Contact model has: contact_type_id (FK to ref_data, category=contact_type), primary_contact (Boolean), contact_frequency (Integer)
-- [ ] **CONTACT-04**: Contact model has: coverage_persons as a M2M association table to users (contact_coverage_persons)
-- [ ] **CONTACT-05**: Contact model has: sector (multi-ref, stored as JSONB array of ref_data IDs), sub_sector (multi-ref, stored as JSONB array of ref_data IDs)
-- [ ] **CONTACT-06**: Contact model has: previous_employment (JSONB array of {company, title, from, to} objects), board_memberships (JSONB array of {company, title} objects)
-- [ ] **CONTACT-07**: Contact model has: linkedin_url (Text), legacy_id (String, org-scoped unique index)
+- [x] **CONTACT-01**: Contact model has: business_phone (String), mobile_phone (String), assistant_name (String), assistant_email (String), assistant_phone (String)
+- [x] **CONTACT-02**: Contact model has address fields: address, city, state, postal_code, country
+- [x] **CONTACT-03**: Contact model has: contact_type_id (FK to ref_data, category=contact_type), primary_contact (Boolean), contact_frequency (Integer)
+- [x] **CONTACT-04**: Contact model has: coverage_persons as a M2M association table to users (contact_coverage_persons)
+- [x] **CONTACT-05**: Contact model has: sector (multi-ref, stored as JSONB array of ref_data IDs), sub_sector (multi-ref, stored as JSONB array of ref_data IDs)
+- [x] **CONTACT-06**: Contact model has: previous_employment (JSONB array of {company, title, from, to} objects), board_memberships (JSONB array of {company, title} objects)
+- [x] **CONTACT-07**: Contact model has: linkedin_url (Text), legacy_id (String, org-scoped unique index)
 - [ ] **CONTACT-08**: Contact API responses include resolved labels for contact_type_id (contact_type_label) and resolved display names for coverage_persons
 - [ ] **CONTACT-09**: Contact detail screen displays all new PE fields grouped by section (Identity, Investment Preferences, Internal Coverage)
 - [ ] **CONTACT-10**: Contact detail edit form supports all new fields with appropriate input types (text, select from ref_data, multi-select, date, boolean, number)
@@ -183,13 +183,13 @@
 | REFDATA-13 | Phase 2 | Complete |
 | REFDATA-14 | Phase 2 | Complete |
 | REFDATA-15 | Phase 2 | Complete |
-| CONTACT-01 | Phase 3 | Pending |
-| CONTACT-02 | Phase 3 | Pending |
-| CONTACT-03 | Phase 3 | Pending |
-| CONTACT-04 | Phase 3 | Pending |
-| CONTACT-05 | Phase 3 | Pending |
-| CONTACT-06 | Phase 3 | Pending |
-| CONTACT-07 | Phase 3 | Pending |
+| CONTACT-01 | Phase 3 | Complete |
+| CONTACT-02 | Phase 3 | Complete |
+| CONTACT-03 | Phase 3 | Complete |
+| CONTACT-04 | Phase 3 | Complete |
+| CONTACT-05 | Phase 3 | Complete |
+| CONTACT-06 | Phase 3 | Complete |
+| CONTACT-07 | Phase 3 | Complete |
 | CONTACT-08 | Phase 3 | Pending |
 | CONTACT-09 | Phase 3 | Pending |
 | CONTACT-10 | Phase 3 | Pending |

@@ -2,13 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 02 Complete
-last_updated: "2026-03-27T12:50:28.606Z"
+status: Executing Phase 03
+stopped_at: Phase 03 UI-SPEC approved
+last_updated: "2026-03-27T20:16:57.469Z"
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 12
+  completed_plans: 7
 ---
 
 # Project State
@@ -18,13 +19,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 02 — reference-data-system
+**Current focus:** Phase 03 — contact-company-model-expansion
 
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 02 — Reference Data System (complete)
-**Last action:** Completed 02-reference-data-system plan 03 — useRefData hook (queryKey ['ref', category], staleTime 5min), refData.js API module (GET/POST/PATCH), RefSelect component (4 states: loading/error/empty/normal, option value=item.id UUID), 6 RefSelect tests passing.
+**Active phase:** 03 — Contact & Company Expansion (in progress — plan 01 complete)
+**Last action:** Completed 03-01 — Contact PE Blueprint model expansion. 18 new nullable columns added to Contact via migration 0003 (phones, address, contact_type_id FK, JSONB fields, linkedin_url, legacy_id). contact_coverage_persons M2M table created via migration 0004 with composite PK. ContactCoveragePerson ORM model + Contact.coverage_persons selectin relationship added to models.py.
 
 ## Phase Completion
 
@@ -32,7 +33,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 |-------|------|--------|
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
-| 3 | Contact & Company Expansion | ⬜ Not started |
+| 3 | Contact & Company Expansion | 🔄 In progress (1/6 plans complete) |
 | 4 | Deal Expansion & Fund Entity | ⬜ Not started |
 | 5 | DealCounterparty & DealFunding | ⬜ Not started |
 | 6 | Admin Reference Data UI | ⬜ Not started |
@@ -61,6 +62,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 02-03: Option value uses item.id (UUID) not item.value (slug) — backend FK references use ref_data.id, so form submissions must send UUIDs
 - 02-03: useRefData queryKey ['ref', category] is canonical — all downstream phases (3-6) must use this exact key for cache sharing
 - 02-03: enabled: Boolean(category) guard prevents spurious fetches when category prop is undefined/null
+- 03-01: All 18 new Contact columns are nullable per D-14 — additive schema expansion with no defaults
+- 03-01: contact_type_id FK uses ondelete=SET NULL per REFDATA-15 pattern — no orphan records
+- 03-01: coverage_persons uses lazy=selectin — acceptable for detail views; service layer avoids N+1 on list queries
 
 ## Notes
 
@@ -80,6 +84,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 02-reference-data-system | 01 | 18min | 2 | 4 |
 | 02-reference-data-system | 02 | 2min | 2 | 4 |
 | 02-reference-data-system | 03 | 5min | 2 | 4 |
+| 03-contact-company-model-expansion | 01 | 2min | 2 | 3 |
+
+## Session Continuity
+
+Last session: 2026-03-27T20:16:13Z
+Stopped at: Completed 03-contact-company-model-expansion plan 01
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*
