@@ -44,12 +44,12 @@ Plans:
   2. `GET /admin/ref-data?category=sector` returns the 10 sector values ordered by position, scoped to the requesting org
   3. An org admin can POST a new reference item, PATCH an existing item's label or position, and PATCH is_active=false to soft-delete it — all without restarting the server
   4. A deactivated reference item no longer appears in `GET /admin/ref-data` results, but existing records that reference its ID are not affected
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: ref_data migration — write `0002_pe_ref_data.py` Alembic migration: CREATE TABLE ref_data with (org_id, category, value) unique constraint and (org_id, category) index; seed all 10 TWG categories via op.bulk_insert; write explicit downgrade
-- [ ] 02-02: ref_data service and API — implement RefDataService with list_by_category, create, update methods; add GET/POST/PATCH routes at `/admin/ref-data`; add require_role(org_admin) guard; write Pydantic Create/Update/Response schemas
-- [ ] 02-03: Frontend ref data hooks — implement `useRefData(category)` TanStack Query hook with `queryKey: ['ref', category]` and 5-minute staleTime; create `<RefSelect>` component that accepts a category prop and renders a populated dropdown; invalidate `['ref']` prefix on admin mutations
+- [ ] 02-01-PLAN.md — Test scaffold (Wave 0 stubs + seed_ref_data fixture) + RefData ORM model + Alembic migration 0002_pe_ref_data.py with all 10 categories seeded
+- [ ] 02-02-PLAN.md — Pydantic schemas (RefDataCreate/Update/Response) + RefDataService + GET/POST/PATCH routes at /admin/ref-data + main.py registration
+- [ ] 02-03-PLAN.md — Frontend API module (refData.js) + useRefData hook (queryKey ['ref', category], staleTime 5min) + RefSelect component + component tests
 
 ---
 
