@@ -25,11 +25,11 @@
 - [x] **REFDATA-08**: deal_source_type is seeded with: Proprietary, Bank, Advisor, Management, Portfolio Company, Existing LP
 - [x] **REFDATA-09**: passed_dead_reason is seeded with: Valuation, Diligence, Market Conditions, Competitive, Strategic Fit, Timing, Management, No Follow-Up
 - [x] **REFDATA-10**: investor_type is seeded with: SWF, Pension/Super, Corporate, Family Office, Financial Sponsor, Insurance, Bank
-- [ ] **REFDATA-11**: `GET /admin/ref-data?category=<category>` returns all active items for a category (org-scoped + system defaults), ordered by position then label
-- [ ] **REFDATA-12**: `POST /admin/ref-data` allows org admins to create a new reference item in any category
-- [ ] **REFDATA-13**: `PATCH /admin/ref-data/{id}` allows org admins to update label, position, or is_active on any reference item
-- [ ] **REFDATA-14**: Deleting a reference item via PATCH (is_active = false) soft-deletes it — the row remains for historical FK integrity, but the item no longer appears in dropdowns
-- [ ] **REFDATA-15**: All entity FK columns pointing to ref_data use ondelete="SET NULL" so that deactivated reference items do not break existing records
+- [x] **REFDATA-11**: `GET /admin/ref-data?category=<category>` returns all active items for a category (org-scoped + system defaults), ordered by position then label
+- [x] **REFDATA-12**: `POST /admin/ref-data` allows org admins to create a new reference item in any category
+- [x] **REFDATA-13**: `PATCH /admin/ref-data/{id}` allows org admins to update label, position, or is_active on any reference item
+- [x] **REFDATA-14**: Deleting a reference item via PATCH (is_active = false) soft-deletes it — the row remains for historical FK integrity, but the item no longer appears in dropdowns
+- [x] **REFDATA-15**: All entity FK columns pointing to ref_data use ondelete="SET NULL" so that deactivated reference items do not break existing records
 
 ### Contact Data Model
 
@@ -178,11 +178,11 @@
 | REFDATA-08 | Phase 2 | Complete |
 | REFDATA-09 | Phase 2 | Complete |
 | REFDATA-10 | Phase 2 | Complete |
-| REFDATA-11 | Phase 2 | Pending |
-| REFDATA-12 | Phase 2 | Pending |
-| REFDATA-13 | Phase 2 | Pending |
-| REFDATA-14 | Phase 2 | Pending |
-| REFDATA-15 | Phase 2 | Pending |
+| REFDATA-11 | Phase 2 | Complete |
+| REFDATA-12 | Phase 2 | Complete |
+| REFDATA-13 | Phase 2 | Complete |
+| REFDATA-14 | Phase 2 | Complete |
+| REFDATA-15 | Phase 2 | Complete |
 | CONTACT-01 | Phase 3 | Pending |
 | CONTACT-02 | Phase 3 | Pending |
 | CONTACT-03 | Phase 3 | Pending |
