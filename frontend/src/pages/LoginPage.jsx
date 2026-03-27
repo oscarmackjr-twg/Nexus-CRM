@@ -44,7 +44,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.35),_transparent_35%),linear-gradient(135deg,_#0f172a,_#111827_50%,_#062b3b)] p-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
       {/* Staging banner — per D-03 */}
       {import.meta.env.MODE !== 'production' && (
         <div className="absolute inset-x-0 top-0 bg-amber-500/90 py-1.5 text-center text-xs font-semibold text-black">
@@ -55,34 +55,34 @@ export default function LoginPage() {
       <div className="flex w-full max-w-md flex-col items-center gap-6">
         {/* TWG Global logo placeholder — per D-03 */}
         {/* TODO: replace with actual logo */}
-        <span className="text-lg font-bold tracking-widest text-white/80">TWG GLOBAL</span>
+        <span className="text-lg font-bold tracking-widest text-slate-500">TWG GLOBAL</span>
 
         {/* App name — per D-03 */}
-        <h1 className="text-3xl font-semibold text-white">Nexus CRM</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Nexus CRM</h1>
 
         {/* Sign-in card */}
-        <Card className="w-full border-white/10 bg-slate-950/70 text-white shadow-2xl backdrop-blur">
+        <Card className="w-full border-slate-200 bg-white shadow-soft">
           <CardContent className="pt-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" {...form.register('username')} placeholder="admin@demo.local" className="border-white/10 bg-white/5 text-white placeholder:text-white/40" />
-                {form.formState.errors.username && <p className="text-sm text-red-300">{form.formState.errors.username.message}</p>}
+                <Label htmlFor="email" className="text-slate-700">Email</Label>
+                <Input id="email" {...form.register('username')} placeholder="admin@demo.local" className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400" />
+                {form.formState.errors.username && <p className="text-sm text-red-500">{form.formState.errors.username.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" {...form.register('password')} className="border-white/10 bg-white/5 text-white placeholder:text-white/40" />
-                {form.formState.errors.password && <p className="text-sm text-red-300">{form.formState.errors.password.message}</p>}
+                <Label htmlFor="password" className="text-slate-700">Password</Label>
+                <Input id="password" type="password" {...form.register('password')} className="border-slate-200 bg-white text-slate-900" />
+                {form.formState.errors.password && <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>Sign in</Button>
+              <Button type="submit" className="w-full bg-slate-900 text-white hover:bg-slate-700" disabled={form.formState.isSubmitting}>Sign in</Button>
             </form>
           </CardContent>
         </Card>
 
         {/* Backend status indicator — per D-03 */}
         <div className="flex items-center gap-1.5 text-xs">
-          <span className={`h-2 w-2 rounded-full ${backendStatus === 'connected' ? 'bg-green-400' : backendStatus === 'unavailable' ? 'bg-red-400' : 'bg-yellow-400'}`} />
-          <span className="text-white/50">
+          <span className={`h-2 w-2 rounded-full ${backendStatus === 'connected' ? 'bg-green-500' : backendStatus === 'unavailable' ? 'bg-red-500' : 'bg-yellow-400'}`} />
+          <span className="text-slate-400">
             Backend: {backendStatus === 'connected' ? 'Connected' : backendStatus === 'unavailable' ? 'Unavailable' : 'Checking...'}
           </span>
         </div>
