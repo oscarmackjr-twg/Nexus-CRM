@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 02
-last_updated: "2026-03-27T12:43:08.049Z"
+status: Phase 02 Complete
+last_updated: "2026-03-27T12:50:28.606Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -23,15 +23,15 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 02 — Reference Data System
-**Last action:** Completed 02-reference-data-system plan 02 — RefDataService, Pydantic schemas (RefDataCreate/RefDataUpdate/RefDataResponse), admin routes (GET/POST/PATCH /api/v1/admin/ref-data), admin.router registered in main.py; all 7 test_ref_data.py tests green (4 xfail -> xpassed).
+**Active phase:** 02 — Reference Data System (complete)
+**Last action:** Completed 02-reference-data-system plan 03 — useRefData hook (queryKey ['ref', category], staleTime 5min), refData.js API module (GET/POST/PATCH), RefSelect component (4 states: loading/error/empty/normal, option value=item.id UUID), 6 RefSelect tests passing.
 
 ## Phase Completion
 
 | Phase | Name | Status |
 |-------|------|--------|
 | 1 | UI Polish | Done (3/3 plans complete) |
-| 2 | Reference Data System | 🔄 In progress (2/3 plans complete) |
+| 2 | Reference Data System | Done (3/3 plans complete) |
 | 3 | Contact & Company Expansion | ⬜ Not started |
 | 4 | Deal Expansion & Fund Entity | ⬜ Not started |
 | 5 | DealCounterparty & DealFunding | ⬜ Not started |
@@ -58,6 +58,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 02-02: GET /admin/ref-data open to all authenticated roles (D-03) — dropdown data needed by all user roles in Phases 3-5
 - 02-02: update() allows modifying system defaults (org_id=None) for org admins; rejects changes to other orgs' items with 403
 - 02-02: REFDATA-15 pattern — downstream FK columns to ref_data.id must use ForeignKey('ref_data.id', ondelete='SET NULL')
+- 02-03: Option value uses item.id (UUID) not item.value (slug) — backend FK references use ref_data.id, so form submissions must send UUIDs
+- 02-03: useRefData queryKey ['ref', category] is canonical — all downstream phases (3-6) must use this exact key for cache sharing
+- 02-03: enabled: Boolean(category) guard prevents spurious fetches when category prop is undefined/null
 
 ## Notes
 
@@ -76,6 +79,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 01-ui-polish | 03 | 15min | 3 | 4 |
 | 02-reference-data-system | 01 | 18min | 2 | 4 |
 | 02-reference-data-system | 02 | 2min | 2 | 4 |
+| 02-reference-data-system | 03 | 5min | 2 | 4 |
 
 ---
-*Last updated: 2026-03-27 after plan 02-02 completion (Phase 2 plan 2 done)*
+*Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*

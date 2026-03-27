@@ -7,7 +7,7 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 ## Phases
 
 - [x] **Phase 1: UI Polish** - Clean up login screen styling and standardize spacing, typography, and layout across all existing screens (completed 2026-03-27)
-- [ ] **Phase 2: Reference Data System** - Build the ref_data table, seed all TWG lookup values via migration, and expose CRUD API endpoints
+- [x] **Phase 2: Reference Data System** - Build the ref_data table, seed all TWG lookup values via migration, and expose CRUD API endpoints (completed 2026-03-27)
 - [ ] **Phase 3: Contact & Company Model Expansion** - Add all PE Blueprint fields to Contact and Company with migrations, API, and updated detail screens
 - [ ] **Phase 4: Deal Model Expansion & Fund Entity** - Add PE deal fields and milestones to Deal, create the Fund entity, and update the deal detail screen
 - [ ] **Phase 5: DealCounterparty & DealFunding** - Build the two new sub-entities with full CRUD APIs and embed their management UIs inside deal detail
@@ -49,7 +49,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Test scaffold (Wave 0 stubs + seed_ref_data fixture) + RefData ORM model + Alembic migration 0002_pe_ref_data.py with all 10 categories seeded
 - [x] 02-02-PLAN.md — Pydantic schemas (RefDataCreate/Update/Response) + RefDataService + GET/POST/PATCH routes at /admin/ref-data + main.py registration
-- [ ] 02-03-PLAN.md — Frontend API module (refData.js) + useRefData hook (queryKey ['ref', category], staleTime 5min) + RefSelect component + component tests
+- [x] 02-03-PLAN.md — Frontend API module (refData.js) + useRefData hook (queryKey ['ref', category], staleTime 5min) + RefSelect component + component tests
 
 ---
 
@@ -142,7 +142,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. UI Polish | 3/3 | Complete   | 2026-03-27 |
-| 2. Reference Data System | 2/3 | In Progress|  |
+| 2. Reference Data System | 3/3 | Complete   | 2026-03-27 |
 | 3. Contact & Company Model Expansion | 0/5 | Not started | - |
 | 4. Deal Model Expansion & Fund Entity | 0/4 | Not started | - |
 | 5. DealCounterparty & DealFunding | 0/4 | Not started | - |
