@@ -165,7 +165,7 @@ class Contact(Base):
     org: Mapped[Organization] = relationship(back_populates="contacts")
     company: Mapped[Optional[Company]] = relationship(back_populates="contacts")
     owner: Mapped[Optional[User]] = relationship(back_populates="owned_contacts", foreign_keys=[owner_id])
-    deals: Mapped[list[Deal]] = relationship(back_populates="contact")
+    deals: Mapped[list[Deal]] = relationship(back_populates="contact", foreign_keys="Deal.contact_id")
     coverage_persons: Mapped[list["User"]] = relationship(
         "User",
         secondary="contact_coverage_persons",
@@ -244,7 +244,7 @@ class Company(Base):
     org: Mapped[Organization] = relationship(back_populates="companies")
     owner: Mapped[Optional[User]] = relationship(back_populates="owned_companies", foreign_keys=[owner_id])
     contacts: Mapped[list[Contact]] = relationship(back_populates="company")
-    deals: Mapped[list[Deal]] = relationship(back_populates="company")
+    deals: Mapped[list[Deal]] = relationship(back_populates="company", foreign_keys="Deal.company_id")
     parent_company: Mapped[Optional["Company"]] = relationship(
         "Company", remote_side="Company.id", foreign_keys=[parent_company_id]
     )
@@ -314,12 +314,23 @@ class Fund(Base):
     deals: Mapped[list["Deal"]] = relationship(back_populates="fund")
 
 
+class DealTeamMember(Base):
+    __tablename__ = "deal_team_members"
+    deal_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("deals.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
 class Deal(Base):
     __tablename__ = "deals"
     __table_args__ = (
         Index("ix_deals_org_team", "org_id", "team_id"),
         Index("ix_deals_pipeline_stage", "pipeline_id", "stage_id"),
         Index("ix_deals_org_status", "org_id", "status"),
+        UniqueConstraint("org_id", "legacy_id", name="uq_deals_org_legacy_id"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -347,15 +358,62 @@ class Deal(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # PE Blueprint fields (Phase 4) — DEAL-01 through DEAL-09
+    # DEAL-01: Identity fields
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    new_deal_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    transaction_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    platform_or_addon: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    platform_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    # DEAL-04: Source tracking fields
+    source_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    source_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    source_individual_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True)
+    originator_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    # DEAL-05: Financial fields (amount + currency pairs)
+    revenue_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    revenue_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    ebitda_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    ebitda_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    enterprise_value_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    enterprise_value_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    equity_investment_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    equity_investment_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    # DEAL-06: Bid fields
+    loi_bid_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    loi_bid_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    ioi_bid_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    ioi_bid_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    # DEAL-07: Date milestone fields
+    cim_received_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    ioi_due_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    ioi_submitted_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    management_presentation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    loi_due_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    loi_submitted_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    live_diligence_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    portfolio_company_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # DEAL-08: Passed/dead fields
+    passed_dead_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    passed_dead_reasons: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
+    passed_dead_commentary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # DEAL-09: Legacy ID (org-scoped unique constraint in __table_args__)
+    legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     org: Mapped[Organization] = relationship(back_populates="deals")
     team: Mapped[Team] = relationship(back_populates="deals")
     pipeline: Mapped[Pipeline] = relationship(back_populates="deals")
     stage: Mapped[PipelineStage] = relationship(back_populates="deals")
     owner: Mapped[User] = relationship(back_populates="owned_deals", foreign_keys=[owner_id])
-    contact: Mapped[Optional[Contact]] = relationship(back_populates="deals")
-    company: Mapped[Optional[Company]] = relationship(back_populates="deals")
+    contact: Mapped[Optional[Contact]] = relationship(back_populates="deals", foreign_keys=[contact_id])
+    company: Mapped[Optional[Company]] = relationship(back_populates="deals", foreign_keys=[company_id])
     fund: Mapped[Optional["Fund"]] = relationship(back_populates="deals")
     activities: Mapped[list[DealActivity]] = relationship(back_populates="deal", cascade="all, delete-orphan")
+    deal_team_members: Mapped[list["DealTeamMember"]] = relationship(cascade="all, delete-orphan")
+    platform_company: Mapped[Optional["Company"]] = relationship(foreign_keys=[platform_company_id])
+    source_company: Mapped[Optional["Company"]] = relationship(foreign_keys=[source_company_id])
+    source_individual: Mapped[Optional["Contact"]] = relationship(foreign_keys=[source_individual_id])
+    originator: Mapped[Optional["User"]] = relationship(foreign_keys=[originator_id])
 
 
 class DealActivity(Base):
