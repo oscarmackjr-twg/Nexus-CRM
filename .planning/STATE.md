@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 05
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-28T12:27:21.621Z"
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-03-28T12:49:01.534Z"
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 20
-  completed_plans: 16
+  completed_plans: 18
 ---
 
 # Project State
@@ -82,6 +82,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 05-01: company_id ondelete=SET NULL (preserve counterparty if company deleted); deal_id ondelete=CASCADE (delete with deal)
 - 05-01: UniqueConstraint(deal_id, company_id) prevents duplicate counterparty entries per deal
 - 05-01: All DealCounterparty relationships use lazy=raise — service layer controls loading, prevents N+1
+- 05-03: DealCounterparty ORM backfilled into models.py (Rule 3 fix) — 05-01 git commit only had migration file, ORM class was never committed
+- 05-03: funding router added to main.py import+router list after funds.router — counterparties router deferred to 05-02
+- 05-03: Route handlers own commit(), service does flush() only — consistent with funds.py transaction pattern
 
 ## Notes
 
@@ -107,11 +110,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 | 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
 | Phase 05-deal-counterparty-deal-funding P01 | 6min | 2 tasks | 2 files |
+| Phase 05-deal-counterparty-deal-funding P03 | 12min | 2 tasks | 6 files |
 
 ## Session Continuity
 
-Last session: 2026-03-28T12:27:21.616Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-28T12:49:01.527Z
+Stopped at: Completed 05-03-PLAN.md
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*

@@ -113,7 +113,7 @@ Plans:
 Plans:
 - [x] 05-01: DealCounterparty migration — write `0009_deal_counterparties.py`: CREATE TABLE deal_counterparties with all fields (id, org_id, deal_id FK cascade, company_id FK set null, primary_contact_name/email/phone, nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at as Date columns, tier_id FK, investor_type_id FK, check_size_amount/currency, aum_amount/currency, next_steps, notes, position); add UniqueConstraint(deal_id, company_id); add indexes on deal_id and company_id; write explicit downgrade
 - [ ] 05-02: DealCounterparty service and API — implement DealCounterpartyService with list_for_deal (single JOIN query resolving company name, tier label, investor_type label; default page size 50), create, update, delete; add nested routes at `/deals/{deal_id}/counterparties`; write Pydantic Create/Update/Response schemas; declare relationship with `lazy="raise"` on ORM model
-- [ ] 05-03: DealFunding migration and API — write `0010_deal_funding.py`: CREATE TABLE deal_funding (id, org_id, deal_id FK cascade, capital_provider_id FK set null, status_id FK ref_data, projected_commitment_amount/currency, actual_commitment_amount/currency, actual_commitment_date, terms, comments_next_steps); implement DealFundingService with list_for_deal, create, update, delete; add nested routes at `/deals/{deal_id}/funding`; write Pydantic schemas; write explicit downgrade
+- [x] 05-03: DealFunding migration and API — write `0010_deal_funding.py`: CREATE TABLE deal_funding (id, org_id, deal_id FK cascade, capital_provider_id FK set null, status_id FK ref_data, projected_commitment_amount/currency, actual_commitment_amount/currency, actual_commitment_date, terms, comments_next_steps); implement DealFundingService with list_for_deal, create, update, delete; add nested routes at `/deals/{deal_id}/funding`; write Pydantic schemas; write explicit downgrade
 - [ ] 05-04: Counterparties and Funding UI — add Counterparties tab to DealDetailPage: grid with stage date columns (boolean visual with date tooltip), inline row editing for next_steps and stage dates, add/remove counterparty via modal; add Funding tab: table with provider name (company link), status dropdown, commitment amounts, add/edit/remove via modal; both tabs use TanStack Query with deal_id in query key; handle null ref_data labels gracefully with "---"
 
 ---
@@ -146,5 +146,5 @@ Plans:
 | 2. Reference Data System | 3/3 | Complete   | 2026-03-27 |
 | 3. Contact & Company Model Expansion | 2/6 | In Progress|  |
 | 4. Deal Model Expansion & Fund Entity | 2/4 | In Progress|  |
-| 5. DealCounterparty & DealFunding | 1/4 | In Progress|  |
+| 5. DealCounterparty & DealFunding | 2/4 | In Progress|  |
 | 6. Admin Reference Data UI | 0/3 | Not started | - |

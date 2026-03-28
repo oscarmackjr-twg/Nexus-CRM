@@ -91,13 +91,13 @@
 
 ### DealFunding Entity
 
-- [ ] **FUNDING-01**: A deal_funding table exists with: id, org_id, deal_id (FK cascade), capital_provider_id (FK to companies, set null), status_id (FK to ref_data, category=deal_funding_status)
-- [ ] **FUNDING-02**: DealFunding has financial fields: projected_commitment_amount (Numeric 18,2), projected_commitment_currency (String 3), actual_commitment_amount (Numeric 18,2), actual_commitment_currency (String 3), actual_commitment_date (Date)
-- [ ] **FUNDING-03**: DealFunding has: terms (Text), comments_next_steps (Text)
-- [ ] **FUNDING-04**: `GET /deals/{deal_id}/funding` returns all funding entries for a deal with capital provider company name resolved
-- [ ] **FUNDING-05**: `POST /deals/{deal_id}/funding` creates a new funding entry for a deal
-- [ ] **FUNDING-06**: `PATCH /deals/{deal_id}/funding/{id}` updates a funding entry
-- [ ] **FUNDING-07**: `DELETE /deals/{deal_id}/funding/{id}` removes a funding entry
+- [x] **FUNDING-01**: A deal_funding table exists with: id, org_id, deal_id (FK cascade), capital_provider_id (FK to companies, set null), status_id (FK to ref_data, category=deal_funding_status)
+- [x] **FUNDING-02**: DealFunding has financial fields: projected_commitment_amount (Numeric 18,2), projected_commitment_currency (String 3), actual_commitment_amount (Numeric 18,2), actual_commitment_currency (String 3), actual_commitment_date (Date)
+- [x] **FUNDING-03**: DealFunding has: terms (Text), comments_next_steps (Text)
+- [x] **FUNDING-04**: `GET /deals/{deal_id}/funding` returns all funding entries for a deal with capital provider company name resolved
+- [x] **FUNDING-05**: `POST /deals/{deal_id}/funding` creates a new funding entry for a deal
+- [x] **FUNDING-06**: `PATCH /deals/{deal_id}/funding/{id}` updates a funding entry
+- [x] **FUNDING-07**: `DELETE /deals/{deal_id}/funding/{id}` removes a funding entry
 - [ ] **FUNDING-08**: Deal detail screen has a Funding tab showing all capital providers with columns: Provider, Status, Projected Commitment, Actual Commitment, Commitment Date, Terms
 - [ ] **FUNDING-09**: Users can add, edit, and remove funding entries from the Funding tab
 
@@ -234,13 +234,13 @@
 | CPARTY-10 | Phase 5 | Pending |
 | CPARTY-11 | Phase 5 | Pending |
 | CPARTY-12 | Phase 5 | Pending |
-| FUNDING-01 | Phase 5 | Pending |
-| FUNDING-02 | Phase 5 | Pending |
-| FUNDING-03 | Phase 5 | Pending |
-| FUNDING-04 | Phase 5 | Pending |
-| FUNDING-05 | Phase 5 | Pending |
-| FUNDING-06 | Phase 5 | Pending |
-| FUNDING-07 | Phase 5 | Pending |
+| FUNDING-01 | Phase 5 | Complete |
+| FUNDING-02 | Phase 5 | Complete |
+| FUNDING-03 | Phase 5 | Complete |
+| FUNDING-04 | Phase 5 | Complete |
+| FUNDING-05 | Phase 5 | Complete |
+| FUNDING-06 | Phase 5 | Complete |
+| FUNDING-07 | Phase 5 | Complete |
 | FUNDING-08 | Phase 5 | Pending |
 | FUNDING-09 | Phase 5 | Pending |
 | ADMIN-01 | Phase 6 | Pending |
