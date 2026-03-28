@@ -117,7 +117,7 @@
 - [ ] **ADMIN-04**: Org admin can add a new item to any category (form with label, value fields)
 - [ ] **ADMIN-05**: Org admin can edit an existing item's label and position
 - [ ] **ADMIN-06**: Org admin can deactivate (soft-delete) an item — it disappears from dropdowns but existing records retain the FK
-- [ ] **ADMIN-07**: All dropdowns in Contact, Company, and Deal forms fetch their options from the ref_data API (`GET /admin/ref-data?category=<category>`) and use consistent TanStack Query keys (`['ref', '<category>']`) for caching
+- [x] **ADMIN-07**: All dropdowns in Contact, Company, and Deal forms fetch their options from the ref_data API (`GET /admin/ref-data?category=<category>`) and use consistent TanStack Query keys (`['ref', '<category>']`) for caching
 - [ ] **ADMIN-08**: After any admin mutation (add/edit/deactivate), all ref data queries are invalidated via queryClient so dropdown updates are visible immediately
 
 ---
@@ -249,7 +249,7 @@
 | ADMIN-04 | Phase 6 | Pending |
 | ADMIN-05 | Phase 6 | Pending |
 | ADMIN-06 | Phase 6 | Pending |
-| ADMIN-07 | Phase 6 | Pending |
+| ADMIN-07 | Phase 6 | Complete |
 | ADMIN-08 | Phase 6 | Pending |
 
 **Coverage:**

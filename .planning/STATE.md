@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 05-04-PLAN.md
-last_updated: "2026-03-28T19:50:18.954Z"
+status: Executing Phase 06
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-28T20:30:09.841Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 23
+  completed_plans: 21
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 04 — deal-model-expansion-fund-entity
+**Current focus:** Phase 06 — admin-reference-data-ui
 
 ## Current Status
 
@@ -36,7 +36,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
 | 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
-| 6 | Admin Reference Data UI | Not started |
+| 6 | Admin Reference Data UI | In progress (1/3 plans complete) |
 
 ## Key Files
 
@@ -78,6 +78,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 04-03: PATCH /deals/{id} added alongside existing PUT — same service method, needed for PE field updates
 - 04-03: source_individual_name uses func.trim + literal() concatenation matching existing contact_name_expr pattern
 - 04-03: Test UUIDs use .hex format to match SQLite UUID storage (no hyphens) for FK join correctness
+- 06-02: ADMIN-07 audit confirmed — all 10 ref_data categories use RefSelect; entity selectors (users/companies/contacts/funds) and app model enums (activity_type, lifecycle_stage, platform/addon) correctly remain as native selects
 
 ## Notes
 
@@ -103,11 +104,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 | 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
 | 05-deal-counterparty-deal-funding | 04 | 8min | 2 | 3 |
+| 06-admin-reference-data-ui | 02 | 5min | 1 | 0 |
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:00:00Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-03-28T20:30:09.836Z
+Stopped at: Completed 06-02-PLAN.md
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*
