@@ -76,10 +76,10 @@
 
 ### DealCounterparty Entity
 
-- [ ] **CPARTY-01**: A deal_counterparties table exists with: id, org_id, deal_id (FK cascade), company_id (FK set null), primary_contact_name (String), primary_contact_email (String), primary_contact_phone (String), position (Integer for ordering)
-- [ ] **CPARTY-02**: DealCounterparty has stage tracking date columns: nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at (all Date, nullable)
-- [ ] **CPARTY-03**: DealCounterparty has: tier_id (FK to ref_data, category=tier), investor_type_id (FK to ref_data, category=investor_type), next_steps (Text), notes (Text)
-- [ ] **CPARTY-04**: DealCounterparty has financial fields: check_size_amount (Numeric 18,2), check_size_currency (String 3), aum_amount (Numeric 18,2), aum_currency (String 3)
+- [x] **CPARTY-01**: A deal_counterparties table exists with: id, org_id, deal_id (FK cascade), company_id (FK set null), primary_contact_name (String), primary_contact_email (String), primary_contact_phone (String), position (Integer for ordering)
+- [x] **CPARTY-02**: DealCounterparty has stage tracking date columns: nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at (all Date, nullable)
+- [x] **CPARTY-03**: DealCounterparty has: tier_id (FK to ref_data, category=tier), investor_type_id (FK to ref_data, category=investor_type), next_steps (Text), notes (Text)
+- [x] **CPARTY-04**: DealCounterparty has financial fields: check_size_amount (Numeric 18,2), check_size_currency (String 3), aum_amount (Numeric 18,2), aum_currency (String 3)
 - [ ] **CPARTY-05**: `GET /deals/{deal_id}/counterparties` returns all counterparties for a deal with company name, stage dates, tier label, and investor type label — resolved in a single query (no N+1)
 - [ ] **CPARTY-06**: `POST /deals/{deal_id}/counterparties` creates a new counterparty entry for a deal
 - [ ] **CPARTY-07**: `PATCH /deals/{deal_id}/counterparties/{id}` updates counterparty fields including individual stage date columns
@@ -222,10 +222,10 @@
 | FUND-03 | Phase 4 | Complete |
 | FUND-04 | Phase 4 | Complete |
 | FUND-05 | Phase 4 | Pending |
-| CPARTY-01 | Phase 5 | Pending |
-| CPARTY-02 | Phase 5 | Pending |
-| CPARTY-03 | Phase 5 | Pending |
-| CPARTY-04 | Phase 5 | Pending |
+| CPARTY-01 | Phase 5 | Complete |
+| CPARTY-02 | Phase 5 | Complete |
+| CPARTY-03 | Phase 5 | Complete |
+| CPARTY-04 | Phase 5 | Complete |
 | CPARTY-05 | Phase 5 | Pending |
 | CPARTY-06 | Phase 5 | Pending |
 | CPARTY-07 | Phase 5 | Pending |
