@@ -9,6 +9,8 @@ export const REF_CATEGORIES = [
   { slug: 'deal_source_type', label: 'Deal Source Type' },
   { slug: 'passed_dead_reason', label: 'Passed/Dead Reason' },
   { slug: 'investor_type', label: 'Investor Type' },
+  { slug: 'deal_funding_status', label: 'Deal Funding Status' },
+  { slug: 'fund_status', label: 'Fund Status' },
 ];
 
 export function getCategoryLabel(slug) {
