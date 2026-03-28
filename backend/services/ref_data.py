@@ -15,7 +15,7 @@ class RefDataService:
         self.db = db
         self.current_user = current_user
 
-    async def list_by_category(self, category: str) -> list[RefDataResponse]:
+    async def list_by_category(self, category: str, *, include_inactive: bool = False) -> list[RefDataResponse]:
         stmt = (
             select(RefData)
             .where(
@@ -25,9 +25,10 @@ class RefDataService:
                 )
             )
             .where(RefData.category == category)
-            .where(RefData.is_active.is_(True))
             .order_by(RefData.position, RefData.label)
         )
+        if not include_inactive:
+            stmt = stmt.where(RefData.is_active.is_(True))
         rows = (await self.db.execute(stmt)).scalars().all()
         return [RefDataResponse.model_validate(row) for row in rows]
 

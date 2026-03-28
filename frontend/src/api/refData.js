@@ -3,6 +3,9 @@ import client from './client';
 export const getRefData = async (category) =>
   (await client.get('/admin/ref-data', { params: { category } })).data;
 
+export const getAllRefData = async (category) =>
+  (await client.get('/admin/ref-data', { params: { category, include_inactive: true } })).data;
+
 export const createRefData = async (data) =>
   (await client.post('/admin/ref-data', data)).data;
 

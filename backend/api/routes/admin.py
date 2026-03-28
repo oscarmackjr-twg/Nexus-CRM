@@ -16,10 +16,13 @@ router = APIRouter(prefix="/admin/ref-data", tags=["admin"])
 @router.get("/", response_model=list[RefDataResponse])
 async def list_ref_data(
     category: str,
+    include_inactive: bool = False,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[RefDataResponse]:
-    return await RefDataService(db, current_user).list_by_category(category)
+    return await RefDataService(db, current_user).list_by_category(
+        category, include_inactive=include_inactive
+    )
 
 
 @router.post("/", response_model=RefDataResponse, status_code=status.HTTP_201_CREATED)
