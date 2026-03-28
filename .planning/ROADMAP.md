@@ -11,7 +11,7 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 - [ ] **Phase 3: Contact & Company Model Expansion** - Add all PE Blueprint fields to Contact and Company with migrations, API, and updated detail screens
 - [ ] **Phase 4: Deal Model Expansion & Fund Entity** - Add PE deal fields and milestones to Deal, create the Fund entity, and update the deal detail screen
 - [x] **Phase 5: DealCounterparty & DealFunding** - Build the two new sub-entities with full CRUD APIs and embed their management UIs inside deal detail (completed 2026-03-28)
-- [ ] **Phase 6: Admin Reference Data UI** - Build the Admin page for managing reference items and wire all form dropdowns to use ref_data
+- [x] **Phase 6: Admin Reference Data UI** - Build the Admin page for managing reference items and wire all form dropdowns to use ref_data (completed 2026-03-28)
 
 ---
 
@@ -134,7 +134,7 @@ Plans:
 Plans:
 - [x] 06-01-PLAN.md — Admin page with Users/Reference Data tabs, category sidebar (10 categories), items table with CRUD modals, deactivate/reactivate, query invalidation
 - [x] 06-02-PLAN.md — Dropdown wiring audit: verify all ref_data dropdowns use RefSelect across Contact, Company, Deal, Counterparty, and Funding forms
-- [ ] 06-03-PLAN.md — Visual and functional verification checkpoint: end-to-end admin CRUD testing and downstream dropdown propagation
+- [x] 06-03-PLAN.md — Visual and functional verification checkpoint: end-to-end admin CRUD testing and downstream dropdown propagation
 
 ---
 
@@ -147,4 +147,4 @@ Plans:
 | 3. Contact & Company Model Expansion | 2/6 | In Progress|  |
 | 4. Deal Model Expansion & Fund Entity | 2/4 | In Progress|  |
 | 5. DealCounterparty & DealFunding | 4/4 | Complete   | 2026-03-28 |
-| 6. Admin Reference Data UI | 2/3 | In Progress|  |
+| 6. Admin Reference Data UI | 3/3 | Complete   | 2026-03-28 |
