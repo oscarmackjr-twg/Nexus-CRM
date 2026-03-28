@@ -76,30 +76,30 @@
 
 ### DealCounterparty Entity
 
-- [x] **CPARTY-01**: A deal_counterparties table exists with: id, org_id, deal_id (FK cascade), company_id (FK set null), primary_contact_name (String), primary_contact_email (String), primary_contact_phone (String), position (Integer for ordering)
-- [x] **CPARTY-02**: DealCounterparty has stage tracking date columns: nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at (all Date, nullable)
-- [x] **CPARTY-03**: DealCounterparty has: tier_id (FK to ref_data, category=tier), investor_type_id (FK to ref_data, category=investor_type), next_steps (Text), notes (Text)
-- [x] **CPARTY-04**: DealCounterparty has financial fields: check_size_amount (Numeric 18,2), check_size_currency (String 3), aum_amount (Numeric 18,2), aum_currency (String 3)
+- [ ] **CPARTY-01**: A deal_counterparties table exists with: id, org_id, deal_id (FK cascade), company_id (FK set null), primary_contact_name (String), primary_contact_email (String), primary_contact_phone (String), position (Integer for ordering)
+- [ ] **CPARTY-02**: DealCounterparty has stage tracking date columns: nda_sent_at, nda_signed_at, nrl_signed_at, intro_materials_sent_at, vdr_access_granted_at, feedback_received_at (all Date, nullable)
+- [ ] **CPARTY-03**: DealCounterparty has: tier_id (FK to ref_data, category=tier), investor_type_id (FK to ref_data, category=investor_type), next_steps (Text), notes (Text)
+- [ ] **CPARTY-04**: DealCounterparty has financial fields: check_size_amount (Numeric 18,2), check_size_currency (String 3), aum_amount (Numeric 18,2), aum_currency (String 3)
 - [ ] **CPARTY-05**: `GET /deals/{deal_id}/counterparties` returns all counterparties for a deal with company name, stage dates, tier label, and investor type label — resolved in a single query (no N+1)
 - [ ] **CPARTY-06**: `POST /deals/{deal_id}/counterparties` creates a new counterparty entry for a deal
 - [ ] **CPARTY-07**: `PATCH /deals/{deal_id}/counterparties/{id}` updates counterparty fields including individual stage date columns
 - [ ] **CPARTY-08**: `DELETE /deals/{deal_id}/counterparties/{id}` removes a counterparty from a deal
-- [ ] **CPARTY-09**: Deal detail screen has a Counterparties tab showing all counterparties in a grid with columns: Company, Tier, Investor Type, NDA Sent, NDA Signed, NRL, Materials, VDR, Feedback, Next Steps
-- [ ] **CPARTY-10**: Users can add a new counterparty to a deal from the Counterparties tab (inline form or modal)
-- [ ] **CPARTY-11**: Users can edit a counterparty row inline or via a modal, including setting stage dates and updating next steps
-- [ ] **CPARTY-12**: Users can remove a counterparty from a deal from the Counterparties tab
+- [x] **CPARTY-09**: Deal detail screen has a Counterparties tab showing all counterparties in a grid with columns: Company, Tier, Investor Type, NDA Sent, NDA Signed, NRL, Materials, VDR, Feedback, Next Steps
+- [x] **CPARTY-10**: Users can add a new counterparty to a deal from the Counterparties tab (inline form or modal)
+- [x] **CPARTY-11**: Users can edit a counterparty row inline or via a modal, including setting stage dates and updating next steps
+- [x] **CPARTY-12**: Users can remove a counterparty from a deal from the Counterparties tab
 
 ### DealFunding Entity
 
-- [x] **FUNDING-01**: A deal_funding table exists with: id, org_id, deal_id (FK cascade), capital_provider_id (FK to companies, set null), status_id (FK to ref_data, category=deal_funding_status)
-- [x] **FUNDING-02**: DealFunding has financial fields: projected_commitment_amount (Numeric 18,2), projected_commitment_currency (String 3), actual_commitment_amount (Numeric 18,2), actual_commitment_currency (String 3), actual_commitment_date (Date)
-- [x] **FUNDING-03**: DealFunding has: terms (Text), comments_next_steps (Text)
-- [x] **FUNDING-04**: `GET /deals/{deal_id}/funding` returns all funding entries for a deal with capital provider company name resolved
-- [x] **FUNDING-05**: `POST /deals/{deal_id}/funding` creates a new funding entry for a deal
-- [x] **FUNDING-06**: `PATCH /deals/{deal_id}/funding/{id}` updates a funding entry
-- [x] **FUNDING-07**: `DELETE /deals/{deal_id}/funding/{id}` removes a funding entry
-- [ ] **FUNDING-08**: Deal detail screen has a Funding tab showing all capital providers with columns: Provider, Status, Projected Commitment, Actual Commitment, Commitment Date, Terms
-- [ ] **FUNDING-09**: Users can add, edit, and remove funding entries from the Funding tab
+- [ ] **FUNDING-01**: A deal_funding table exists with: id, org_id, deal_id (FK cascade), capital_provider_id (FK to companies, set null), status_id (FK to ref_data, category=deal_funding_status)
+- [ ] **FUNDING-02**: DealFunding has financial fields: projected_commitment_amount (Numeric 18,2), projected_commitment_currency (String 3), actual_commitment_amount (Numeric 18,2), actual_commitment_currency (String 3), actual_commitment_date (Date)
+- [ ] **FUNDING-03**: DealFunding has: terms (Text), comments_next_steps (Text)
+- [ ] **FUNDING-04**: `GET /deals/{deal_id}/funding` returns all funding entries for a deal with capital provider company name resolved
+- [ ] **FUNDING-05**: `POST /deals/{deal_id}/funding` creates a new funding entry for a deal
+- [ ] **FUNDING-06**: `PATCH /deals/{deal_id}/funding/{id}` updates a funding entry
+- [ ] **FUNDING-07**: `DELETE /deals/{deal_id}/funding/{id}` removes a funding entry
+- [x] **FUNDING-08**: Deal detail screen has a Funding tab showing all capital providers with columns: Provider, Status, Projected Commitment, Actual Commitment, Commitment Date, Terms
+- [x] **FUNDING-09**: Users can add, edit, and remove funding entries from the Funding tab
 
 ### Fund Entity
 
@@ -222,27 +222,27 @@
 | FUND-03 | Phase 4 | Complete |
 | FUND-04 | Phase 4 | Complete |
 | FUND-05 | Phase 4 | Pending |
-| CPARTY-01 | Phase 5 | Complete |
-| CPARTY-02 | Phase 5 | Complete |
-| CPARTY-03 | Phase 5 | Complete |
-| CPARTY-04 | Phase 5 | Complete |
+| CPARTY-01 | Phase 5 | Pending |
+| CPARTY-02 | Phase 5 | Pending |
+| CPARTY-03 | Phase 5 | Pending |
+| CPARTY-04 | Phase 5 | Pending |
 | CPARTY-05 | Phase 5 | Pending |
 | CPARTY-06 | Phase 5 | Pending |
 | CPARTY-07 | Phase 5 | Pending |
 | CPARTY-08 | Phase 5 | Pending |
-| CPARTY-09 | Phase 5 | Pending |
-| CPARTY-10 | Phase 5 | Pending |
-| CPARTY-11 | Phase 5 | Pending |
-| CPARTY-12 | Phase 5 | Pending |
-| FUNDING-01 | Phase 5 | Complete |
-| FUNDING-02 | Phase 5 | Complete |
-| FUNDING-03 | Phase 5 | Complete |
-| FUNDING-04 | Phase 5 | Complete |
-| FUNDING-05 | Phase 5 | Complete |
-| FUNDING-06 | Phase 5 | Complete |
-| FUNDING-07 | Phase 5 | Complete |
-| FUNDING-08 | Phase 5 | Pending |
-| FUNDING-09 | Phase 5 | Pending |
+| CPARTY-09 | Phase 5 | Complete |
+| CPARTY-10 | Phase 5 | Complete |
+| CPARTY-11 | Phase 5 | Complete |
+| CPARTY-12 | Phase 5 | Complete |
+| FUNDING-01 | Phase 5 | Pending |
+| FUNDING-02 | Phase 5 | Pending |
+| FUNDING-03 | Phase 5 | Pending |
+| FUNDING-04 | Phase 5 | Pending |
+| FUNDING-05 | Phase 5 | Pending |
+| FUNDING-06 | Phase 5 | Pending |
+| FUNDING-07 | Phase 5 | Pending |
+| FUNDING-08 | Phase 5 | Complete |
+| FUNDING-09 | Phase 5 | Complete |
 | ADMIN-01 | Phase 6 | Pending |
 | ADMIN-02 | Phase 6 | Pending |
 | ADMIN-03 | Phase 6 | Pending |
