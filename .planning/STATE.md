@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 06
 stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-28T20:30:09.841Z"
+last_updated: "2026-03-28T20:45:00Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 06 — Admin Reference Data UI (not started)
-**Last action:** Completed 05-04 — Counterparties and Funding tabs added to DealDetailPage: 6-tab layout, inline date editing via editingCell state, horizontally scrollable counterparty grid with sticky Company column, CRUD modals for both tabs, null ref_data labels render as "---". Visual verification approved 2026-03-28. Phase 5 fully complete (4/4 plans).
+**Active phase:** 06 — Admin Reference Data UI (in progress — plans 01 and 02 complete)
+**Last action:** Completed 06-02 — Dropdown wiring audit: ADMIN-07 confirmed, all 10 ref_data categories use RefSelect across ContactDetailPage, CompanyDetailPage, DealDetailPage. No hardcoded option arrays found.
 
 ## Phase Completion
 
@@ -36,7 +36,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
 | 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
-| 6 | Admin Reference Data UI | In progress (1/3 plans complete) |
+| 6 | Admin Reference Data UI | In progress (2/3 plans complete) |
 
 ## Key Files
 
@@ -78,6 +78,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 04-03: PATCH /deals/{id} added alongside existing PUT — same service method, needed for PE field updates
 - 04-03: source_individual_name uses func.trim + literal() concatenation matching existing contact_name_expr pattern
 - 04-03: Test UUIDs use .hex format to match SQLite UUID storage (no hyphens) for FK join correctness
+- 06-01: include_inactive query param added to GET /admin/ref-data — admin panel shows all items; regular dropdowns see only active
+- 06-01: getAllRefData() added alongside getRefData() for backward compat — no existing hook callers broken
+- 06-01: REF_CATEGORIES canonical ordering in refCategories.js — all downstream category references use this module
 - 06-02: ADMIN-07 audit confirmed — all 10 ref_data categories use RefSelect; entity selectors (users/companies/contacts/funds) and app model enums (activity_type, lifecycle_stage, platform/addon) correctly remain as native selects
 
 ## Notes
@@ -104,11 +107,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 | 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
 | 05-deal-counterparty-deal-funding | 04 | 8min | 2 | 3 |
+| 06-admin-reference-data-ui | 01 | 15min | 2 | 5 |
 | 06-admin-reference-data-ui | 02 | 5min | 1 | 0 |
 
 ## Session Continuity
 
-Last session: 2026-03-28T20:30:09.836Z
+Last session: 2026-03-28T20:45:00Z
 Stopped at: Completed 06-02-PLAN.md
 
 ---

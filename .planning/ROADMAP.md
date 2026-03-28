@@ -132,7 +132,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01-PLAN.md — Admin page with Users/Reference Data tabs, category sidebar (10 categories), items table with CRUD modals, deactivate/reactivate, query invalidation
+- [x] 06-01-PLAN.md — Admin page with Users/Reference Data tabs, category sidebar (10 categories), items table with CRUD modals, deactivate/reactivate, query invalidation
 - [x] 06-02-PLAN.md — Dropdown wiring audit: verify all ref_data dropdowns use RefSelect across Contact, Company, Deal, Counterparty, and Funding forms
 - [ ] 06-03-PLAN.md — Visual and functional verification checkpoint: end-to-end admin CRUD testing and downstream dropdown propagation
 
@@ -147,4 +147,4 @@ Plans:
 | 3. Contact & Company Model Expansion | 2/6 | In Progress|  |
 | 4. Deal Model Expansion & Fund Entity | 2/4 | In Progress|  |
 | 5. DealCounterparty & DealFunding | 4/4 | Complete   | 2026-03-28 |
-| 6. Admin Reference Data UI | 1/3 | In Progress|  |
+| 6. Admin Reference Data UI | 2/3 | In Progress|  |

@@ -111,14 +111,14 @@
 
 ### Admin UI
 
-- [ ] **ADMIN-01**: An Admin page exists in the frontend, accessible to org_admin and super_admin roles
-- [ ] **ADMIN-02**: Admin page shows all reference data categories in a sidebar or tab list
-- [ ] **ADMIN-03**: Selecting a category shows the active items for that category in a sortable list with label, value, and position
-- [ ] **ADMIN-04**: Org admin can add a new item to any category (form with label, value fields)
-- [ ] **ADMIN-05**: Org admin can edit an existing item's label and position
-- [ ] **ADMIN-06**: Org admin can deactivate (soft-delete) an item — it disappears from dropdowns but existing records retain the FK
+- [x] **ADMIN-01**: An Admin page exists in the frontend, accessible to org_admin and super_admin roles
+- [x] **ADMIN-02**: Admin page shows all reference data categories in a sidebar or tab list
+- [x] **ADMIN-03**: Selecting a category shows the active items for that category in a sortable list with label, value, and position
+- [x] **ADMIN-04**: Org admin can add a new item to any category (form with label, value fields)
+- [x] **ADMIN-05**: Org admin can edit an existing item's label and position
+- [x] **ADMIN-06**: Org admin can deactivate (soft-delete) an item — it disappears from dropdowns but existing records retain the FK
 - [x] **ADMIN-07**: All dropdowns in Contact, Company, and Deal forms fetch their options from the ref_data API (`GET /admin/ref-data?category=<category>`) and use consistent TanStack Query keys (`['ref', '<category>']`) for caching
-- [ ] **ADMIN-08**: After any admin mutation (add/edit/deactivate), all ref data queries are invalidated via queryClient so dropdown updates are visible immediately
+- [x] **ADMIN-08**: After any admin mutation (add/edit/deactivate), all ref data queries are invalidated via queryClient so dropdown updates are visible immediately
 
 ---
 
@@ -243,14 +243,14 @@
 | FUNDING-07 | Phase 5 | Pending |
 | FUNDING-08 | Phase 5 | Complete |
 | FUNDING-09 | Phase 5 | Complete |
-| ADMIN-01 | Phase 6 | Pending |
-| ADMIN-02 | Phase 6 | Pending |
-| ADMIN-03 | Phase 6 | Pending |
-| ADMIN-04 | Phase 6 | Pending |
-| ADMIN-05 | Phase 6 | Pending |
-| ADMIN-06 | Phase 6 | Pending |
-| ADMIN-07 | Phase 6 | Complete |
-| ADMIN-08 | Phase 6 | Pending |
+| ADMIN-01 | Phase 6 | Complete (06-01) |
+| ADMIN-02 | Phase 6 | Complete (06-01) |
+| ADMIN-03 | Phase 6 | Complete (06-01) |
+| ADMIN-04 | Phase 6 | Complete (06-01) |
+| ADMIN-05 | Phase 6 | Complete (06-01) |
+| ADMIN-06 | Phase 6 | Complete (06-01) |
+| ADMIN-07 | Phase 6 | Complete (06-02) |
+| ADMIN-08 | Phase 6 | Complete (06-01) |
 
 **Coverage:**
 - v1 requirements: 86 total
