@@ -112,6 +112,17 @@ None — plan executed exactly as written.
 - All downstream FK columns in Phases 3–5 should reference ref_data with `ondelete="SET NULL"` (REFDATA-15, verified in Phase 3–5 migrations)
 - No blockers
 
+## Self-Check: PASSED
+
+- FOUND: backend/tests/test_ref_data.py
+- FOUND: backend/models.py (class RefData)
+- FOUND: alembic/versions/0002_pe_ref_data.py
+- FOUND: .planning/phases/02-reference-data-system/02-01-SUMMARY.md
+- FOUND commit: 5cb3e02 (test scaffold)
+- FOUND commit: f2e8c25 (RefData model + migration)
+- FOUND commit: acbc60f (docs metadata)
+- pytest backend/tests/test_ref_data.py: 3 passed, 4 xfailed
+
 ---
 *Phase: 02-reference-data-system*
 *Completed: 2026-03-27*

@@ -8,8 +8,8 @@ This milestone expands Nexus CRM from a generic deal CRM into a purpose-built PE
 
 - [x] **Phase 1: UI Polish** - Clean up login screen styling and standardize spacing, typography, and layout across all existing screens (completed 2026-03-27)
 - [x] **Phase 2: Reference Data System** - Build the ref_data table, seed all TWG lookup values via migration, and expose CRUD API endpoints (completed 2026-03-27)
-- [ ] **Phase 3: Contact & Company Model Expansion** - Add all PE Blueprint fields to Contact and Company with migrations, API, and updated detail screens
-- [ ] **Phase 4: Deal Model Expansion & Fund Entity** - Add PE deal fields and milestones to Deal, create the Fund entity, and update the deal detail screen
+- [x] **Phase 3: Contact & Company Model Expansion** - Add all PE Blueprint fields to Contact and Company with migrations, API, and updated detail screens (completed 2026-03-27)
+- [x] **Phase 4: Deal Model Expansion & Fund Entity** - Add PE deal fields and milestones to Deal, create the Fund entity, and update the deal detail screen (completed 2026-03-28)
 - [ ] **Phase 5: DealCounterparty & DealFunding** - Build the two new sub-entities with full CRUD APIs and embed their management UIs inside deal detail
 - [ ] **Phase 6: Admin Reference Data UI** - Build the Admin page for managing reference items and wire all form dropdowns to use ref_data
 
@@ -93,7 +93,7 @@ Plans:
 - [x] 04-01-PLAN.md — Fund entity: Alembic 0007_fund.py (funds table + fund_status ref_data seeds), Fund ORM model, FundService, FundCreate/Update/Response schemas, GET/POST/PATCH /funds routes, test stubs
 - [x] 04-02-PLAN.md — Deal migrations: Alembic 0008_deal_pe_fields.py (~30 PE columns on deals) + 0009_deal_team_members.py (M2M table), DealTeamMember ORM class, Deal model expansion with all PE columns and relationships
 - [x] 04-03-PLAN.md — Deal service and API: DealResponse/DealUpdate schema expansion, aliased RefData joins for label resolution, deal_team loading/setting, source_company/individual/originator name resolution, PE field tests
-- [ ] 04-04-PLAN.md — Deal UI: DealDetailPage rewrite with 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile section cards with per-card edit/save, fund selector with inline create modal, deal team chips, date milestone grid, visual verification checkpoint
+- [x] 04-04-PLAN.md — Deal UI: DealDetailPage rewrite with 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile section cards with per-card edit/save, fund selector with inline create modal, deal team chips, date milestone grid, visual verification checkpoint
 
 ---
 

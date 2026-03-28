@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 04
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-03-27T23:33:23Z"
+status: Phase 04 Complete — Ready for Phase 05
+stopped_at: "Phase 04 human-verify approved. Phase 05 (DealCounterparty & DealFunding) not yet started."
+last_updated: "2026-03-28T01:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 03 complete)
-**Last action:** Completed 04-03 — Deal service/schema expansion: DealResponse + DealUpdate with all PE fields, aliased RefData joins resolving 7 label fields in _base_deal_stmt, _load_deal_team/_set_deal_team helpers, PATCH /deals/{id} endpoint, 4 new tests (PE persistence, label resolution, deal_team CRUD, backward compat).
+**Active phase:** 05 — DealCounterparty & DealFunding (not started)
+**Last action:** Phase 04 complete — DealDetailPage 4-tab rewrite approved by user. Fixed Vite proxy 307 redirect bug (followRedirects:true). Converted vertical sidebar nav to horizontal top ribbon. Commit ca2168b.
 
 ## Phase Completion
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
-| 4 | Deal Expansion & Fund Entity | In progress (3/4 plans complete) |
+| 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Not started |
 | 6 | Admin Reference Data UI | Not started |
 
@@ -78,6 +78,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 04-03: PATCH /deals/{id} added alongside existing PUT — same service method, needed for PE field updates
 - 04-03: source_individual_name uses func.trim + literal() concatenation matching existing contact_name_expr pattern
 - 04-03: Test UUIDs use .hex format to match SQLite UUID storage (no hyphens) for FK join correctness
+- 04-04: Per-card editing uses string discriminator (editingCard) not separate booleans — scales to 5 cards without prop drilling
+- 04-04: Fund dropdown auto-selects new fund on modal success via setIdentityForm((prev) => ({...prev, fund_id: newFund.id}))
+- 04-04: useMemo with null-guard initializes per-card form state from deal once on load; subsequent edits use local state only
+- 04-04: updateDeal sends PATCH with null coercion — empty strings converted to null before mutate call
 
 ## Notes
 
@@ -102,11 +106,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 04-deal-model-expansion-fund-entity | 01 | 2min | 2 | 8 |
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 | 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
+| 04-deal-model-expansion-fund-entity | 04 | 12min | 1 | 2 |
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:33:23Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-03-28T01:00:00Z
+Stopped at: Phase 04 complete. Phase 05 ready to plan.
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*
