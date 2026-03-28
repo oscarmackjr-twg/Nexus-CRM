@@ -82,6 +82,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - 05-01: company_id ondelete=SET NULL (preserve counterparty if company deleted); deal_id ondelete=CASCADE (delete with deal)
 - 05-01: UniqueConstraint(deal_id, company_id) prevents duplicate counterparty entries per deal
 - 05-01: All DealCounterparty relationships use lazy=raise — service layer controls loading, prevents N+1
+- 05-02: DealCounterpartyCreate omits stage dates (set via Update only) — matches PE workflow where milestones tracked after creation
+- 05-02: list_for_deal default page size 50 (D-16) ordered by position ASC NULLS LAST then created_at ASC
+- 05-02: counterparties.router registered in main.py after deals.router — nested at /api/v1/deals/{deal_id}/counterparties
 - 05-03: DealCounterparty ORM backfilled into models.py (Rule 3 fix) — 05-01 git commit only had migration file, ORM class was never committed
 - 05-03: funding router added to main.py import+router list after funds.router — counterparties router deferred to 05-02
 - 05-03: Route handlers own commit(), service does flush() only — consistent with funds.py transaction pattern
