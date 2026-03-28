@@ -85,8 +85,37 @@
 
 ## Traceability
 
-*Filled by roadmapper agent.*
-
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| | | |
+| BRAND-01 | Phase 7 | TBD |
+| BRAND-02 | Phase 7 | TBD |
+| BRAND-03 | Phase 7 | TBD |
+| LOGIN-01 | Phase 8 | TBD |
+| LOGIN-02 | Phase 8 | TBD |
+| LOGIN-03 | Phase 8 | TBD |
+| LOGIN-04 | Phase 8 | TBD |
+| BANNER-01 | Phase 8 | TBD |
+| NAV-01 | Phase 8 | TBD |
+| NAV-02 | Phase 8 | TBD |
+| NAV-03 | Phase 8 | TBD |
+| NAV-04 | Phase 8 | TBD |
+| NAV-05 | Phase 8 | TBD |
+| GRID-01 | Phase 9 | TBD |
+| GRID-02 | Phase 9 | TBD |
+| GRID-03 | Phase 9 | TBD |
+| GRID-04 | Phase 9 | TBD |
+| GRID-05 | Phase 9 | TBD |
+| GRID-06 | Phase 9 | TBD |
+| DETAIL-01 | Phase 10 | TBD |
+| DETAIL-02 | Phase 10 | TBD |
+| DETAIL-03 | Phase 10 | TBD |
+| DETAIL-04 | Phase 10 | TBD |
+| CONTACT-08 | Phase 11 | TBD |
+| CONTACT-09 | Phase 11 | TBD |
+| CONTACT-10 | Phase 11 | TBD |
+| COMPANY-10 | Phase 11 | TBD |
+| COMPANY-11 | Phase 11 | TBD |
+| COMPANY-12 | Phase 11 | TBD |
+| DEAL-11 | Phase 12 | TBD |
+| DEAL-12 | Phase 12 | TBD |
+| FUND-05 | Phase 12 | TBD |

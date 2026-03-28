@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
-status: Defining requirements
-stopped_at: Milestone v1.1 started — defining requirements
+status: Roadmap defined
+stopped_at: Roadmap v1.1 created — Phases 7-12 defined, ready for Phase 7 planning
 last_updated: "2026-03-28T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,16 +16,16 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-03-26)
+See: `.planning/PROJECT.md` (updated 2026-03-28)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Milestone v1.0 complete — all 6 phases done (23/23 plans)
+**Current focus:** Milestone v1.1 — TWG brand identity rollout across all screens
 
 ## Current Status
 
 **Milestone:** v1.1 — UI Professionalism — IN PROGRESS
-**Active phase:** None — defining requirements
-**Last action:** 2026-03-28 — Milestone v1.1 started. Gathering requirements for TWG brand identity rollout across login, sidebar, data grids, and detail pages.
+**Active phase:** None — roadmap defined, awaiting Phase 7 planning
+**Last action:** 2026-03-28 — Roadmap v1.1 created. 6 phases (7-12) covering all 27 requirements.
 
 ## Phase Completion
 
@@ -37,11 +37,17 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
 | 6 | Admin Reference Data UI | Done (3/3 plans complete) |
+| 7 | Brand Foundation | Not started |
+| 8 | Login, Banner & Sidebar | Not started |
+| 9 | Data Grids | Not started |
+| 10 | Detail Page Polish | Not started |
+| 11 | Contact & Company Data Completeness | Not started |
+| 12 | Deal & Fund Data Completeness | Not started |
 
 ## Key Files
 
 - `.planning/PROJECT.md` — project goals and requirements
-- `.planning/REQUIREMENTS.md` — 86 v1 requirements across 6 phases
+- `.planning/REQUIREMENTS.md` — 27 v1.1 requirements across 6 phases (Phases 7-12)
 - `.planning/ROADMAP.md` — phase breakdown with success criteria
 - `.planning/research/` — 4 domain research documents (stack, features, architecture, pitfalls)
 - `.planning/codebase/` — 7 codebase map documents
@@ -88,8 +94,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 - Seed data enabled (`.env`: `RUN_SEED_DATA=true`) — demo login: `admin@demo.local` / `password123`
 - Backend `db.bind` SQLAlchemy 2.0 bug fixed in `deals.py` and `ai_service.py`
 - Run `make dev` to start the app
-- Phase 1 fully complete. Light theme active: white content, dark blue sidebar, centered login page.
-- Phase 2 (Reference Data System) ready to begin.
+- v1.0 complete: 6 phases, 23/23 plans done. Light theme active.
+- v1.1 roadmap defined: Phases 7-12 covering 27 requirements.
+- Phase 7 (Brand Foundation) is the prerequisite — CSS vars + Gotham font unlock all subsequent UI work.
+- Phases 11-12 involve both backend (label resolution) and frontend — more complex than pure UI polish phases.
 
 ## Performance Metrics
 
@@ -113,8 +121,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 ## Session Continuity
 
-Last session: 2026-03-28T20:52:43.541Z
-Stopped at: Completed 06-03-PLAN.md — Phase 6 complete
+Last session: 2026-03-28T00:00:00.000Z
+Stopped at: Roadmap v1.1 created — Phases 7-12 defined
 
 ---
-*Last updated: 2026-03-28 after plan 06-03 completion (Phase 6 complete — milestone v1.0 all 23/23 plans done)*
+*Last updated: 2026-03-28 — Roadmap v1.1 created (Phases 7-12, 27 requirements mapped)*
