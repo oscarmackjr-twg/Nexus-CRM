@@ -6,6 +6,8 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.types import Uuid
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -105,11 +107,11 @@ class User(Base):
 
 class ContactCoveragePerson(Base):
     __tablename__ = "contact_coverage_persons"
-    contact_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("contacts.id", ondelete="CASCADE"), primary_key=True
+    contact_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("contacts.id", ondelete="CASCADE"), primary_key=True
     )
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
 
 
@@ -152,7 +154,7 @@ class Contact(Base):
     state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    contact_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    contact_type_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
     primary_contact: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
     contact_frequency: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     sector: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
@@ -199,12 +201,12 @@ class Company(Base):
 
     # PE Blueprint fields (Phase 3) — COMPANY-01 through COMPANY-09
     # COMPANY-01: Identity fields
-    company_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    company_type_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
     company_sub_type_ids: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     # COMPANY-02: Phone + parent
     main_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    parent_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    parent_company_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
     # COMPANY-03: Address fields (country not in original model)
     address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -212,9 +214,9 @@ class Company(Base):
     postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     # COMPANY-04: Ref_data FK fields
-    tier_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
-    sector_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
-    sub_sector_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    tier_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    sector_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
+    sub_sector_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True)
     # COMPANY-05: Investment preference fields
     sector_preferences: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
     sub_sector_preferences: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
@@ -229,7 +231,7 @@ class Company(Base):
     typical_bite_size_high: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
     bite_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     co_invest: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    target_deal_size_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    target_deal_size_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
     # COMPANY-08: Deal preference fields
     transaction_types: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
     min_ebitda: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
@@ -237,7 +239,7 @@ class Company(Base):
     ebitda_range_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     # COMPANY-09: Relationship fields
     watchlist: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    coverage_person_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    coverage_person_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     contact_frequency: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
@@ -304,7 +306,7 @@ class Fund(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     fund_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    fundraise_status_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    fundraise_status_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
     target_fund_size_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
     target_fund_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     vintage_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -316,11 +318,11 @@ class Fund(Base):
 
 class DealTeamMember(Base):
     __tablename__ = "deal_team_members"
-    deal_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("deals.id", ondelete="CASCADE"), primary_key=True
+    deal_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("deals.id", ondelete="CASCADE"), primary_key=True
     )
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
 
 
@@ -362,14 +364,14 @@ class Deal(Base):
     # DEAL-01: Identity fields
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     new_deal_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    transaction_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    transaction_type_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
     platform_or_addon: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    platform_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    platform_company_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
     # DEAL-04: Source tracking fields
-    source_type_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
-    source_company_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
-    source_individual_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True)
-    originator_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    source_type_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    source_company_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    source_individual_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True)
+    originator_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     # DEAL-05: Financial fields (amount + currency pairs)
     revenue_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
     revenue_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)

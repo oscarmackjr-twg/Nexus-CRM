@@ -1,41 +1,43 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-27T03:42:12.582Z",
-  "phase": "02",
-  "phase_name": "Reference Data System",
-  "phase_dir": ".planning/phases/02-reference-data-system",
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "timestamp": "2026-03-28T00:37:56.012Z",
+  "phase": "04",
+  "phase_name": "deal-model-expansion-fund-entity",
+  "phase_dir": ".planning/phases/04-deal-model-expansion-fund-entity",
+  "plan": 4,
+  "task": 2,
+  "total_tasks": 2,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "GSD init for phase 2", "status": "done"},
-    {"id": 2, "name": "Phase 2 validation (roadmap lookup)", "status": "done"},
-    {"id": 3, "name": "Loaded CONTEXT.md (02-CONTEXT.md exists)", "status": "done"},
-    {"id": 4, "name": "Research phase (gsd-phase-researcher spawned)", "status": "done", "output": "02-RESEARCH.md written"},
-    {"id": 5, "name": "VALIDATION.md created from research", "status": "done", "commit": "030f661"}
+    {"id": 1, "name": "Fund API module + DealDetailPage full rewrite with tabs and Profile cards", "status": "done", "commit": "37bac69"},
+    {"id": 2, "name": "Visual verification of Deal detail screen", "status": "pending_human", "progress": "Awaiting user to run make dev and visually verify 13-step checklist"}
   ],
   "remaining_tasks": [
-    {"id": 6, "name": "UI Design Contract Gate (Step 5.6) — user interrupted AskUserQuestion", "status": "pending_decision"},
-    {"id": 7, "name": "Check existing plans (Step 6)", "status": "not_started"},
-    {"id": 8, "name": "Spawn gsd-planner (Step 8)", "status": "not_started"},
-    {"id": 9, "name": "Spawn gsd-plan-checker (Step 10)", "status": "not_started"},
-    {"id": 10, "name": "Requirements coverage gate (Step 13)", "status": "not_started"},
-    {"id": 11, "name": "Present final status (Step 14)", "status": "not_started"}
+    {"id": 2, "name": "Task 2: Visual verification — run make dev, navigate to deal, verify 4 tabs + 5 cards + edit flows", "status": "checkpoint:human-verify"}
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Phase 4 execution is paused at human-verify checkpoint for plan 04-04 — visual UI verification required before phase can be marked complete",
+      "type": "human_action",
+      "workaround": "Type 'approved' after verifying, or describe issues to trigger gap closure"
+    }
+  ],
   "human_actions_pending": [
     {
-      "action": "Decide on UI Design Contract Gate: Generate UI-SPEC first, continue without, or declare not a frontend phase",
-      "context": "Phase 2 has frontend indicators (02-03: useRefData hook + RefSelect component). No UI-SPEC.md exists. The AskUserQuestion was interrupted before user answered.",
+      "action": "Visual verification of DealDetailPage: run make dev, log in as admin@demo.local / password123, navigate to Pipeline → open a deal → verify 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile cards, per-card editing, fund modal, deal team chips",
+      "context": "Plan 04-04 Task 1 (code) is complete and committed. Task 2 is a blocking checkpoint requiring human eye on the live UI before phase verification runs.",
       "blocking": true
     }
   ],
   "decisions": [
-    {"decision": "Research first (not skip)", "rationale": "User selected 'Research first (Recommended)' at Step 5", "phase": "02"},
-    {"decision": "02-VALIDATION.md written and committed", "rationale": "RESEARCH.md contained ## Validation Architecture section", "phase": "02"}
+    {"decision": "Fixed models.py String(36) FK columns to use Uuid() type", "rationale": "PostgreSQL columns are uuid type after migration 74fa6d3 but ORM still sent varchar bindings — caused DatatypeMismatchError on any INSERT touching nullable FK fields (Fund, Company, Contact, Deal, DealTeamMember)", "phase": "04"},
+    {"decision": "Seed data omits ref_data FK fields (transaction_type_id, source_type_id, fundraise_status_id)", "rationale": "These fields are optional; seeding them requires UUID values from ref_data which varies per environment. Core deal data (EBITDA, revenue, dates, company/contact links) is sufficient for demo.", "phase": "04"}
   ],
-  "uncommitted_files": [],
-  "next_action": "Re-run /gsd:plan-phase 2 — will detect existing RESEARCH.md and VALIDATION.md, skip to Step 5.6 UI gate, then ask the UI design contract question (Continue without UI-SPEC is the natural choice for this thin component phase)",
-  "context_notes": "Phase 2 is a clean schema + API + thin frontend hook phase. Research found all patterns exist (follows ContactService stack). Open question: company_sub_type has no seed values in REQUIREMENTS.md. The RefSelect component is a thin shadcn/ui wrapper — UI-SPEC is probably overkill."
+  "uncommitted_files": [
+    "backend/models.py — String(36) FK columns changed to Uuid() for 14 fields across Fund, Company, Contact, Deal, DealTeamMember, ContactCoveragePerson",
+    "backend/seed_data.py — added Fund, 4 companies, 6 contacts, 6 deals with PE fields",
+    "frontend/src/pages/DealDetailPage.jsx — Phase 4 rewrite (was already staged)"
+  ],
+  "next_action": "Resume /gsd:execute-phase 4 — the orchestrator will present the pending checkpoint for plan 04-04 Task 2 (visual verification). Run make dev, verify UI, type 'approved' to proceed to phase verification.",
+  "context_notes": "All 4 plans have SUMMARY.md. The only remaining work is: (1) user approves visual checkpoint, (2) regression gate runs, (3) gsd-verifier creates VERIFICATION.md, (4) phase marked complete. The models.py Uuid() fix is uncommitted and critical — must be committed before the backend restarts cold (Docker hot-reloads picked it up already)."
 }
