@@ -326,6 +326,74 @@ class DealTeamMember(Base):
     )
 
 
+class DealCounterparty(Base):
+    __tablename__ = "deal_counterparties"
+    __table_args__ = (
+        UniqueConstraint("deal_id", "company_id", name="uq_deal_counterparties_deal_company"),
+        Index("ix_deal_counterparties_deal_id", "deal_id"),
+        Index("ix_deal_counterparties_company_id", "company_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    deal_id: Mapped[UUID] = mapped_column(Uuid(), ForeignKey("deals.id", ondelete="CASCADE"), nullable=False)
+    company_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    primary_contact_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    primary_contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    primary_contact_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    # Stage tracking dates (CPARTY-02)
+    nda_sent_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    nda_signed_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    nrl_signed_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    intro_materials_sent_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    vdr_access_granted_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    feedback_received_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # Ref_data FKs (CPARTY-03)
+    tier_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    investor_type_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    # Financial fields (CPARTY-04)
+    check_size_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    check_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    aum_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    aum_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships — lazy="raise" per convention
+    deal: Mapped["Deal"] = relationship(back_populates="counterparties", lazy="raise")
+    company: Mapped[Optional["Company"]] = relationship(lazy="raise")
+
+
+class DealFunding(Base):
+    __tablename__ = "deal_funding"
+    __table_args__ = (
+        Index("ix_deal_funding_deal_id", "deal_id"),
+        Index("ix_deal_funding_capital_provider_id", "capital_provider_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    deal_id: Mapped[UUID] = mapped_column(Uuid(), ForeignKey("deals.id", ondelete="CASCADE"), nullable=False)
+    capital_provider_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    status_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
+    projected_commitment_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    projected_commitment_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    actual_commitment_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
+    actual_commitment_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    actual_commitment_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    terms: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    comments_next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships — lazy="raise" per convention
+    deal: Mapped["Deal"] = relationship(back_populates="funding_entries", lazy="raise")
+    capital_provider: Mapped[Optional["Company"]] = relationship(lazy="raise")
+
+
 class Deal(Base):
     __tablename__ = "deals"
     __table_args__ = (
@@ -412,6 +480,8 @@ class Deal(Base):
     fund: Mapped[Optional["Fund"]] = relationship(back_populates="deals")
     activities: Mapped[list[DealActivity]] = relationship(back_populates="deal", cascade="all, delete-orphan")
     deal_team_members: Mapped[list["DealTeamMember"]] = relationship(cascade="all, delete-orphan")
+    counterparties: Mapped[list["DealCounterparty"]] = relationship(back_populates="deal", cascade="all, delete-orphan", lazy="raise")
+    funding_entries: Mapped[list["DealFunding"]] = relationship(back_populates="deal", cascade="all, delete-orphan", lazy="raise")
     platform_company: Mapped[Optional["Company"]] = relationship(foreign_keys=[platform_company_id])
     source_company: Mapped[Optional["Company"]] = relationship(foreign_keys=[source_company_id])
     source_individual: Mapped[Optional["Contact"]] = relationship(foreign_keys=[source_individual_id])
