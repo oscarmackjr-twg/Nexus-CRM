@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 04
-stopped_at: "Paused at 05-04 Task 2/2 — checkpoint:human-verify pending"
-last_updated: "2026-03-28T12:57:01.682Z"
+status: Executing Phase 06
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-03-28T00:00:00Z"
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 5
   total_plans: 16
   completed_plans: 16
 ---
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 ## Current Status
 
 **Milestone:** M1 — PE CRM Foundation
-**Active phase:** 04 — Deal Model Expansion & Fund Entity (in progress — plan 03 complete)
-**Last action:** Completed 04-03 — Deal service/schema expansion: DealResponse + DealUpdate with all PE fields, aliased RefData joins resolving 7 label fields in _base_deal_stmt, _load_deal_team/_set_deal_team helpers, PATCH /deals/{id} endpoint, 4 new tests (PE persistence, label resolution, deal_team CRUD, backward compat).
+**Active phase:** 06 — Admin Reference Data UI (not started)
+**Last action:** Completed 05-04 — Counterparties and Funding tabs added to DealDetailPage: 6-tab layout, inline date editing via editingCell state, horizontally scrollable counterparty grid with sticky Company column, CRUD modals for both tabs, null ref_data labels render as "---". Visual verification approved 2026-03-28. Phase 5 fully complete (4/4 plans).
 
 ## Phase Completion
 
@@ -34,8 +34,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 1 | UI Polish | Done (3/3 plans complete) |
 | 2 | Reference Data System | Done (3/3 plans complete) |
 | 3 | Contact & Company Expansion | Done (6/6 plans complete) |
-| 4 | Deal Expansion & Fund Entity | In progress (3/4 plans complete) |
-| 5 | DealCounterparty & DealFunding | Not started |
+| 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
+| 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
 | 6 | Admin Reference Data UI | Not started |
 
 ## Key Files
@@ -102,12 +102,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 04-deal-model-expansion-fund-entity | 01 | 2min | 2 | 8 |
 | 04-deal-model-expansion-fund-entity | 02 | 4min | 2 | 3 |
 | 04-deal-model-expansion-fund-entity | 03 | 30min | 2 | 4 |
-| Phase 05-deal-counterparty-deal-funding P04 | 8min | 1 tasks | 3 files |
+| 05-deal-counterparty-deal-funding | 04 | 8min | 2 | 3 |
 
 ## Session Continuity
 
-Last session: 2026-03-28T12:56:59.210Z
-Stopped at: Paused at 05-04 Task 2/2 — checkpoint:human-verify pending
+Last session: 2026-03-28T00:00:00Z
+Stopped at: Completed 05-04-PLAN.md
 
 ---
 *Last updated: 2026-03-27 after plan 02-03 completion (Phase 2 complete — all 3 plans done)*

@@ -28,11 +28,12 @@ decisions:
 metrics:
   duration: "8min"
   completed_date: "2026-03-28"
-  tasks_completed: 1
+  tasks_completed: 2
   tasks_total: 2
   files_modified: 3
   checkpoint_reached: true
   checkpoint_type: human-verify
+  checkpoint_outcome: approved
 ---
 
 # Phase 05 Plan 04: Counterparties & Funding Tabs Summary
@@ -41,18 +42,14 @@ metrics:
 
 ## Status
 
-**PAUSED AT CHECKPOINT** — Task 1 complete and committed. Task 2 is a `checkpoint:human-verify` requiring visual confirmation in the browser.
+**COMPLETE** — Both tasks done. Visual verification approved by user on 2026-03-28.
 
 ## Tasks Completed
 
 | Task | Name | Commit | Files |
 |------|------|--------|-------|
-| 1 | API modules + Counterparties tab + Funding tab | 8a7539a | counterparties.js, funding.js, DealDetailPage.jsx |
-
-## Task 2 (Checkpoint)
-
-**Type:** human-verify
-**Blocked by:** Visual verification of Counterparties and Funding tabs in browser
+| 1 | API modules + Counterparties tab + Funding tab | d76a4de | counterparties.js, funding.js, DealDetailPage.jsx |
+| 2 | Visual verification of Counterparties and Funding tabs | — (checkpoint: human approved) | — |
 
 ## What Was Built
 
@@ -98,6 +95,9 @@ None — plan executed exactly as written.
 
 None — both tabs are fully wired to real API endpoints.
 
-## Self-Check: PENDING
+## Self-Check: PASSED
 
-Will be completed after checkpoint approval.
+- frontend/src/api/counterparties.js — created (commit d76a4de)
+- frontend/src/api/funding.js — created (commit d76a4de)
+- frontend/src/pages/DealDetailPage.jsx — modified (commit d76a4de)
+- Task 2 visual verification — approved by user 2026-03-28
