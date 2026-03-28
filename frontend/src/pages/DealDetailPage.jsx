@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, X, Plus } from 'lucide-react';
+import { Pencil, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getDeal, getDealActivities, logActivity, scoreDeal, updateDeal } from '@/api/deals';
 import { getFunds, createFund } from '@/api/funds';
+import { getCounterparties, createCounterparty, updateCounterparty, deleteCounterparty } from '@/api/counterparties';
+import { getFunding, createFunding, updateFunding, deleteFunding } from '@/api/funding';
 import { getUsers } from '@/api/users';
 import { getCompanies } from '@/api/companies';
 import { getContacts } from '@/api/contacts';
@@ -73,6 +75,703 @@ function CardEditFooter({ onSave, onCancel, isSaving }) {
       <Button size="sm" onClick={onSave} disabled={isSaving}>
         {isSaving ? 'Saving…' : 'Save Changes'}
       </Button>
+    </div>
+  );
+}
+
+// ---- Counterparties Tab ----
+function CounterpartiesTab({ dealId, companies }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState(null);
+  const [editingCell, setEditingCell] = useState(null); // format: `${rowId}-${fieldName}`
+  const [addForm, setAddForm] = useState({
+    company_id: '',
+    tier_id: '',
+    investor_type_id: '',
+    primary_contact_name: '',
+    check_size_amount: '',
+    check_size_currency: 'USD',
+    next_steps: '',
+  });
+  const [editForm, setEditForm] = useState({});
+  const queryClient = useQueryClient();
+
+  const cpartiesQuery = useQuery({
+    queryKey: ['deal-counterparties', dealId],
+    queryFn: () => getCounterparties(dealId, { size: 200 }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => createCounterparty(dealId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-counterparties', dealId] });
+      setAddOpen(false);
+      setAddForm({ company_id: '', tier_id: '', investor_type_id: '', primary_contact_name: '', check_size_amount: '', check_size_currency: 'USD', next_steps: '' });
+      toast.success('Counterparty added');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to add counterparty'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateCounterparty(dealId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-counterparties', dealId] });
+      setEditOpen(false);
+      setEditingRow(null);
+      setEditingCell(null);
+      toast.success('Counterparty updated');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to update'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteCounterparty(dealId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-counterparties', dealId] });
+      toast.success('Counterparty removed');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to remove'),
+  });
+
+  const stageDateCols = [
+    { key: 'nda_sent_at', label: 'NDA Sent' },
+    { key: 'nda_signed_at', label: 'NDA Signed' },
+    { key: 'nrl_signed_at', label: 'NRL' },
+    { key: 'intro_materials_sent_at', label: 'Materials' },
+    { key: 'vdr_access_granted_at', label: 'VDR' },
+    { key: 'feedback_received_at', label: 'Feedback' },
+  ];
+
+  const handleDateChange = (row, field, value) => {
+    updateMutation.mutate({ id: row.id, data: { [field]: value || null } });
+  };
+
+  const fmtShortDate = (d) => {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const openEdit = (row) => {
+    setEditingRow(row);
+    setEditForm({
+      company_id: row.company_id || '',
+      tier_id: row.tier_id || '',
+      investor_type_id: row.investor_type_id || '',
+      primary_contact_name: row.primary_contact_name || '',
+      primary_contact_email: row.primary_contact_email || '',
+      primary_contact_phone: row.primary_contact_phone || '',
+      check_size_amount: row.check_size_amount ?? '',
+      check_size_currency: row.check_size_currency || 'USD',
+      aum_amount: row.aum_amount ?? '',
+      aum_currency: row.aum_currency || 'USD',
+      nda_sent_at: row.nda_sent_at || '',
+      nda_signed_at: row.nda_signed_at || '',
+      nrl_signed_at: row.nrl_signed_at || '',
+      intro_materials_sent_at: row.intro_materials_sent_at || '',
+      vdr_access_granted_at: row.vdr_access_granted_at || '',
+      feedback_received_at: row.feedback_received_at || '',
+      next_steps: row.next_steps || '',
+      notes: row.notes || '',
+    });
+    setEditOpen(true);
+  };
+
+  const cleanFormData = (form) => {
+    const out = {};
+    for (const [k, v] of Object.entries(form)) {
+      out[k] = v === '' ? null : v;
+    }
+    return out;
+  };
+
+  const items = cpartiesQuery.data?.items || [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={() => setAddOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" /> Add Counterparty
+        </Button>
+      </div>
+
+      {cpartiesQuery.isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading counterparties...</p>
+      ) : items.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No counterparties tracked yet. Add the first investor to start tracking stage progression.</p>
+          <Button className="mt-4" onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Add Counterparty
+          </Button>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="sticky left-0 z-10 bg-muted/40 px-4 py-2 text-left font-medium whitespace-nowrap">Company</th>
+                <th className="px-4 py-2 text-left font-medium whitespace-nowrap">Tier</th>
+                <th className="px-4 py-2 text-left font-medium whitespace-nowrap">Investor Type</th>
+                {stageDateCols.map((col) => (
+                  <th key={col.key} className="w-24 px-4 py-2 text-left font-medium whitespace-nowrap">{col.label}</th>
+                ))}
+                <th className="px-4 py-2 text-left font-medium">Next Steps</th>
+                <th className="px-4 py-2 text-left font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((row) => (
+                <tr key={row.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                  <td className="sticky left-0 z-10 bg-white px-4 py-2 font-medium whitespace-nowrap">{row.company_name || '—'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{row.tier_label || '---'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{row.investor_type_label || '---'}</td>
+                  {stageDateCols.map((col) => (
+                    <td key={col.key} className="w-24 px-4 py-2">
+                      {editingCell === `${row.id}-${col.key}` ? (
+                        <input
+                          type="date"
+                          autoFocus
+                          className="w-24 rounded border px-1 py-0.5 text-xs"
+                          defaultValue={row[col.key] ? row[col.key].substring(0, 10) : ''}
+                          onChange={(e) => handleDateChange(row, col.key, e.target.value)}
+                          onBlur={() => setEditingCell(null)}
+                        />
+                      ) : (
+                        <span
+                          className="cursor-pointer hover:text-primary"
+                          onClick={() => setEditingCell(`${row.id}-${col.key}`)}
+                        >
+                          {fmtShortDate(row[col.key]) || <span className="text-muted-foreground text-xs">—</span>}
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                  <td className="px-4 py-2 max-w-xs truncate">{row.next_steps || '—'}</td>
+                  <td className="px-4 py-2">
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(row)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => deleteMutation.mutate(row.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Add Counterparty Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle>Add Counterparty</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label>Company *</Label>
+              <select
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                value={addForm.company_id}
+                onChange={(e) => setAddForm((f) => ({ ...f, company_id: e.target.value }))}
+              >
+                <option value="">Select company...</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Tier</Label>
+              <RefSelect
+                category="tier"
+                value={addForm.tier_id}
+                onChange={(v) => setAddForm((f) => ({ ...f, tier_id: v }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Investor Type</Label>
+              <RefSelect
+                category="investor_type"
+                value={addForm.investor_type_id}
+                onChange={(v) => setAddForm((f) => ({ ...f, investor_type_id: v }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Primary Contact Name</Label>
+              <Input
+                value={addForm.primary_contact_name}
+                onChange={(e) => setAddForm((f) => ({ ...f, primary_contact_name: e.target.value }))}
+                placeholder="e.g. Jane Smith"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Check Size</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  className="flex-1"
+                  placeholder="Amount"
+                  value={addForm.check_size_amount}
+                  onChange={(e) => setAddForm((f) => ({ ...f, check_size_amount: e.target.value }))}
+                />
+                <Input
+                  className="w-16 uppercase"
+                  maxLength={3}
+                  placeholder="USD"
+                  value={addForm.check_size_currency}
+                  onChange={(e) => setAddForm((f) => ({ ...f, check_size_currency: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Next Steps</Label>
+              <Textarea
+                value={addForm.next_steps}
+                onChange={(e) => setAddForm((f) => ({ ...f, next_steps: e.target.value }))}
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!addForm.company_id || createMutation.isPending}
+              onClick={() => createMutation.mutate(cleanFormData(addForm))}
+            >
+              {createMutation.isPending ? 'Adding…' : 'Add Counterparty'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Counterparty Dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => { if (!o) { setEditOpen(false); setEditingRow(null); } }}>
+        <DialogContent className="max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Counterparty</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label>Company</Label>
+              <select
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                value={editForm.company_id || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, company_id: e.target.value }))}
+              >
+                <option value="">Select company...</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Tier</Label>
+              <RefSelect
+                category="tier"
+                value={editForm.tier_id || ''}
+                onChange={(v) => setEditForm((f) => ({ ...f, tier_id: v }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Investor Type</Label>
+              <RefSelect
+                category="investor_type"
+                value={editForm.investor_type_id || ''}
+                onChange={(v) => setEditForm((f) => ({ ...f, investor_type_id: v }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Primary Contact Name</Label>
+              <Input
+                value={editForm.primary_contact_name || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, primary_contact_name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Primary Contact Email</Label>
+              <Input
+                type="email"
+                value={editForm.primary_contact_email || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, primary_contact_email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Primary Contact Phone</Label>
+              <Input
+                value={editForm.primary_contact_phone || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, primary_contact_phone: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Check Size</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  className="flex-1"
+                  placeholder="Amount"
+                  value={editForm.check_size_amount ?? ''}
+                  onChange={(e) => setEditForm((f) => ({ ...f, check_size_amount: e.target.value }))}
+                />
+                <Input
+                  className="w-16 uppercase"
+                  maxLength={3}
+                  placeholder="USD"
+                  value={editForm.check_size_currency || 'USD'}
+                  onChange={(e) => setEditForm((f) => ({ ...f, check_size_currency: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>AUM</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  className="flex-1"
+                  placeholder="Amount"
+                  value={editForm.aum_amount ?? ''}
+                  onChange={(e) => setEditForm((f) => ({ ...f, aum_amount: e.target.value }))}
+                />
+                <Input
+                  className="w-16 uppercase"
+                  maxLength={3}
+                  placeholder="USD"
+                  value={editForm.aum_currency || 'USD'}
+                  onChange={(e) => setEditForm((f) => ({ ...f, aum_currency: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {stageDateCols.map((col) => (
+                <div key={col.key} className="space-y-1">
+                  <Label>{col.label}</Label>
+                  <Input
+                    type="date"
+                    value={editForm[col.key] ? editForm[col.key].substring(0, 10) : ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, [col.key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1">
+              <Label>Next Steps</Label>
+              <Textarea
+                value={editForm.next_steps || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, next_steps: e.target.value }))}
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Notes</Label>
+              <Textarea
+                value={editForm.notes || ''}
+                onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={() => { setEditOpen(false); setEditingRow(null); }}>Cancel</Button>
+            <Button
+              disabled={updateMutation.isPending}
+              onClick={() => updateMutation.mutate({ id: editingRow.id, data: cleanFormData(editForm) })}
+            >
+              {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ---- Funding Tab ----
+function FundingTab({ dealId, companies }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null); // null = add mode, object = edit mode
+  const [form, setForm] = useState({
+    capital_provider_id: '',
+    status_id: '',
+    projected_commitment_amount: '',
+    projected_commitment_currency: 'USD',
+    actual_commitment_amount: '',
+    actual_commitment_currency: 'USD',
+    actual_commitment_date: '',
+    terms: '',
+    comments_next_steps: '',
+  });
+  const queryClient = useQueryClient();
+
+  const fundingQuery = useQuery({
+    queryKey: ['deal-funding', dealId],
+    queryFn: () => getFunding(dealId, { size: 200 }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => createFunding(dealId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-funding', dealId] });
+      setModalOpen(false);
+      resetForm();
+      toast.success('Funding entry added');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to add funding'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateFunding(dealId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-funding', dealId] });
+      setModalOpen(false);
+      setEditingEntry(null);
+      resetForm();
+      toast.success('Funding updated');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to update funding'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteFunding(dealId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deal-funding', dealId] });
+      toast.success('Funding entry removed');
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to remove'),
+  });
+
+  const emptyForm = {
+    capital_provider_id: '',
+    status_id: '',
+    projected_commitment_amount: '',
+    projected_commitment_currency: 'USD',
+    actual_commitment_amount: '',
+    actual_commitment_currency: 'USD',
+    actual_commitment_date: '',
+    terms: '',
+    comments_next_steps: '',
+  };
+
+  const resetForm = () => setForm(emptyForm);
+
+  const openAdd = () => {
+    setEditingEntry(null);
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const openEdit = (entry) => {
+    setEditingEntry(entry);
+    setForm({
+      capital_provider_id: entry.capital_provider_id || '',
+      status_id: entry.status_id || '',
+      projected_commitment_amount: entry.projected_commitment_amount ?? '',
+      projected_commitment_currency: entry.projected_commitment_currency || 'USD',
+      actual_commitment_amount: entry.actual_commitment_amount ?? '',
+      actual_commitment_currency: entry.actual_commitment_currency || 'USD',
+      actual_commitment_date: entry.actual_commitment_date ? entry.actual_commitment_date.substring(0, 10) : '',
+      terms: entry.terms || '',
+      comments_next_steps: entry.comments_next_steps || '',
+    });
+    setModalOpen(true);
+  };
+
+  const cleanFormData = (f) => {
+    const out = {};
+    for (const [k, v] of Object.entries(f)) {
+      out[k] = v === '' ? null : v;
+    }
+    return out;
+  };
+
+  const handleSubmit = () => {
+    const data = cleanFormData(form);
+    if (editingEntry) {
+      updateMutation.mutate({ id: editingEntry.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const fmtCommitment = (amount, currency) =>
+    amount == null ? '—' : `${amount} ${currency || ''}`.trim();
+
+  const items = fundingQuery.data?.items || [];
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={openAdd}>
+          <Plus className="h-4 w-4 mr-1" /> Add Funding
+        </Button>
+      </div>
+
+      {fundingQuery.isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading funding...</p>
+      ) : items.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No funding commitments recorded. Add a capital provider to track commitments.</p>
+          <Button className="mt-4" onClick={openAdd}>
+            <Plus className="h-4 w-4 mr-1" /> Add Funding
+          </Button>
+        </div>
+      ) : (
+        <div className="rounded-xl border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="px-4 py-2 text-left font-medium">Provider</th>
+                <th className="px-4 py-2 text-left font-medium">Status</th>
+                <th className="px-4 py-2 text-left font-medium">Projected</th>
+                <th className="px-4 py-2 text-left font-medium">Actual</th>
+                <th className="px-4 py-2 text-left font-medium">Date</th>
+                <th className="px-4 py-2 text-left font-medium">Terms</th>
+                <th className="px-4 py-2 text-left font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((entry) => (
+                <tr key={entry.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                  <td className="px-4 py-2 font-medium">{entry.capital_provider_name || '—'}</td>
+                  <td className="px-4 py-2">{entry.status_label || '---'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{fmtCommitment(entry.projected_commitment_amount, entry.projected_commitment_currency)}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{fmtCommitment(entry.actual_commitment_amount, entry.actual_commitment_currency)}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{entry.actual_commitment_date ? entry.actual_commitment_date.substring(0, 10) : '—'}</td>
+                  <td className="px-4 py-2 max-w-xs">
+                    {entry.terms ? (
+                      <span title={entry.terms}>{entry.terms.length > 50 ? entry.terms.substring(0, 50) + '…' : entry.terms}</span>
+                    ) : '—'}
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(entry)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => deleteMutation.mutate(entry.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Add/Edit Funding Modal */}
+      <Dialog open={modalOpen} onOpenChange={(o) => { if (!o) { setModalOpen(false); setEditingEntry(null); resetForm(); } }}>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle>{editingEntry ? 'Edit Funding' : 'Add Funding'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label>Capital Provider</Label>
+              <select
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                value={form.capital_provider_id}
+                onChange={(e) => setForm((f) => ({ ...f, capital_provider_id: e.target.value }))}
+              >
+                <option value="">Select company...</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Status</Label>
+              <RefSelect
+                category="deal_funding_status"
+                value={form.status_id}
+                onChange={(v) => setForm((f) => ({ ...f, status_id: v }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Projected Commitment</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  className="flex-1"
+                  placeholder="Amount"
+                  value={form.projected_commitment_amount}
+                  onChange={(e) => setForm((f) => ({ ...f, projected_commitment_amount: e.target.value }))}
+                />
+                <Input
+                  className="w-16 uppercase"
+                  maxLength={3}
+                  placeholder="USD"
+                  value={form.projected_commitment_currency}
+                  onChange={(e) => setForm((f) => ({ ...f, projected_commitment_currency: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Actual Commitment</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  className="flex-1"
+                  placeholder="Amount"
+                  value={form.actual_commitment_amount}
+                  onChange={(e) => setForm((f) => ({ ...f, actual_commitment_amount: e.target.value }))}
+                />
+                <Input
+                  className="w-16 uppercase"
+                  maxLength={3}
+                  placeholder="USD"
+                  value={form.actual_commitment_currency}
+                  onChange={(e) => setForm((f) => ({ ...f, actual_commitment_currency: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Commitment Date</Label>
+              <Input
+                type="date"
+                value={form.actual_commitment_date}
+                onChange={(e) => setForm((f) => ({ ...f, actual_commitment_date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Terms</Label>
+              <Textarea
+                value={form.terms}
+                onChange={(e) => setForm((f) => ({ ...f, terms: e.target.value }))}
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Comments / Next Steps</Label>
+              <Textarea
+                value={form.comments_next_steps}
+                onChange={(e) => setForm((f) => ({ ...f, comments_next_steps: e.target.value }))}
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={() => { setModalOpen(false); setEditingEntry(null); resetForm(); }}>Cancel</Button>
+            <Button disabled={isPending} onClick={handleSubmit}>
+              {isPending ? 'Saving…' : editingEntry ? 'Save Changes' : 'Add Funding'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -275,9 +974,11 @@ export default function DealDetailPage() {
       <Tabs defaultValue="profile">
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="counterparties">Counterparties</TabsTrigger>
+          <TabsTrigger value="funding">Funding</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="ai">AI Insights</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="ai">AI Insights</TabsTrigger>
         </TabsList>
 
         {/* ============================================================ */}
@@ -903,6 +1604,20 @@ export default function DealDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ============================================================ */}
+        {/* COUNTERPARTIES TAB                                          */}
+        {/* ============================================================ */}
+        <TabsContent value="counterparties" className="pt-6">
+          <CounterpartiesTab dealId={id} companies={companiesQuery.data?.items || []} />
+        </TabsContent>
+
+        {/* ============================================================ */}
+        {/* FUNDING TAB                                                  */}
+        {/* ============================================================ */}
+        <TabsContent value="funding" className="pt-6">
+          <FundingTab dealId={id} companies={companiesQuery.data?.items || []} />
         </TabsContent>
 
         {/* ============================================================ */}
