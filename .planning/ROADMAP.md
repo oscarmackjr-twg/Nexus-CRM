@@ -128,13 +128,13 @@ Plans:
   3. Org admin can edit an existing item's label and position; org admin can deactivate an item (it disappears from all form dropdowns but existing records showing that value are not broken)
   4. All dropdowns across Contact, Company, Deal, DealCounterparty, and DealFunding forms fetch from `GET /admin/ref-data?category=<category>` with `queryKey: ['ref', '<category>']` — no hardcoded option lists remain in any form
   5. After any admin mutation, all `['ref', ...]` prefixed queries are invalidated so changes propagate to open forms without a page reload
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01: Admin page scaffold — create `/admin` route (protected by org_admin role check); build AdminPage component with category sidebar listing all 10+ ref_data categories; route to CategoryView when a category is selected
-- [ ] 06-02: Category management UI — build CategoryView component: sortable list of items with label, value, position, and is_active toggle; add item form (label + value fields); inline edit for label and position; deactivate button with confirmation; all mutations call `queryClient.invalidateQueries({ queryKey: ['ref'] })` on success
-- [ ] 06-03: Dropdown wiring audit — audit all Contact, Company, Deal, DealCounterparty, and DealFunding edit forms; replace any hardcoded option arrays with `<RefSelect category="...">` component calls; verify consistent `['ref', category]` query keys; confirm staleTime=5min on all ref data queries
+- [ ] 06-01-PLAN.md — Admin page with Users/Reference Data tabs, category sidebar (10 categories), items table with CRUD modals, deactivate/reactivate, query invalidation
+- [ ] 06-02-PLAN.md — Dropdown wiring audit: verify all ref_data dropdowns use RefSelect across Contact, Company, Deal, Counterparty, and Funding forms
+- [ ] 06-03-PLAN.md — Visual and functional verification checkpoint: end-to-end admin CRUD testing and downstream dropdown propagation
 
 ---
 
