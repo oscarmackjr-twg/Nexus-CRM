@@ -12,8 +12,8 @@ depends_on = None
 # Ad-hoc table reference for bulk_insert (Alembic requirement)
 ref_data_table = sa.table(
     "ref_data",
-    sa.column("id", sa.String),
-    sa.column("org_id", sa.String),
+    sa.column("id", sa.Uuid),
+    sa.column("org_id", sa.Uuid),
     sa.column("category", sa.String),
     sa.column("value", sa.String),
     sa.column("label", sa.String),
@@ -25,7 +25,7 @@ ref_data_table = sa.table(
 
 def _row(category: str, value: str, label: str, position: int = 0) -> dict:
     return {
-        "id": str(uuid4()),
+        "id": uuid4(),
         "org_id": None,
         "category": category,
         "value": value,
@@ -39,10 +39,10 @@ def _row(category: str, value: str, label: str, position: int = 0) -> dict:
 def upgrade() -> None:
     op.create_table(
         "ref_data",
-        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "org_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("organizations.id", ondelete="SET NULL"),
             nullable=True,
         ),

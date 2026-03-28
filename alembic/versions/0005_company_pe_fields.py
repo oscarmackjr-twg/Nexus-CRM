@@ -16,7 +16,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "company_type_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -41,7 +41,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "parent_company_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("companies.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -78,7 +78,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "tier_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -87,7 +87,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "sector_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -96,7 +96,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "sub_sector_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -161,7 +161,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "target_deal_size_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
@@ -198,7 +198,7 @@ def upgrade() -> None:
         "companies",
         sa.Column(
             "coverage_person_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="SET NULL"),
             nullable=True,
         ),

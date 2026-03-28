@@ -21,18 +21,18 @@ def upgrade() -> None:
     # ------------------------------------------------------------------
     op.add_column("deals", sa.Column("description", sa.Text(), nullable=True))
     op.add_column("deals", sa.Column("new_deal_date", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("transaction_type_id", sa.String(36), nullable=True))
-    op.add_column("deals", sa.Column("fund_id", sa.String(36), nullable=True))
+    op.add_column("deals", sa.Column("transaction_type_id", sa.Uuid(), nullable=True))
+    op.add_column("deals", sa.Column("fund_id", sa.Uuid(), nullable=True))
     op.add_column("deals", sa.Column("platform_or_addon", sa.String(20), nullable=True))
-    op.add_column("deals", sa.Column("platform_company_id", sa.String(36), nullable=True))
+    op.add_column("deals", sa.Column("platform_company_id", sa.Uuid(), nullable=True))
 
     # ------------------------------------------------------------------
     # DEAL-04: Source tracking fields
     # ------------------------------------------------------------------
-    op.add_column("deals", sa.Column("source_type_id", sa.String(36), nullable=True))
-    op.add_column("deals", sa.Column("source_company_id", sa.String(36), nullable=True))
-    op.add_column("deals", sa.Column("source_individual_id", sa.String(36), nullable=True))
-    op.add_column("deals", sa.Column("originator_id", sa.String(36), nullable=True))
+    op.add_column("deals", sa.Column("source_type_id", sa.Uuid(), nullable=True))
+    op.add_column("deals", sa.Column("source_company_id", sa.Uuid(), nullable=True))
+    op.add_column("deals", sa.Column("source_individual_id", sa.Uuid(), nullable=True))
+    op.add_column("deals", sa.Column("originator_id", sa.Uuid(), nullable=True))
 
     # ------------------------------------------------------------------
     # DEAL-05: Financial fields (amount + currency pairs)

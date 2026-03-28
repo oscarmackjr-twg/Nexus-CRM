@@ -28,7 +28,7 @@ def upgrade() -> None:
         "deal_activities",
         sa.Column(
             "contact_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("contacts.id", ondelete="SET NULL"),
             nullable=True,
         ),

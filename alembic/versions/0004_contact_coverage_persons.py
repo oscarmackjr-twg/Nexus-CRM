@@ -14,13 +14,13 @@ def upgrade() -> None:
         "contact_coverage_persons",
         sa.Column(
             "contact_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("contacts.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
             "user_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),

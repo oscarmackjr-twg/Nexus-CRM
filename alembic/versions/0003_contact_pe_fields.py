@@ -29,7 +29,7 @@ def upgrade() -> None:
         "contacts",
         sa.Column(
             "contact_type_id",
-            sa.String(36),
+            sa.Uuid(),
             sa.ForeignKey("ref_data.id", ondelete="SET NULL"),
             nullable=True,
         ),
