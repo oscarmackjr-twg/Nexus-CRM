@@ -1,5 +1,18 @@
 # Nexus CRM — PE Deal Management Platform
 
+## Current Milestone: v1.1 UI Professionalism
+
+**Goal:** Apply the TWG Global brand identity across all screens for a professional enterprise CRM appearance.
+
+**Target features:**
+- TWG-branded login page — logo, `#1a3868` navy, staging banner, backend status indicator
+- White sidebar with navy left-border active indicators (matching Intrepid-POC pattern)
+- Staging banner on every authenticated page (amber-400, sticky top, env-gated)
+- TWG color palette globally — replace current indigo/purple primary with `#1a3868` navy
+- Gotham font + typography polish across headings, labels, and hierarchy
+- Compact Salesforce-style data grids for Contacts, Companies, Deals list views
+- Detail page cards polish — field layout, section headers, consistent spacing
+
 ## What This Is
 
 A Private Equity-focused CRM built for deal teams at firms like TWG Asia. It tracks companies, contacts, deals, counterparty investor pipelines, and capital funding commitments through the full investment lifecycle — from initial outreach through diligence, NDA, LOI, and close. Built on FastAPI + React + PostgreSQL, deployed via Docker Compose.
@@ -101,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after v1.0 milestone — PE CRM Foundation complete*
+*Last updated: 2026-03-28 — Milestone v1.1 UI Professionalism started*
