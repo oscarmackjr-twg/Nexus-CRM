@@ -22,7 +22,7 @@ created: 2026-03-28
 | Preset | not applicable |
 | Component library | Manual shadcn-compatible components in `frontend/src/components/ui/` |
 | Icon library | none declared (not in scope for Phase 7) |
-| Font | Montserrat (Google Fonts CDN), weights 400/500/600/700 — source: CONTEXT.md D-01 |
+| Font | Montserrat (Google Fonts CDN), weights 400/600 — source: CONTEXT.md D-01 |
 
 **Note:** No `components.json` exists. The project uses the shadcn CSS variable convention (`hsl(var(--...))` in `tailwind.config.js`) without the shadcn CLI. The registry safety gate is not applicable.
 
@@ -54,7 +54,7 @@ Font family declared for `body` (source: CONTEXT.md D-01, RESEARCH.md Pattern 2)
 font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 ```
 
-Loaded via Google Fonts CDN with weights 400, 500, 600, 700 and `display=swap`.
+Loaded via Google Fonts CDN with weights 400 and 600 only, and `display=swap`.
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
@@ -83,6 +83,8 @@ All values sourced from CONTEXT.md decisions D-02 through D-05 and verified by R
 | Destructive | `hsl(0 84% 60%)` | `--danger` (existing) | Destructive actions only — no change in this phase |
 
 **Accent reserved for:** Primary action buttons (`bg-primary`), focus rings (`ring-primary`), active nav `border-l-4` indicator (Phase 8), tab underline indicators (Phase 10). Never used on neutral text, background surfaces, or decorative elements.
+
+**Retained pre-existing tokens (not consumed by Phase 7):** `--secondary` (`262 83% 67%`, purple) and `--accent` (`188 86% 43%`, cyan) are retained unchanged in both `:root` and `.dark` blocks. They are present in RESEARCH.md code examples as existing tokens but are not referenced by any Phase 7 component. Cleanup or reassignment is deferred to a future phase.
 
 **Color changes in this phase:**
 
@@ -127,7 +129,7 @@ The following describes the visual changes this phase produces across existing c
 |--------------------|---------------|---------------|
 | Primary buttons (all pages) | Indigo `bg-indigo-600` / `bg-primary` (indigo) | Navy `bg-primary` (navy `#1a3868`) — automatic via CSS var cascade |
 | Focus rings (inputs, buttons) | Indigo `ring-primary` | Navy `ring-primary` — automatic via CSS var cascade |
-| Body font | "IBM Plex Sans" (not loaded; system-ui effective) | Montserrat (Google Fonts), weights 400/500/600/700 |
+| Body font | "IBM Plex Sans" (not loaded; system-ui effective) | Montserrat (Google Fonts), weights 400/600 |
 | `.surface-grid` background | Indigo `rgba(99, 102, 241, 0.06)` | Navy `rgba(26, 56, 104, 0.06)` — manual update required |
 | All shadcn/ui components using `text-primary`, `border-primary` | Indigo | Navy — automatic via CSS var cascade |
 
@@ -137,7 +139,7 @@ The following describes the visual changes this phase produces across existing c
 
 | File | Change | Requirement |
 |------|--------|-------------|
-| `frontend/index.html` | Add 3 Google Fonts `<link>` tags (preconnect googleapis, preconnect gstatic crossorigin, stylesheet for Montserrat wght@400;500;600;700&display=swap) inside `<head>` | BRAND-02 |
+| `frontend/index.html` | Add 3 Google Fonts `<link>` tags (preconnect googleapis, preconnect gstatic crossorigin, stylesheet for Montserrat wght@400;600&display=swap) inside `<head>` | BRAND-02 |
 | `frontend/src/styles.css` | Update `--primary` and `--ring` to `217 60% 25%` in both `:root` and `.dark` | BRAND-01 |
 | `frontend/src/styles.css` | Add `--color-brand`, `--color-brand-hover`, `--color-page-bg`, `--color-content-bg`, `--color-text` to both `:root` and `.dark` | BRAND-03 |
 | `frontend/src/styles.css` | Update `font-family` on `body` from `"IBM Plex Sans"` to `'Montserrat', ui-sans-serif, system-ui, sans-serif` | BRAND-02 |
