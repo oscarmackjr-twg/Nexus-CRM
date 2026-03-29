@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 60% 25%;
+    --primary: 217 60% 25%;
+    --secondary: 262 83% 67%;
+    --accent: 188 86% 43%;
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 9% 46%;
+    /* POC-pattern semantic tokens (BRAND-03) */
+    --color-brand: #1a3868;
+    --color-brand-hover: #1e4080;
+    --color-page-bg: #ffffff;
+    --color-content-bg: #ffffff;
+    --color-text: hsl(222, 47%, 11%);
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 213 31% 91%;
+    --card: 222 39% 16%;
+    --card-foreground: 213 31% 91%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 217 60% 25%;
+    --primary: 217 60% 25%;
+    --secondary: 262 83% 67%;
+    --accent: 188 86% 43%;
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+    --muted: 222 31% 18%;
+    --muted-foreground: 215 20% 65%;
+    /* POC-pattern semantic tokens (BRAND-03) */
+    --color-brand: #1a3868;
+    --color-brand-hover: #1e4080;
+    --color-page-bg: #ffffff;
+    --color-content-bg: #ffffff;
+    --color-text: hsl(222, 47%, 11%);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background text-foreground;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer utilities {
+  .surface-grid {
+    background-image:
+      linear-gradient(to right, rgba(26, 56, 104, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+}
