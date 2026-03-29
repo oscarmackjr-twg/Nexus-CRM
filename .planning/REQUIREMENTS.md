@@ -14,14 +14,14 @@
 
 ## Login Page
 
-- [ ] **LOGIN-01**: TWG logo (`twg-logo.png`) displayed centered above the login form
-- [ ] **LOGIN-02**: Staging banner displayed on login page when `VITE_APP_ENV !== 'production'` (amber-400, sticky top)
-- [ ] **LOGIN-03**: Backend health status indicator shown on login page ("Backend connected" / "Backend unreachable")
-- [ ] **LOGIN-04**: Login page button and focus rings use `#1a3868` navy primary color
+- [x] **LOGIN-01**: TWG logo (`twg-logo.png`) displayed centered above the login form
+- [x] **LOGIN-02**: Staging banner displayed on login page when `VITE_APP_ENV !== 'production'` (amber-400, sticky top)
+- [x] **LOGIN-03**: Backend health status indicator shown on login page ("Backend connected" / "Backend unreachable")
+- [x] **LOGIN-04**: Login page button and focus rings use `#1a3868` navy primary color
 
 ## Staging Banner
 
-- [ ] **BANNER-01**: `StagingBanner` component created and displayed on all authenticated pages (amber-400, sticky top, z-50, env-gated)
+- [x] **BANNER-01**: `StagingBanner` component created and displayed on all authenticated pages (amber-400, sticky top, z-50, env-gated)
 
 ## Navigation / Sidebar
 
