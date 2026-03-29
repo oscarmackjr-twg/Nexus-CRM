@@ -20,6 +20,12 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 vi.mock('sonner', () => ({ toast: { error: toastError } }));
 
+vi.mock('@/components/StagingBanner', () => ({
+  default: () => <div>STAGING -- Not Production</div>
+}));
+
+vi.mock('@/assets/twg-logo.png', () => ({ default: 'twg-logo.png' }));
+
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -57,6 +63,6 @@ describe('LoginPage', () => {
 
   it('renders staging banner in non-production mode', () => {
     renderWithProviders(<LoginPage />, { route: '/login', path: '/login' });
-    expect(screen.getByText(/environment/i)).toBeInTheDocument();
+    expect(screen.getByText(/staging/i)).toBeInTheDocument();
   });
 });

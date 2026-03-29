@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import StagingBanner from '@/components/StagingBanner';
+import twgLogo from '@/assets/twg-logo.png';
 
 const schema = z.object({
   username: z.string().min(1, 'Email is required'),
@@ -45,17 +47,10 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
-      {/* Staging banner — per D-03 */}
-      {import.meta.env.MODE !== 'production' && (
-        <div className="absolute inset-x-0 top-0 bg-amber-500/90 py-1.5 text-center text-xs font-semibold text-black">
-          {import.meta.env.MODE.toUpperCase()} ENVIRONMENT
-        </div>
-      )}
+      <StagingBanner />
 
       <div className="flex w-full max-w-md flex-col items-center gap-6">
-        {/* TWG Global logo placeholder — per D-03 */}
-        {/* TODO: replace with actual logo */}
-        <span className="text-lg font-bold tracking-widest text-slate-500">TWG GLOBAL</span>
+        <img src={twgLogo} alt="TWG Global" className="h-10 w-auto" />
 
         {/* App name — per D-03 */}
         <h1 className="text-3xl font-semibold text-slate-900">Nexus CRM</h1>
@@ -74,7 +69,7 @@ export default function LoginPage() {
                 <Input id="password" type="password" {...form.register('password')} className="border-slate-200 bg-white text-slate-900" />
                 {form.formState.errors.password && <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>}
               </div>
-              <Button type="submit" className="w-full bg-slate-900 text-white hover:bg-slate-700" disabled={form.formState.isSubmitting}>Sign in</Button>
+              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.formState.isSubmitting}>Sign in</Button>
             </form>
           </CardContent>
         </Card>
