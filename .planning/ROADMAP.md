@@ -58,7 +58,10 @@ Plans:
   4. Section group labels (DEALS, ADMIN) appear in uppercase muted tracking-widest text in the sidebar
   5. The sidebar footer shows the current user's name, role, and a Sign Out button in muted style
   6. The amber-400 staging banner appears at the top of every authenticated page (not just login) when not in production
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 08-01-PLAN.md — StagingBanner component, TWG logo asset, login page polish
+- [ ] 08-02-PLAN.md — White sidebar layout with nav groups, logo header, user footer
 **UI hint**: yes
 
 ### Phase 9: Data Grids
@@ -122,7 +125,7 @@ Plans:
 | 5. DealCounterparty & DealFunding | v1.0 | 4/4 | Complete | 2026-03-28 |
 | 6. Admin Reference Data UI | v1.0 | 3/3 | Complete | 2026-03-28 |
 | 7. Brand Foundation | v1.1 | 1/1 | Complete   | 2026-03-29 |
-| 8. Login, Banner & Sidebar | v1.1 | 0/? | Not started | - |
+| 8. Login, Banner & Sidebar | v1.1 | 0/2 | Planned | - |
 | 9. Data Grids | v1.1 | 0/? | Not started | - |
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
