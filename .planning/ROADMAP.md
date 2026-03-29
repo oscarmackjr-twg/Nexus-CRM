@@ -23,7 +23,7 @@
 
 ### v1.1 UI Professionalism
 
-- [ ] **Phase 7: Brand Foundation** — TWG color palette, Gotham font, CSS variable consolidation
+- [x] **Phase 7: Brand Foundation** — TWG color palette, Gotham font, CSS variable consolidation (completed 2026-03-29)
 - [ ] **Phase 8: Login, Banner & Sidebar** — branded login page, staging banner, white sidebar redesign
 - [ ] **Phase 9: Data Grids** — compact Salesforce-style list views for Contacts, Companies, Deals
 - [ ] **Phase 10: Detail Page Polish** — section card headers, field layout, empty values, tab bar
@@ -42,9 +42,9 @@
   1. Every button, active indicator, and focus ring in the app shows `#1a3868` navy instead of indigo or purple
   2. Body text renders in Montserrat with system-ui fallback on all pages
   3. CSS variables `--color-brand`, `--color-brand-hover`, `--color-page-bg`, `--color-content-bg`, `--color-text` are defined and consumed throughout — no inline hex or one-off Tailwind color overrides
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 07-01-PLAN.md — Navy CSS variables + Montserrat font + POC tokens + indigo sweep
+- [x] 07-01-PLAN.md — Navy CSS variables + Montserrat font + POC tokens + indigo sweep
 **UI hint**: yes
 
 ### Phase 8: Login, Banner & Sidebar
@@ -121,7 +121,7 @@ Plans:
 | 4. Deal Model Expansion & Fund Entity | v1.0 | 4/4 | Complete | 2026-03-28 |
 | 5. DealCounterparty & DealFunding | v1.0 | 4/4 | Complete | 2026-03-28 |
 | 6. Admin Reference Data UI | v1.0 | 3/3 | Complete | 2026-03-28 |
-| 7. Brand Foundation | v1.1 | 0/1 | Planned | - |
+| 7. Brand Foundation | v1.1 | 1/1 | Complete   | 2026-03-29 |
 | 8. Login, Banner & Sidebar | v1.1 | 0/? | Not started | - |
 | 9. Data Grids | v1.1 | 0/? | Not started | - |
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |

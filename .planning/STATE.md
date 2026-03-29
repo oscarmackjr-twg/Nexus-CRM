@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
-status: Roadmap defined
-stopped_at: Roadmap v1.1 created — Phases 7-12 defined, ready for Phase 7 planning
-last_updated: "2026-03-28T00:00:00.000Z"
+status: Executing Phase 07
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-29T00:48:11.830Z"
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -19,13 +19,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-28)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Milestone v1.1 — TWG brand identity rollout across all screens
+**Current focus:** Phase 07 — brand-foundation
 
 ## Current Status
 
 **Milestone:** v1.1 — UI Professionalism — IN PROGRESS
 **Active phase:** None — roadmap defined, awaiting Phase 7 planning
-**Last action:** 2026-03-28 — Roadmap v1.1 created. 6 phases (7-12) covering all 27 requirements.
+**Last action:** 2026-03-29 — Completed 07-01: Navy CSS vars + Montserrat font established globally; --primary/#ring remapped to #1a3868, 5 POC-pattern tokens in :root/.dark, Google Fonts CDN loaded.
 
 ## Phase Completion
 
@@ -37,7 +37,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 | 4 | Deal Expansion & Fund Entity | Done (4/4 plans complete) |
 | 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
 | 6 | Admin Reference Data UI | Done (3/3 plans complete) |
-| 7 | Brand Foundation | Not started |
+| 7 | Brand Foundation | Done (1/1 plans complete) |
 | 8 | Login, Banner & Sidebar | Not started |
 | 9 | Data Grids | Not started |
 | 10 | Detail Page Polish | Not started |
@@ -88,6 +88,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 - 06-01: getAllRefData() added alongside getRefData() for backward compat — no existing hook callers broken
 - 06-01: REF_CATEGORIES canonical ordering in refCategories.js — all downstream category references use this module
 - 06-02: ADMIN-07 audit confirmed — all 10 ref_data categories use RefSelect; entity selectors (users/companies/contacts/funds) and app model enums (activity_type, lifecycle_stage, platform/addon) correctly remain as native selects
+- 07-01: --primary/--ring use bare HSL triplet format without hsl() wrapper (e.g. "217 60% 25%") — tailwind.config.js wraps with hsl(); breaking this causes hsl(hsl(...)) double-wrap rendering transparent/black
+- 07-01: Dark mode POC tokens use identical navy values as light mode — safe since dark mode is currently disabled
 
 ## Notes
 
@@ -118,11 +120,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 | 06-admin-reference-data-ui | 01 | 15min | 2 | 5 |
 | 06-admin-reference-data-ui | 02 | 5min | 1 | 0 |
 | 06-admin-reference-data-ui | 03 | 5min | 2 | 0 |
+| 07-brand-foundation | 01 | 5min | 2 | 2 |
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:00:00.000Z
-Stopped at: Roadmap v1.1 created — Phases 7-12 defined
+Last session: 2026-03-29T00:48:11.826Z
+Stopped at: Completed 07-01-PLAN.md
 
 ---
 *Last updated: 2026-03-28 — Roadmap v1.1 created (Phases 7-12, 27 requirements mapped)*

@@ -8,9 +8,9 @@
 
 ## Branding & Theme
 
-- [ ] **BRAND-01**: TWG `#1a3868` navy replaces indigo/purple as the primary brand color throughout (CSS variables and Tailwind config updated)
-- [ ] **BRAND-02**: Gotham font applied as body font with system-ui fallback via CSS `@font-face` or font-family declaration
-- [ ] **BRAND-03**: CSS variables consolidated to match POC pattern: `--color-brand`, `--color-brand-hover`, `--color-page-bg`, `--color-content-bg`, `--color-text`
+- [x] **BRAND-01**: TWG `#1a3868` navy replaces indigo/purple as the primary brand color throughout (CSS variables and Tailwind config updated)
+- [x] **BRAND-02**: Gotham font applied as body font with system-ui fallback via CSS `@font-face` or font-family declaration
+- [x] **BRAND-03**: CSS variables consolidated to match POC pattern: `--color-brand`, `--color-brand-hover`, `--color-page-bg`, `--color-content-bg`, `--color-text`
 
 ## Login Page
 
