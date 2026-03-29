@@ -35,14 +35,16 @@
 ## Phase Details
 
 ### Phase 7: Brand Foundation
-**Goal**: The TWG color palette and Gotham font are live globally — all subsequent UI work builds on this baseline
+**Goal**: The TWG color palette and Montserrat font are live globally — all subsequent UI work builds on this baseline
 **Depends on**: Nothing (first phase of v1.1)
 **Requirements**: BRAND-01, BRAND-02, BRAND-03
 **Success Criteria** (what must be TRUE):
   1. Every button, active indicator, and focus ring in the app shows `#1a3868` navy instead of indigo or purple
-  2. Body text renders in Gotham with system-ui fallback on all pages
+  2. Body text renders in Montserrat with system-ui fallback on all pages
   3. CSS variables `--color-brand`, `--color-brand-hover`, `--color-page-bg`, `--color-content-bg`, `--color-text` are defined and consumed throughout — no inline hex or one-off Tailwind color overrides
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 07-01-PLAN.md — Navy CSS variables + Montserrat font + POC tokens + indigo sweep
 **UI hint**: yes
 
 ### Phase 8: Login, Banner & Sidebar
@@ -119,7 +121,7 @@
 | 4. Deal Model Expansion & Fund Entity | v1.0 | 4/4 | Complete | 2026-03-28 |
 | 5. DealCounterparty & DealFunding | v1.0 | 4/4 | Complete | 2026-03-28 |
 | 6. Admin Reference Data UI | v1.0 | 3/3 | Complete | 2026-03-28 |
-| 7. Brand Foundation | v1.1 | 0/? | Not started | - |
+| 7. Brand Foundation | v1.1 | 0/1 | Planned | - |
 | 8. Login, Banner & Sidebar | v1.1 | 0/? | Not started | - |
 | 9. Data Grids | v1.1 | 0/? | Not started | - |
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
