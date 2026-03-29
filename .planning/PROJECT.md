@@ -40,6 +40,9 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 - ✓ Alembic database migrations — existing
 - ✓ React frontend with TanStack Query + Zustand state management — existing
 - ✓ UI polish — professional presentation across all screens, TWG GLOBAL branding, light theme — v1.0
+- ✓ TWG brand foundation — navy CSS variables, Gotham font, brand tokens globally applied — v1.1 Phase 7
+- ✓ Login page — real TWG logo, StagingBanner, navy primary button, backend health indicator — v1.1 Phase 8
+- ✓ White left sidebar layout — TWG logo header, grouped nav (DEALS/TOOLS/ADMIN), navy active highlight, user footer, staging banner on every authenticated page — v1.1 Phase 8
 - ✓ Admin-configurable reference data — 12 categories, 96+ seed values, soft-delete, org-scoped — v1.0
 - ✓ RefSelect component + useRefData hook — canonical dropdown infrastructure for all entities — v1.0
 - ✓ Admin Reference Data UI — 12-category management page, full CRUD, query prefix invalidation — v1.0
@@ -114,4 +117,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Milestone v1.1 UI Professionalism started*
+*Last updated: 2026-03-28 — Phase 8 complete: login + banner + white sidebar delivered*
