@@ -87,9 +87,9 @@
 
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| BRAND-01 | Phase 7 | TBD |
-| BRAND-02 | Phase 7 | TBD |
-| BRAND-03 | Phase 7 | TBD |
+| BRAND-01 | Phase 7 | 07-01-PLAN.md |
+| BRAND-02 | Phase 7 | 07-01-PLAN.md |
+| BRAND-03 | Phase 7 | 07-01-PLAN.md |
 | LOGIN-01 | Phase 8 | TBD |
 | LOGIN-02 | Phase 8 | TBD |
 | LOGIN-03 | Phase 8 | TBD |
