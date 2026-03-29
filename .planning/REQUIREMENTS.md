@@ -25,11 +25,11 @@
 
 ## Navigation / Sidebar
 
-- [ ] **NAV-01**: Sidebar redesigned with white background + `border-r` separator (replacing dark slate-900)
-- [ ] **NAV-02**: TWG logo + "Nexus CRM" subtext displayed in sidebar header (matching POC Layout.tsx pattern)
-- [ ] **NAV-03**: Active nav items display navy `border-l-4` left indicator + `#1a3868` text + `bg-gray-50` background
-- [ ] **NAV-04**: Nav section group labels styled with uppercase tracking-widest muted text (e.g., DEALS, ADMIN)
-- [ ] **NAV-05**: Sidebar footer displays current username, role, and Sign out button in muted POC style
+- [x] **NAV-01**: Sidebar redesigned with white background + `border-r` separator (replacing dark slate-900)
+- [x] **NAV-02**: TWG logo + "Nexus CRM" subtext displayed in sidebar header (matching POC Layout.tsx pattern)
+- [x] **NAV-03**: Active nav items display navy `border-l-4` left indicator + `#1a3868` text + `bg-gray-50` background
+- [x] **NAV-04**: Nav section group labels styled with uppercase tracking-widest muted text (e.g., DEALS, ADMIN)
+- [x] **NAV-05**: Sidebar footer displays current username, role, and Sign out button in muted POC style
 
 ## Data Grids
 

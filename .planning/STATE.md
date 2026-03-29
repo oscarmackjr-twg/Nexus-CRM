@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
 status: Executing Phase 08
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-29T01:23:14.250Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-29T01:26:26.052Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -90,6 +90,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 - 06-02: ADMIN-07 audit confirmed — all 10 ref_data categories use RefSelect; entity selectors (users/companies/contacts/funds) and app model enums (activity_type, lifecycle_stage, platform/addon) correctly remain as native selects
 - 07-01: --primary/--ring use bare HSL triplet format without hsl() wrapper (e.g. "217 60% 25%") — tailwind.config.js wraps with hsl(); breaking this causes hsl(hsl(...)) double-wrap rendering transparent/black
 - 07-01: Dark mode POC tokens use identical navy values as light mode — safe since dark mode is currently disabled
+- 08-02: NavGroups data structure replaces flat navItems — Dashboard (unlabeled), DEALS, TOOLS, ADMIN groups
+- 08-02: overflow-y-auto on nav prevents user footer clip on short viewports (Pitfall 3)
+- 08-02: AIQueryBar placed outside flex-1 sidebar+main wrapper to avoid layout interference (Pitfall 5)
 
 ## Notes
 
@@ -123,11 +126,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 | 06-admin-reference-data-ui | 03 | 5min | 2 | 0 |
 | 07-brand-foundation | 01 | 5min | 2 | 2 |
 | Phase 08-login-banner-sidebar P01 | 1min | 2 tasks | 4 files |
+| Phase 08-login-banner-sidebar P02 | 2min | 2 tasks | 2 files |
 
 ## Session Continuity
 
-Last session: 2026-03-29T01:23:14.246Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-29T01:26:26.047Z
+Stopped at: Completed 08-02-PLAN.md
 
 ---
 *Last updated: 2026-03-29 — Phase 7 (Brand Foundation) verified complete*
