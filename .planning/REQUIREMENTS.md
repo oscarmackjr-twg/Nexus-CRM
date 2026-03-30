@@ -72,14 +72,14 @@
 
 - [x] **INFRA-01**: VPC provisioned via Terraform with public/private subnets, NAT gateway, and security groups for all services
 - [x] **INFRA-02**: RDS PostgreSQL (Flexible / Multi-AZ capable) provisioned with parameter group configured for logical replication readiness
-- [ ] **INFRA-03**: RDS Proxy provisioned alongside RDS for connection pooling — ECS services connect via Proxy endpoint, not RDS directly
-- [ ] **INFRA-04**: ECR repositories created with immutable tags and lifecycle policies (one repo per service: api and worker (frontend is served from S3+CloudFront, not a container))
+- [x] **INFRA-03**: RDS Proxy provisioned alongside RDS for connection pooling — ECS services connect via Proxy endpoint, not RDS directly
+- [x] **INFRA-04**: ECR repositories created with immutable tags and lifecycle policies (one repo per service: api and worker (frontend is served from S3+CloudFront, not a container))
 - [ ] **INFRA-05**: ALB with HTTPS listener, ACM certificate (DNS validation), and Route 53 A-record alias pointing to ALB
 - [ ] **INFRA-06**: CloudFront distribution backed by S3 bucket serving the Vite-built React frontend; `/api/*` path behavior routes to ALB
 - [x] **INFRA-07**: AWS Secrets Manager secrets created for all runtime secrets (DB password, JWT secret, Redis URL) with staging/prod path separation (`/nexus/staging/` vs `/nexus/prod/`)
 - [ ] **INFRA-08**: ECS Fargate cluster with task definitions for API service, Celery worker service, and one-shot migration runner task; all secrets injected via `secrets[]` block (not `environment[]`)
 - [x] **INFRA-09**: ElastiCache Redis provisioned cluster (not Serverless) — required broker for Celery worker
-- [ ] **INFRA-10**: IAM OIDC provider and GitHub Actions deployment role with least-privilege ECS/ECR/Secrets permissions; `lifecycle { ignore_changes = [task_definition] }` on ECS services
+- [x] **INFRA-10**: IAM OIDC provider and GitHub Actions deployment role with least-privilege ECS/ECR/Secrets permissions; `lifecycle { ignore_changes = [task_definition] }` on ECS services
 
 ### CI/CD Pipeline
 

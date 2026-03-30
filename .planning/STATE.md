@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
 status: Executing Phase 13
-stopped_at: Completed 13-02-PLAN.md
-last_updated: "2026-03-30T02:13:46.046Z"
+stopped_at: Completed 13-03-PLAN.md
+last_updated: "2026-03-30T02:20:25.604Z"
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 29
-  completed_plans: 28
+  completed_plans: 29
 ---
 
 # Project State
@@ -102,6 +102,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 - v1.2-arch: ElastiCache provisioned Redis only — Serverless is incompatible with Celery 5.3+ (documented AWS re:Post issue)
 - v1.2-arch: DEPLOY-05 (remove Alembic from entrypoint.sh) is a Phase 15 prerequisite task, must be committed before first ECS deploy
 - v1.2-arch: FAILOVER-01 pg_failover_slots must be enabled BEFORE replication subscription is created — order is mandatory
+- 13-03: IAM OIDC provider conditional on var.create_oidc_provider; prod sets false to reuse account-scoped provider from staging
+- 13-03: RDS Proxy uses SECRETS auth scheme with IAM role for Secrets Manager access (iam_auth=DISABLED on auth block)
+- 13-03: secret_arn_pattern uses /nexus/environment/* to match Makefile tf-secrets-* target paths
+- 13-03: ECR repos inline in environment main.tf (not a module) — only api and worker, frontend uses S3+CloudFront
 - v1.2-arch: Terraform uses separate environment directories (environments/staging/, environments/prod/) not workspaces — HashiCorp guidance
 - v1.2-arch: ACM certificate for CloudFront requires us-east-1 provider alias regardless of deployment region
 - v1.2-arch: lifecycle { ignore_changes = [task_definition] } on all ECS services from day 1 — Terraform owns infra, CI owns image versions
@@ -146,11 +150,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | Phase 08-login-banner-sidebar P02 | 2min | 2 tasks | 2 files |
 | 13-aws-core-infrastructure | 01 | 12min | 2 | 9 |
 | Phase 13-aws-core-infrastructure P02 | 3min | 2 tasks | 11 files |
+| Phase 13-aws-core-infrastructure P03 | 3min | 2 tasks | 11 files |
 
 ## Session Continuity
 
-Last session: 2026-03-30T02:13:46.041Z
-Stopped at: Completed 13-02-PLAN.md
+Last session: 2026-03-30T02:20:25.599Z
+Stopped at: Completed 13-03-PLAN.md
 
 ---
 *Last updated: 2026-03-30 — Phase 13 Plan 01 complete: Terraform bootstrap + environment structure*
