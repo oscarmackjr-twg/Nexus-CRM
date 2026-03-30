@@ -131,10 +131,10 @@ Plans:
   4. ElastiCache provisioned Redis replication group (not Serverless) is reachable from the ECS security group; Celery can connect and queue tasks
   5. ECR repositories exist for `api` and `worker` with immutable image tags and lifecycle policies; a test push with a SHA-tagged image succeeds and is visible in the ECR console
   6. AWS Secrets Manager secrets exist at `/nexus/staging/` and `/nexus/prod/` paths for `db_password`, `jwt_secret`, and `redis_url`; the GitHub Actions OIDC role can read them and has least-privilege ECS/ECR permissions
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
 - [x] 13-01-PLAN.md — Bootstrap config, environment directory structure, provider upgrade, delete flat root
-- [ ] 13-02-PLAN.md — Fix networking, RDS, ElastiCache, and Secrets modules
+- [x] 13-02-PLAN.md — Fix networking, RDS, ElastiCache, and Secrets modules
 - [ ] 13-03-PLAN.md — RDS Proxy module, IAM OIDC fix, environment wiring, ECR inline, entrypoint cleanup
 
 ### Phase 14: AWS Compute, CDN & HTTPS
@@ -192,7 +192,7 @@ Plans:
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
-| 13. AWS Core Infrastructure | v1.2 | 1/3 | In Progress|  |
+| 13. AWS Core Infrastructure | v1.2 | 2/3 | In Progress|  |
 | 14. AWS Compute, CDN & HTTPS | v1.2 | 0/? | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
