@@ -5,10 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import StagingBanner from '@/components/StagingBanner';
 import twgLogo from '@/assets/twg-logo.png';
 
@@ -46,40 +42,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
       <StagingBanner />
 
-      <div className="flex w-full max-w-md flex-col items-center gap-6">
-        <img src={twgLogo} alt="TWG Global" className="h-10 w-auto" />
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <img src={twgLogo} alt="TWG Global" className="mx-auto h-12 w-auto" />
+            <h2 className="mt-4 text-center text-3xl font-bold text-[#1a3868]">Nexus CRM</h2>
+            <p className="mt-2 text-center text-sm text-gray-600">Sign in to your account</p>
+            <p className="mt-1 text-center text-xs text-gray-500" aria-live="polite">
+              {backendStatus === 'connected' ? 'Backend connected' : backendStatus === 'unavailable' ? 'Backend unavailable' : 'Checking backend...'}
+            </p>
+          </div>
 
-        {/* App name — per D-03 */}
-        <h1 className="text-3xl font-semibold text-slate-900">Nexus CRM</h1>
-
-        {/* Sign-in card */}
-        <Card className="w-full border-slate-200 bg-white shadow-soft">
-          <CardContent className="pt-6">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700">Email</Label>
-                <Input id="email" {...form.register('username')} placeholder="admin@demo.local" className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400" />
-                {form.formState.errors.username && <p className="text-sm text-red-500">{form.formState.errors.username.message}</p>}
+          <form className="mt-8 space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="username" className="sr-only">Username</label>
+                <input
+                  id="username"
+                  type="text"
+                  placeholder="Email"
+                  {...form.register('username')}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-[#1a3868] focus:border-[#1a3868] focus:z-10 sm:text-sm"
+                />
+                {form.formState.errors.username && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.username.message}</p>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700">Password</Label>
-                <Input id="password" type="password" {...form.register('password')} className="border-slate-200 bg-white text-slate-900" />
-                {form.formState.errors.password && <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>}
+              <div>
+                <label htmlFor="password" className="sr-only">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Password"
+                  {...form.register('password')}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-[#1a3868] focus:border-[#1a3868] focus:z-10 sm:text-sm"
+                />
+                {form.formState.errors.password && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.password.message}</p>
+                )}
               </div>
-              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.formState.isSubmitting}>Sign in</Button>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
 
-        {/* Backend status indicator — per D-03 */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <span className={`h-2 w-2 rounded-full ${backendStatus === 'connected' ? 'bg-green-500' : backendStatus === 'unavailable' ? 'bg-red-500' : 'bg-yellow-400'}`} />
-          <span className="text-slate-400">
-            Backend: {backendStatus === 'connected' ? 'Connected' : backendStatus === 'unavailable' ? 'Unavailable' : 'Checking...'}
-          </span>
+            <div>
+              <button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#1a3868] hover:bg-[#15305a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1a3868] disabled:opacity-60"
+              >
+                Sign in
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
