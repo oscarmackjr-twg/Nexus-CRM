@@ -1,438 +1,492 @@
-# Technology Stack — PE Data Model Expansion
+# Stack Research: Cloud Deployment
 
-**Project:** Nexus CRM — PE Blueprint data model expansion
-**Researched:** 2026-03-26
-**Scope:** Patterns for adding admin-configurable reference data, JSONB vs dedicated columns for sparse PE fields, and Alembic migration strategy for existing tables.
-
----
-
-## Existing Stack Constraints (from codebase analysis)
-
-The codebase is well-established. These facts constrain every recommendation:
-
-| Fact | Implication |
-|------|-------------|
-| SQLAlchemy 2.0 async (`create_async_engine`, `async_sessionmaker`) | All new models follow `Mapped[T]` / `mapped_column()` typed-column style |
-| Alembic env uses `psycopg` (sync) for migration, `asyncpg` for app | No changes needed to env.py; new migrations write explicit DDL |
-| `0001_initial` used `metadata.create_all(bind)` (full schema dump) | All subsequent migrations MUST use explicit `op.add_column` / `op.create_table`, NOT autogenerate alone |
-| `JSONVariant = JSON().with_variant(JSONB, "postgresql")` already defined | Reuse this alias for any new JSONB columns; do not re-declare |
-| `custom_fields: Mapped[Optional[dict]]` on Contact, Company, Deal | Existing escape hatch — PE-specific sparse fields can go here or get dedicated columns depending on query needs |
-| Multi-tenant via `org_id` FK on every entity | Reference/lookup tables MUST include `org_id` and be scoped per-org |
-| Pydantic v2 schemas in `backend/schemas/` mirroring service layer | New entities need schema files; FK-resolved display names (e.g. `sector_name`) are computed in service layer, not ORM |
+**Project:** Nexus CRM — v1.2 Cloud Deployment
+**Researched:** 2026-03-29
+**Scope:** Terraform providers + modules for AWS ECS Fargate, RDS, ElastiCache, ALB, ACM, Secrets Manager, ECR, Route 53, and Azure warm failover (PostgreSQL Flexible Server + ACI).
+**Overall Confidence:** MEDIUM-HIGH — provider major versions confirmed; module patch versions change frequently, pin to minor (`~> X.Y`) not exact.
 
 ---
 
-## Decision 1: Admin-Configurable Reference Data
+## Terraform Providers & Versions
 
-### Recommendation: Dedicated `ref_data` table with a `category` discriminator column
+| Provider | Version Constraint | Latest Confirmed | Purpose |
+|----------|--------------------|-----------------|---------|
+| `hashicorp/aws` | `~> 6.0` | 6.38.0 (Mar 2026) | All AWS resources |
+| `hashicorp/azurerm` | `~> 4.0` | 4.66.0 (Mar 2026) | All Azure resources |
+| `hashicorp/random` | `~> 3.6` | 3.6.x | Random suffixes for globally unique resource names |
+| `hashicorp/tls` | `~> 4.0` | 4.0.x | TLS helpers if needed for local cert generation |
 
-**Use this pattern:**
+**Terraform CLI:** Pin to `~> 1.10` (stable 1.x series, widely supported by all modules). Use `.terraform-version` file or `required_version = ">= 1.10, < 2.0"` in every root module. Terraform 1.14.x is the latest stable as of research date.
 
-```python
-class RefData(Base):
-    __tablename__ = "ref_data"
-    __table_args__ = (
-        UniqueConstraint("org_id", "category", "value", name="uq_ref_data_org_category_value"),
-        Index("ix_ref_data_org_category", "org_id", "category"),
-    )
+**Decision — Terraform vs OpenTofu:** Use HashiCorp Terraform `~> 1.10`. The BSL license does not restrict internal/private-use deployments. The module ecosystem, GitHub Actions integrations, and all official AWS docs are Terraform-first. OpenTofu `1.11.x` is a valid fork but adds operational risk for a first cloud deployment with no team experience on it.
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
-    category: Mapped[str] = mapped_column(String(50), nullable=False)
-    value: Mapped[str] = mapped_column(String(255), nullable=False)
-    label: Mapped[str] = mapped_column(String(255), nullable=False)
-    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="1")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+**Shared provider block (both providers live in separate root modules — see Workspace Structure below):**
+
+```hcl
+terraform {
+  required_version = ">= 1.10, < 2.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+  default_tags {
+    tags = {
+      Project     = "nexus-crm"
+      Environment = var.environment
+      ManagedBy   = "terraform"
+    }
+  }
+}
 ```
-
-`category` values: `"sector"`, `"sub_sector"`, `"transaction_type"`, `"tier"`, `"contact_type"`, `"company_type"`, `"company_sub_type"`, `"currency"`, `"deal_source_type"`, `"passed_dead_reason"`.
-
-**Why this pattern over the alternatives:**
-
-| Alternative | Why Rejected |
-|-------------|-------------|
-| Separate table per category (e.g. `sectors`, `tiers`) | 10+ migrations to add tables; JOIN fan-out in queries; no benefit for a domain with ~10 small lists |
-| Python Enum / hardcoded string literals | Cannot be edited by admin at runtime; changing values requires a deployment |
-| JSONB blob on Organization.settings | No FK referential integrity; cannot do `WHERE ref_data_id = X` joins; hard to paginate or sort by |
-| One table per entity with JSONB array of allowed values | Mixes config with data; no per-value metadata (position, active flag) |
-
-**Why single table works here:**
-- All categories are small lists (< 100 values each in practice)
-- The `(org_id, category)` compound index makes per-category lookups O(1)
-- Pre-populated TWG values are seeded once in a migration data step — admin can add/edit/deactivate values at runtime without schema changes
-- The `is_active` flag lets admins soft-delete values that are in use on existing records (hard delete would break FK integrity)
-- Single CRUD API surface: `GET /admin/ref-data?category=sector`, `POST /admin/ref-data`, `PATCH /admin/ref-data/{id}`
-
-**Seeding TWG values:**
-
-Seed data belongs in the migration that creates the table, not in `seed.py`, because it is schema-level configuration that must exist in production. Use Alembic's `op.bulk_insert()`:
-
-```python
-def upgrade() -> None:
-    op.create_table("ref_data", ...)
-    ref_data_table = sa.table("ref_data",
-        sa.column("id", sa.String),
-        sa.column("org_id", sa.String),  # NULL for system defaults — see note below
-        sa.column("category", sa.String),
-        sa.column("value", sa.String),
-        sa.column("label", sa.String),
-        sa.column("position", sa.Integer),
-        sa.column("is_active", sa.Boolean),
-    )
-    op.bulk_insert(ref_data_table, [
-        {"id": str(uuid4()), "org_id": None, "category": "sector", "value": "financial_services", "label": "Financial Services", "position": 1, "is_active": True},
-        # ... etc
-    ])
-```
-
-**System defaults vs org-specific values:**
-
-Use `org_id = NULL` to represent system-level defaults shipped with the product. The query to populate a dropdown is then:
-
-```sql
-SELECT * FROM ref_data
-WHERE category = 'sector'
-  AND (org_id = :org_id OR org_id IS NULL)
-  AND is_active = TRUE
-ORDER BY position, label;
-```
-
-This lets each org add their own values on top of the defaults without copying every row, and lets an org deactivate a system default by adding a shadow row with `is_active = FALSE` and the same `value`. **If this org-override logic adds complexity, simplify to org-only rows and copy defaults during org creation.** The copy-on-create approach is simpler and more explicit — recommended for this project's scale.
-
-**FK strategy on parent tables:**
-
-Store the `ref_data.id` UUID as a nullable FK on the deal/contact/company table:
-
-```python
-sector_id: Mapped[Optional[UUID]] = mapped_column(
-    ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True, index=True
-)
-```
-
-`ondelete="SET NULL"` is correct: if an admin deletes a ref value, existing records become `NULL` rather than raising an FK violation. This is preferable to `RESTRICT` (blocks admin deletion) or `CASCADE` (silently nulls many records without admin awareness — accept this tradeoff given the domain).
-
-Do NOT store only the string value in the parent table (e.g. `sector: str = "Technology"`). That approach loses the FK relationship, makes renaming a value a bulk UPDATE across all rows, and cannot enforce valid values at the DB level.
-
-**Confidence:** HIGH — this is the standard Django/SQLAlchemy pattern for admin-managed lookup tables. The single-table-with-category discriminator is well-established for small enumerable domains.
 
 ---
 
-## Decision 2: JSONB vs Dedicated Columns for PE-Specific Fields
+## AWS Resources (Terraform)
 
-### Recommendation: Dedicated columns for all named PE fields; JSONB only for genuinely unknown future fields
+Use the `terraform-aws-modules` collection throughout. These are the de facto community standard — maintained, Fargate-aware, and production-tested. Rolling equivalent resources by hand adds 150–300 lines of boilerplate per service with no upside.
 
-The existing `custom_fields` JSONB column is already the generic escape hatch. The PE Blueprint fields are fully enumerated in the PROJECT.md requirements. Putting known fields into JSONB would throw away PostgreSQL's ability to:
+### VPC
 
-- Index on individual field values (e.g. filter deals by `transaction_type`)
-- Enforce NOT NULL, type, and FK constraints
-- Write readable SQLAlchemy queries (`Deal.revenue_usd > 1_000_000` vs `Deal.custom_fields["revenue_usd"].astext.cast(Numeric) > 1_000_000`)
-- Generate sensible Alembic diffs going forward
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/vpc/aws` |
+| Version constraint | `~> 6.6` |
+| Latest confirmed | 6.6.0 (published Jan 8 2026) |
+| Key config | 3 AZs minimum; public subnets for ALB; private subnets for ECS tasks, RDS, ElastiCache; no direct internet egress on private subnets (NAT gateway) |
 
-**Rule of thumb for this codebase:**
-- Field appears in the PROJECT.md requirements list → dedicated column
-- Field is a reference to a lookup list → dedicated FK column (`sector_id UUID REFERENCES ref_data(id)`)
-- Field is a financial metric (revenue, EBITDA, EV, equity investment) → `Numeric(18, 2)` column + companion `_currency` String(3) if multi-currency
-- Field is a date milestone (CIM, IOI, LOI, etc.) → `Date` column, nullable
-- Field is a multi-value list (e.g. coverage persons = multiple users, deal team = multiple users) → association table, not JSONB array
-- Field is truly ad-hoc, user-defined, unpredictable shape → stays in `custom_fields` JSONB
+The module handles NAT gateways, route tables, DB subnet groups, and subnet tagging (required for ECS service discovery and ALB target group registration) in a single call.
 
-**JSONB is appropriate for:**
-- `custom_fields` (already exists): keeps catch-all for one-off fields no schema anticipates
-- `DealCounterparty.next_steps` / `DealCounterparty.feedback` if these are long-form text blobs with evolving sub-structure — though plain `Text` columns are simpler
-- Do NOT add a second JSONB blob alongside `custom_fields`. One JSONB catch-all per entity is the ceiling.
+### ECS Fargate
 
-**Sparse columns are fine in PostgreSQL:**
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/ecs/aws` |
+| Version constraint | `~> 7.5` |
+| Latest confirmed | 7.5.0 (published Mar 18 2026) |
+| Capacity provider | `FARGATE` for backend + frontend; `FARGATE_SPOT` for Celery worker (60-80% cost reduction, acceptable for async tasks) |
+| Services | `backend` (FastAPI on port 8000), `frontend` (nginx serving Vite build on port 80), `celery` (Celery worker, no inbound port) |
 
-PostgreSQL stores NULL columns with zero storage cost per row (NULL bitmap). A contact with 30 PE fields where 20 are NULL does not waste meaningful storage. The "use JSONB for sparse fields" argument applies to key-value stores and wide-column NoSQL, not PostgreSQL.
+**Secret injection pattern — use `secrets` block, not `environment`:**
 
-**Confidence:** HIGH — PostgreSQL documentation explicitly confirms NULL column storage is 1 bit in the heap tuple header, not per-column storage.
+```hcl
+container_definitions = {
+  backend = {
+    image = "${aws_ecr_repository.backend.repository_url}:${var.image_tag}"
+    port_mappings = [{ containerPort = 8000, protocol = "tcp" }]
+    environment = [
+      { name = "ENV", value = var.environment }
+    ]
+    secrets = [
+      { name = "DATABASE_URL",    valueFrom = aws_secretsmanager_secret.db_url.arn },
+      { name = "REDIS_URL",       valueFrom = "${aws_secretsmanager_secret.app.arn}:REDIS_URL::" },
+      { name = "JWT_SECRET_KEY",  valueFrom = "${aws_secretsmanager_secret.app.arn}:JWT_SECRET_KEY::" }
+    ]
+  }
+}
+```
+
+The ECS **execution role** (not the task role) needs `secretsmanager:GetSecretValue` scoped to those ARNs. Values in `environment` blocks appear in the AWS console and CloudWatch logs — never put credentials there.
+
+**Alembic migration task:** Run as a one-off ECS task before deploying services. Same backend image, command overridden to `["alembic", "upgrade", "head"]`. The CI pipeline waits for the task to exit 0 before proceeding with the rolling service deploy.
+
+### RDS PostgreSQL
+
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/rds/aws` |
+| Version constraint | `~> 6.10` |
+| Latest confirmed | Updated Mar 27 2026 (exact patch — check registry at deploy time) |
+| Engine | `postgres`, version `17` (use `postgres17` parameter group family) |
+| Instance class | `db.t4g.medium` (staging) / `db.r8g.large` (prod) — Graviton for cost |
+| Storage type | `gp3` (not gp2 — better baseline IOPS at same cost) |
+| Multi-AZ | `true` for prod; `false` for staging |
+| Backup retention | 7 days (prod); 1 day (staging) |
+| Parameter group | `rds.logical_replication = 1` is **required** — enables the PostgreSQL WAL slot that Azure DMS uses for cross-cloud replication to the warm failover. Also set `max_wal_senders = 10`, `max_replication_slots = 5`. These require an RDS reboot on first apply. |
+
+### ElastiCache Redis
+
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/elasticache/aws` |
+| Version constraint | `~> 1.0` (check registry — module was refactored in late 2024; confirm 1.x is latest stable) |
+| Engine | Redis OSS 7.x (latest LTS available on ElastiCache) |
+| Node type | `cache.t4g.small` (staging) / `cache.r7g.large` (prod) |
+| Mode | Single-node replication group with 1 read replica (prod); single node (staging) |
+| Encryption | `transit_encryption_enabled = true`; store auth token in Secrets Manager |
+
+Alternative: Use `aws_elasticache_replication_group` directly if the module abstraction adds complexity. Both are valid — module is preferred for consistency.
+
+### ALB (Application Load Balancer)
+
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/alb/aws` |
+| Version constraint | `~> 9.0` |
+| Listeners | Port 80 → permanent redirect to 443; Port 443 → forward to target groups |
+| Target groups | `backend` (port 8000, path `/health`); `frontend` (port 80, path `/`) |
+| ALB handles TLS | ECS containers communicate over HTTP internally — no end-to-end TLS complexity |
+
+### ACM (TLS Certificate)
+
+| Item | Value |
+|------|-------|
+| Module | `terraform-aws-modules/acm/aws` |
+| Version constraint | `~> 5.0` |
+| Latest confirmed | 5.x published Jan 8 2026 |
+| Validation method | DNS (automated via Route 53 — no email dependency, certificate auto-renews) |
+| Coverage | `nexus-crm.example.com` + `*.nexus-crm.example.com` in a single cert |
+
+### Route 53
+
+| Resource | Purpose |
+|----------|---------|
+| `aws_route53_zone` | One hosted zone per environment OR a shared zone with environment-prefixed A records |
+| `aws_route53_record` (A alias) | Points app domain to ALB DNS name |
+| `aws_route53_health_check` | HTTP/HTTPS check on ALB; feeds failover routing policy |
+| `aws_route53_record` (failover PRIMARY) | Primary record with `health_check_id` attached |
+| `aws_route53_record` (failover SECONDARY) | Secondary record pointing to Azure ACI public IP |
+
+Configuring Route 53 failover routing is the mechanism that makes the Azure warm standby near-automatic — if the ALB health check fails for 3 consecutive intervals (default 30s each = ~90s detection), DNS flips to Azure without manual intervention.
+
+### ECR (Container Registry)
+
+| Resource | Notes |
+|----------|-------|
+| `aws_ecr_repository` | One per image: `nexus-crm-backend`, `nexus-crm-frontend`, `nexus-crm-celery` |
+| `aws_ecr_lifecycle_policy` | Keep last 10 tagged images; expire untagged images after 1 day — prevents unbounded storage cost |
+| `image_scanning_configuration` | `scan_on_push = true` for basic vulnerability awareness |
+
+No module needed — `aws_ecr_repository` is a simple resource with few attributes.
+
+### Secrets Manager
+
+| Resource | Notes |
+|----------|-------|
+| `aws_secretsmanager_secret` | One logical secret per group: `nexus-crm/{env}/app` (JWT secret, etc.), `nexus-crm/{env}/db`, `nexus-crm/{env}/redis` |
+| `aws_secretsmanager_secret_version` | **Do not set secret values in Terraform if you want them out of state.** Create the `aws_secretsmanager_secret` resource (gets ARN into state), populate values via AWS CLI or CI post-apply. |
+
+**Critical:** Terraform state stores any `secret_string` value in plaintext. Use remote state in S3 with KMS encryption and strict IAM policies. Alternatively, create the secret shell in Terraform and populate values out-of-band.
+
+### S3 + DynamoDB (Terraform Remote State — Bootstrap First)
+
+| Resource | Notes |
+|----------|-------|
+| `aws_s3_bucket` | Versioned, KMS-encrypted; key pattern: `aws/{env}/terraform.tfstate` |
+| `aws_dynamodb_table` | `LockID` hash key, `PAY_PER_REQUEST` billing — state locking |
+
+Bootstrap this with a separate throwaway local-state Terraform config before standing up the main infrastructure. Once created, migrate to S3 backend.
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "nexus-crm-tfstate-{aws-account-id}"
+    key            = "aws/prod/terraform.tfstate"
+    region         = "ap-southeast-1"
+    encrypt        = true
+    kms_key_id     = "alias/terraform-state"
+    dynamodb_table = "nexus-crm-tfstate-lock"
+  }
+}
+```
 
 ---
 
-## Decision 3: Alembic Migration Strategy for Adding Many Columns
+## Azure Resources (Terraform)
 
-### Context: the existing initial migration is a metadata dump
+Azure is warm standby only — pre-deployed and idle. It receives no traffic until cutover. Size everything at minimum SKU; upgrade at failover if load demands it.
 
-`0001_initial` calls `models.Base.metadata.create_all(bind)`. This means Alembic's autogenerate (`--autogenerate`) will see a diff between the live schema and models.py any time models change. **Do not rely on autogenerate alone** — it will attempt to regenerate the whole schema.
+### Resource Group
 
-### Recommended approach: hand-write explicit DDL migrations
-
-For this milestone, write one migration file per logical unit:
-
-```
-0002_pe_ref_data.py          # CREATE TABLE ref_data + seed TWG defaults
-0003_contact_pe_fields.py    # ALTER TABLE contacts ADD COLUMN ...
-0004_company_pe_fields.py    # ALTER TABLE companies ADD COLUMN ...
-0005_deal_pe_fields.py       # ALTER TABLE deals ADD COLUMN ...
-0006_deal_counterparty.py    # CREATE TABLE deal_counterparties
-0007_deal_funding.py         # CREATE TABLE deal_funding
+```hcl
+resource "azurerm_resource_group" "failover" {
+  name     = "nexus-crm-failover-${var.environment}"
+  location = "Southeast Asia"  # Singapore — matches AWS ap-southeast-1
+}
 ```
 
-Split by entity so that a failed migration can be rolled back without undoing unrelated changes. Alembic's `downgrade()` for each file should be the exact reverse (drop columns / drop tables).
+### Azure PostgreSQL Flexible Server
 
-**Pattern for adding nullable columns to an existing table:**
+| Item | Value |
+|------|-------|
+| Resource | `azurerm_postgresql_flexible_server` |
+| SKU | `GP_Standard_D2s_v3` (2 vCPU / 8 GB RAM) — upgrade to D4s_v3 at cutover |
+| PostgreSQL version | `17` (must match AWS RDS primary) |
+| Storage | 32 GB minimum, auto-grow enabled |
+| Backup retention | 7 days |
+| Replication source | Replica fed from AWS RDS via Azure DMS logical replication (see Integration Points) |
+| **Do NOT use** | Azure PostgreSQL Single Server — retired March 2025, unavailable for new deployments |
 
-```python
-def upgrade() -> None:
-    # All PE fields are nullable — no default needed for existing rows
-    op.add_column("deals", sa.Column("transaction_type_id", sa.UUID(), sa.ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True))
-    op.add_column("deals", sa.Column("revenue_usd", sa.Numeric(18, 2), nullable=True))
-    op.add_column("deals", sa.Column("ebitda_usd", sa.Numeric(18, 2), nullable=True))
-    op.add_column("deals", sa.Column("ev_usd", sa.Numeric(18, 2), nullable=True))
-    op.add_column("deals", sa.Column("equity_investment_usd", sa.Numeric(18, 2), nullable=True))
-    op.add_column("deals", sa.Column("date_cim", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("date_ioi", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("date_loi", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("date_mgmt_presentation", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("date_live_diligence", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("date_portfolio_company", sa.Date(), nullable=True))
-    op.add_column("deals", sa.Column("is_platform", sa.Boolean(), server_default="0", nullable=False))
-    op.add_column("deals", sa.Column("fund", sa.String(100), nullable=True))
-    op.add_column("deals", sa.Column("legacy_id", sa.String(100), nullable=True))
-    op.add_column("deals", sa.Column("passed_reason_id", sa.UUID(), sa.ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True))
-    op.add_column("deals", sa.Column("source_type_id", sa.UUID(), sa.ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True))
-    op.create_index("ix_deals_transaction_type", "deals", ["transaction_type_id"])
-    op.create_index("ix_deals_legacy_id", "deals", ["legacy_id"])
+No battle-tested community module exists for Flexible Server comparable to `terraform-aws-modules/rds`. Use `azurerm_postgresql_flexible_server` directly. The Azure Verified Module (`Azure/terraform-azurerm-avm-res-dbforpostgresql-flexibleserver`) exists but is newer and less widely tested.
 
-def downgrade() -> None:
-    op.drop_index("ix_deals_transaction_type", "deals")
-    op.drop_index("ix_deals_legacy_id", "deals")
-    op.drop_column("deals", "transaction_type_id")
-    # ... reverse all add_column calls
+```hcl
+resource "azurerm_postgresql_flexible_server" "failover" {
+  name                   = "nexus-crm-pg-failover-${var.environment}"
+  resource_group_name    = azurerm_resource_group.failover.name
+  location               = azurerm_resource_group.failover.location
+  version                = "17"
+  delegated_subnet_id    = azurerm_subnet.pg.id
+  private_dns_zone_id    = azurerm_private_dns_zone.pg.id
+  administrator_login    = var.pg_admin_user
+  administrator_password = var.pg_admin_password  # inject from Key Vault post-apply
+  storage_mb             = 32768
+  sku_name               = "GP_Standard_D2s_v3"
+  backup_retention_days  = 7
+  geo_redundant_backup_enabled = false  # warm standby, not geo-HA
+}
 ```
 
-**Key rules:**
-1. All new PE columns are `nullable=True` (or use `server_default` for booleans). Existing rows require no backfill.
-2. Add FK indexes explicitly with `op.create_index`. Alembic does not create FK indexes automatically — and `(org_id, transaction_type_id)` compound indexes improve filter queries.
-3. `op.add_column` on PostgreSQL is an instant metadata change for nullable columns (no table rewrite). Adding many columns to a live table is safe.
-4. Do not call `metadata.create_all()` or `metadata.drop_all()` in any migration after `0001`. It bypasses Alembic's revision tracking and will corrupt the migration graph if applied out of order.
+### Azure Container Instances (ACI)
 
-**Avoiding the `op.get_bind()` deprecation:**
+| Item | Value |
+|------|-------|
+| Resource | `azurerm_container_group` |
+| Containers | `backend` (FastAPI), `frontend` (nginx), `celery` (Celery worker) |
+| Image source | Azure Container Registry (ACR) — see Integration Points |
+| CPU / Memory (standby) | 0.5 vCPU / 1 GB per container — scale up at cutover |
+| Restart policy | `Always` |
+| OS type | `Linux` |
 
-The existing `0001_initial` uses `op.get_bind()` which is deprecated in Alembic 1.12+. New migrations should use `op.get_context().bind` or preferably avoid imperative DDL entirely by using `op.add_column`, `op.create_table`, etc. directly (which is what the pattern above does).
+ACI is the right choice for warm standby: no cluster overhead, per-second billing, simple Terraform resource. AKS is overkill for a container group that may never receive production traffic.
 
-**Confidence:** HIGH — based on Alembic 1.13 documentation patterns and SQLAlchemy 2.0 migration guides.
+### Azure Container Registry (ACR)
+
+| Resource | Notes |
+|----------|-------|
+| `azurerm_container_registry` | `Basic` SKU for warm standby — upgrade to `Standard` at cutover |
+| Admin enabled | `false` — use managed identity for ACI pull |
+
+Push images to ACR from CI on every merge (alongside pushing to ECR). ACI pulls from ACR using managed identity — no cross-cloud credential rotation required.
+
+### Azure Key Vault
+
+| Resource | Notes |
+|----------|-------|
+| `azurerm_key_vault` | Stores connection strings, JWT secret, Redis URL for ACI containers |
+| `azurerm_key_vault_secret` | One secret per env var; structure mirrors AWS Secrets Manager |
+
+ACI containers reference Key Vault secrets at startup via managed identity. The JWT secret must be identical between AWS Secrets Manager and Azure Key Vault (sessions started on AWS must decode on Azure after failover).
+
+### Azure VNet + Private DNS
+
+| Resource | Notes |
+|----------|-------|
+| `azurerm_virtual_network` | Private network for ACI and PostgreSQL Flexible Server |
+| `azurerm_subnet` (delegated) | PostgreSQL Flexible Server requires a dedicated delegated subnet |
+| `azurerm_subnet` (ACI) | Separate subnet for container group |
+| `azurerm_private_dns_zone` | Required for Flexible Server private DNS resolution (`privatelink.postgres.database.azure.com`) |
 
 ---
 
-## Decision 4: Multi-Value Association Fields
+## Supporting Tools
 
-Some PE fields are inherently many-to-many:
+### GitHub Actions — CI/CD Pipeline
 
-- `deal.deal_team` — multiple users assigned to a deal
-- `contact.coverage_persons` — multiple internal users covering a contact
-- `contact.previous_employment` — multiple company entries
-- `contact.board_memberships` — multiple company entries
+| Action | Version | Purpose |
+|--------|---------|---------|
+| `actions/checkout` | `v4` | Checkout source |
+| `aws-actions/configure-aws-credentials` | `v4` | OIDC-based AWS auth (no stored access keys) |
+| `aws-actions/amazon-ecr-login` | `v2` | Authenticate local Docker daemon to ECR |
+| `docker/setup-buildx-action` | `v3` | Enable BuildKit and layer caching |
+| `docker/build-push-action` | `v6` | Build + tag + push multi-platform images |
+| `aws-actions/amazon-ecs-render-task-definition` | `v1` | Inject new image URI into task definition JSON template |
+| `aws-actions/amazon-ecs-deploy-task-definition` | `v1` | Register task def revision + trigger ECS rolling deploy |
+| `hashicorp/setup-terraform` | `v3` | Install pinned Terraform CLI version in runner |
+| `azure/login` | `v2` | Azure login via OIDC (for ACR push step) |
+| `azure/docker-login` | `v1` | Authenticate Docker to ACR |
 
-**Recommendation: Association tables for user arrays; JSONB for employment/board history**
+**OIDC authentication is mandatory for AWS** — do not store long-lived AWS access keys in GitHub Secrets. Set up an IAM OIDC identity provider for `token.actions.githubusercontent.com` and assume an IAM role with a trust policy scoped to `repo:your-org/nexus-crm:ref:refs/heads/main`. Same pattern applies for Azure using a federated credential.
 
-For user assignments (deal team, coverage persons), use association tables:
+### Docker Base Images
 
-```python
-class DealTeamMember(Base):
-    __tablename__ = "deal_team_members"
-    __table_args__ = (UniqueConstraint("deal_id", "user_id"),)
+| Image | Use |
+|-------|-----|
+| `python:3.12-slim` | FastAPI backend and Celery worker — multi-stage build, run as non-root user |
+| `node:22-alpine` (build stage) | Vite build step — `npm run build` produces `dist/` |
+| `nginx:1.27-alpine` (runtime stage) | Serve compiled React frontend; minimal attack surface |
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    deal_id: Mapped[UUID] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    role: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # e.g. "lead", "analyst"
-```
+Use multi-stage builds. Final images should be under 300 MB. Always create a non-root user in the Dockerfile — required if ECS task definition uses `readonlyRootFilesystem = true`.
 
-This allows querying "all deals where user X is a team member" with a proper index rather than a JSONB containment query (`@>` operator), and surfaces correctly in Pydantic response schemas without raw UUID arrays.
+### Alembic Migration in CI
 
-For `previous_employment` and `board_memberships` on contacts, these are historical data with free-form metadata (company name, title, date range) that will not be queried individually. Store as JSONB:
+Run `alembic upgrade head` as a one-off ECS task (not a sidecar) using the same backend image with a command override. The CI pipeline step:
 
-```python
-previous_employment: Mapped[Optional[list]] = mapped_column(JSONVariant, nullable=True)
-# Structure: [{"company": "Blackstone", "title": "VP", "from": "2018", "to": "2022"}]
-```
+1. Registers a migration task definition with `command = ["alembic", "upgrade", "head"]`
+2. Runs `aws ecs run-task --launch-type FARGATE --task-definition nexus-crm-migrate`
+3. Waits for the task to reach `STOPPED` with exit code 0
+4. Only then deploys the updated backend service
 
-This is the correct use of JSONB: variable-length arrays of structured-but-not-queried data.
-
-**Confidence:** MEDIUM — association table vs JSONB array tradeoff is context-dependent. The decision above is based on query patterns described in PROJECT.md requirements.
-
----
-
-## Decision 5: DealCounterparty and DealFunding as First-Class Tables
-
-Both are explicitly listed in PROJECT.md as new entities. Both have structured fields that will be displayed in list views, filtered, and sorted. Neither should be a JSONB blob on `deals`.
-
-**DealCounterparty schema shape:**
-
-```python
-class DealCounterparty(Base):
-    __tablename__ = "deal_counterparties"
-    __table_args__ = (
-        Index("ix_deal_counterparties_deal", "deal_id"),
-        Index("ix_deal_counterparties_company", "company_id"),
-    )
-
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
-    deal_id: Mapped[UUID] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=False)
-    company_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
-    contact_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True)
-    # Pipeline stage tracking
-    stage: Mapped[str] = mapped_column(String(50), nullable=False, default="prospect")  # or ref_data FK
-    nda_signed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-    nda_signed_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    nrl_signed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-    intro_materials_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-    vdr_access: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-    feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tier_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
-    check_size_min: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
-    check_size_max: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
-    aum: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
-    investor_type_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("ref_data.id", ondelete="SET NULL"), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-```
-
-**DealFunding schema shape:**
-
-```python
-class DealFunding(Base):
-    __tablename__ = "deal_funding"
-    __table_args__ = (
-        Index("ix_deal_funding_deal", "deal_id"),
-    )
-
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
-    deal_id: Mapped[UUID] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=False)
-    capital_provider_company_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
-    capital_provider_contact_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True)
-    projected_commitment: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
-    actual_commitment: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 2), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
-    terms: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    comments: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-```
-
-**Confidence:** HIGH — structure derived directly from PE Blueprint requirements in PROJECT.md.
+This guarantees migrations complete before new application code starts serving traffic.
 
 ---
 
-## Decision 6: Pydantic v2 Schema Strategy for New Entities
+## What NOT to Use
 
-The existing pattern (from `deals.py` schema):
-- `*Create` — fields accepted on POST; FKs as UUIDs
-- `*Update` — all fields optional; FKs as UUID | None
-- `*Response` — `model_config = ConfigDict(from_attributes=True)`; computed display names (e.g. `sector_name: str | None`) populated by the service layer from a JOIN or eager-load
+| Anti-Pattern | Why Not | Use Instead |
+|-------------|---------|-------------|
+| AWS CodePipeline / CodeDeploy | Added complexity, cost, and IAM surface for a team already running GitHub Actions | GitHub Actions with OIDC |
+| ECS EC2 launch type | Requires managing EC2 instances, AMI patching, capacity reservations | ECS Fargate |
+| RDS Aurora Serverless v2 | Auto-pause causes cold-start query latency; Aurora per-ACU pricing is 2-3x standard RDS for a lightly loaded CRM | RDS for PostgreSQL on `db.t4g.medium` |
+| ElastiCache Serverless | 2-4x cost overhead vs provisioned for a predictable Celery/JWT session workload | Provisioned ElastiCache replication group |
+| Azure Kubernetes Service (AKS) | 30-minute cold start for cluster provisioning; cluster management overhead; overkill for a warm standby | Azure Container Instances (ACI) |
+| Azure PostgreSQL Single Server | Retired March 2025 — no longer available for new deployments | Azure PostgreSQL Flexible Server |
+| Secrets in ECS `environment` block | Values appear in CloudWatch logs and the AWS ECS console in plaintext | ECS `secrets` block with Secrets Manager ARN |
+| `terraform workspace` for multi-env | Workspaces share a backend bucket prefix; subtle blast radius issues; harder to diff environments | Separate `staging/` and `prod/` Terraform root directories with separate state keys |
+| Single monolithic Terraform root | One state file for all environments and all clouds — a failed plan blocks everything | Per-environment roots: `terraform/aws/staging/`, `terraform/aws/prod/`, `terraform/azure/staging/`, `terraform/azure/prod/` |
+| CloudPosse modules | Heavier opinion layer, harder to debug, less community documentation than terraform-aws-modules | `terraform-aws-modules` collection |
+| ECR image tags using `:latest` | Unpredictable deployments — `latest` can refer to any image | Tag images with Git commit SHA; also tag `staging` / `prod` as mutable convenience aliases |
+| Storing Terraform secret values in `aws_secretsmanager_secret_version.secret_string` | Values end up in `.tfstate` in plaintext | Create the secret resource (ARN in state), populate value out-of-band via CLI/CI |
 
-**For ref_data FK columns, the Response schema should carry both the ID and the resolved label:**
+---
 
-```python
-class DealResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    # ...
-    transaction_type_id: UUID | None = None
-    transaction_type_label: str | None = None   # resolved in service layer
-    sector_id: UUID | None = None
-    sector_label: str | None = None
+## Integration Points
+
+### AWS Primary → Azure Warm Failover: Database Synchronisation
+
+**Method:** PostgreSQL logical replication from RDS to Azure Flexible Server.
+
+**Two tiers of implementation:**
+
+| Tier | RPO | Complexity | When to use |
+|------|-----|------------|------------|
+| Nightly pg_dump → Azure Blob → restore | Up to 24h | Low — one cron job, no DMS | Acceptable if failover SLA is "within a business day" |
+| Azure DMS online migration (continuous WAL replication) | < 5 minutes | Medium — DMS infrastructure, RDS parameter group reboot | Required if stricter RPO is needed |
+
+**Recommendation for v1.2:** Start with nightly pg_dump. Document the DMS upgrade path. The nightly approach is runnable in < 1 hour of setup; DMS requires enabling logical replication on RDS (reboot), configuring a DMS replication instance, and ongoing monitoring.
+
+**DMS setup when required:**
+1. Enable `rds.logical_replication = 1` in the RDS parameter group (requires reboot — plan a maintenance window).
+2. Set `max_wal_senders = 10`, `max_replication_slots = 5`.
+3. Create Azure DMS project: source = AWS RDS PostgreSQL, target = Azure Flexible Server, mode = Online (LSN tracking).
+4. Azure DMS continuously replicates WAL changes with < 5 minute RPO.
+5. At cutover: stop DMS, promote Azure replica, update Key Vault app secrets, flip Route 53.
+
+### AWS Primary → Azure Warm Failover: Container Images
+
+CI pipeline pushes images to both ECR and ACR on every merge to main. ACI containers always reference the latest image in ACR. No additional pipeline logic needed beyond an extra `docker push` to the ACR endpoint after the ECR push:
+
+```yaml
+- name: Push to ACR
+  run: |
+    docker tag $ECR_REGISTRY/nexus-crm-backend:$SHA \
+      $ACR_LOGIN_SERVER/nexus-crm-backend:$SHA
+    docker push $ACR_LOGIN_SERVER/nexus-crm-backend:$SHA
 ```
 
-The service layer resolves these in a single JOIN to `ref_data` rather than N+1 lookups. The frontend receives both the UUID (for form pre-population) and the label (for display), matching the existing pattern for `pipeline_name`, `stage_name`, `owner_name` in `DealResponse`.
+This keeps Azure always current with no manual image sync step.
 
-**Frontend dropdown pattern with TanStack Query:**
+### Route 53 Failover Routing (Near-Automatic Cutover)
 
-```typescript
-// Fetch all ref data once per category, cache for 10 minutes
-const { data: sectors } = useQuery({
-  queryKey: ['ref-data', 'sector'],
-  queryFn: () => api.get('/admin/ref-data?category=sector'),
-  staleTime: 10 * 60 * 1000,
-})
+| Record | Routing | Target |
+|--------|---------|--------|
+| `app.nexus-crm.com` (primary) | Failover PRIMARY + health check | AWS ALB |
+| `app.nexus-crm.com` (secondary) | Failover SECONDARY | Azure ACI public IP |
+
+Route 53 monitors the ALB health check endpoint. If primary fails 3 consecutive checks (default 30s interval = ~90s detection), DNS automatically resolves to the Azure ACI IP. Recovery is symmetric — when the AWS health check passes again, DNS reverts to primary.
+
+**Terraform resources:**
+```hcl
+resource "aws_route53_health_check" "primary" {
+  fqdn              = aws_lb.main.dns_name
+  port              = 443
+  type              = "HTTPS"
+  resource_path     = "/health"
+  failure_threshold = "3"
+  request_interval  = "30"
+}
+
+resource "aws_route53_record" "primary" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "app.nexus-crm.example.com"
+  type    = "A"
+  alias { name = aws_lb.main.dns_name, zone_id = aws_lb.main.zone_id, evaluate_target_health = true }
+  failover_routing_policy { type = "PRIMARY" }
+  health_check_id = aws_route53_health_check.primary.id
+  set_identifier  = "primary"
+}
+
+resource "aws_route53_record" "secondary" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "app.nexus-crm.example.com"
+  type    = "A"
+  records = [azurerm_container_group.app.ip_address]
+  ttl     = 60
+  failover_routing_policy { type = "SECONDARY" }
+  set_identifier = "secondary"
+}
 ```
 
-Ref data is low-volatility (changes rarely). Aggressive caching (10-minute staleTime) prevents redundant network calls across forms. Invalidate on admin save.
+### Secrets Consistency Between Clouds
 
-**Confidence:** HIGH — consistent with existing codebase patterns.
-
----
-
-## What to Avoid
-
-### Avoid: Storing ref data values as plain strings on parent tables
-
-Bad: `deal.sector = "Technology"` (String column, no FK)
-
-Why: Admin rename of "Technology" to "Tech & Software" requires a bulk `UPDATE deals SET sector = 'Tech & Software' WHERE sector = 'Technology'` across potentially thousands of rows. FK to ref_data makes rename a single row UPDATE.
-
-### Avoid: Python Enum for admin-configurable values
-
-Bad: `class Sector(str, Enum): technology = "Technology"`
-
-Why: Adding a new sector requires a code deploy. The whole point of admin-configurable reference data is runtime configurability.
-
-### Avoid: Autogenerate-only Alembic workflow
-
-Bad: Editing `models.py` then running `alembic revision --autogenerate`
-
-Why: The initial migration (`0001_initial`) used `create_all`, so autogenerate will produce incorrect diffs on a fresh database (it sees no schema to diff against). Always write explicit DDL in migration `upgrade()` / `downgrade()` bodies.
-
-### Avoid: Single monolithic migration for all PE fields
-
-Bad: One `0002_pe_all_fields.py` adding all new tables and columns
-
-Why: If the migration fails mid-way (e.g. FK to a table not yet created), the partial rollback is painful. Separate migrations per entity allow targeted downgrade.
-
-### Avoid: Multiple JSONB catch-all columns
-
-Bad: Adding `pe_fields: JSONB` alongside the existing `custom_fields: JSONB`
-
-Why: Splits the catch-all surface, creates ambiguity about where to put new fields. The existing `custom_fields` is the single JSONB escape hatch — add to it if truly needed, or create a dedicated column.
-
-### Avoid: `op.get_bind()` in new migrations
-
-Bad: The pattern in `0001_initial` calling `models.Base.metadata.create_all(bind=op.get_bind())`
-
-Why: `op.get_bind()` is deprecated in Alembic 1.12+ and will raise a warning. New migrations use the imperative DDL API (`op.add_column`, `op.create_table`) directly.
+The JWT secret used to sign access/refresh tokens must be identical in both clouds. Sessions started on AWS must decode on Azure after failover. Enforce this by:
+1. Generating the JWT secret once.
+2. Storing the same value in both `nexus-crm/{env}/app` (AWS Secrets Manager) and the Azure Key Vault equivalent.
+3. Referencing the same Key Vault secret name in both the ECS task definition and the ACI container group.
 
 ---
 
-## Supporting Libraries (No New Dependencies Required)
+## Terraform Workspace Structure
 
-All patterns above use only what is already installed:
+```
+terraform/
+  bootstrap/               # S3 bucket + DynamoDB table — run once with local state
+    main.tf
+  modules/                 # Shared local modules (optional)
+    ecs-service/           # Reusable ECS service + target group + security group
+    ecr/                   # ECR repo + lifecycle policy
+  aws/
+    staging/
+      main.tf              # Calls terraform-aws-modules
+      variables.tf
+      outputs.tf
+      terraform.tfvars
+    prod/
+      main.tf
+      variables.tf
+      outputs.tf
+      terraform.tfvars
+  azure/
+    staging/
+      main.tf
+      variables.tf
+      outputs.tf
+      terraform.tfvars
+    prod/
+      main.tf
+      variables.tf
+      outputs.tf
+      terraform.tfvars
+```
 
-| Need | Library | Already in stack |
-|------|---------|-----------------|
-| JSONB column type | `sqlalchemy.dialects.postgresql.JSONB` | Yes — `JSONVariant` alias in `models.py` |
-| Numeric financial fields | `sqlalchemy.Numeric` | Yes — used on `Deal.value`, `Company.annual_revenue` |
-| UUID primary keys | `uuid.uuid4` + `sqlalchemy.UUID` | Yes — universal across all models |
-| Alembic bulk_insert for seed | `alembic.op.bulk_insert` | Yes — Alembic 1.13 |
-| Pydantic v2 response schemas | `pydantic.BaseModel`, `ConfigDict` | Yes — Pydantic 2.6 |
-| TanStack Query caching | `useQuery`, `staleTime` | Yes — TanStack Query 5.64 |
-
-No new Python or npm packages are needed for this milestone.
-
----
-
-## Migration Checklist Summary
-
-- [ ] `0002_pe_ref_data.py` — CREATE TABLE ref_data with (org_id, category, value) unique constraint; seed TWG defaults via `op.bulk_insert`
-- [ ] `0003_contact_pe_fields.py` — ADD COLUMN on contacts: phones (JSONB array), assistant (Text), contact_type_id (FK ref_data), sector_pref_ids (JSONB array of UUIDs), previous_employment (JSONB), board_memberships (JSONB), linkedin_url (Text), legacy_id (String)
-- [ ] `0004_company_pe_fields.py` — ADD COLUMN on companies: company_type_id, company_sub_type_id, aum, ebitda, bite_size_min, bite_size_max, sector_id, sub_sector_id, tier_id, co_invest_ok (Boolean), is_watchlist (Boolean), coverage_user_id (FK users), legacy_id
-- [ ] `0005_deal_pe_fields.py` — ADD COLUMN on deals: transaction_type_id, fund, is_platform, is_add_on, source_type_id, revenue_usd, ebitda_usd, ev_usd, equity_investment_usd, date_cim, date_ioi, date_loi, date_mgmt_presentation, date_live_diligence, date_portfolio_company, passed_reason_id, legacy_id
-- [ ] `0006_deal_team_members.py` — CREATE TABLE deal_team_members (deal_id, user_id, role)
-- [ ] `0007_deal_counterparties.py` — CREATE TABLE deal_counterparties
-- [ ] `0008_deal_funding.py` — CREATE TABLE deal_funding
+Keep AWS and Azure in completely separate Terraform roots with separate state files. They share no Terraform-managed resources (the connection between them is application-level: DNS + DB replication + image mirroring). Combining them in one plan creates cross-provider dependency ordering issues and complicates targeted applies.
 
 ---
 
 ## Sources
 
-- Codebase analysis: `/Users/oscarmack/OpenClaw/nexus-crm/backend/models.py` (HIGH confidence — direct inspection)
-- Codebase analysis: `/Users/oscarmack/OpenClaw/nexus-crm/alembic/versions/0001_initial.py` (HIGH confidence — direct inspection)
-- Codebase analysis: `/Users/oscarmack/OpenClaw/nexus-crm/backend/services/_crm.py` (HIGH confidence — direct inspection)
-- SQLAlchemy 2.0 docs: `Mapped` typed column syntax, `DeclarativeBase`, async patterns (HIGH confidence — training knowledge consistent with observed codebase usage)
-- Alembic 1.13 docs: `op.add_column`, `op.create_table`, `op.bulk_insert`, deprecation of `op.get_bind()` (HIGH confidence — training knowledge, consistent with Alembic 1.13 changelog)
-- PostgreSQL NULL storage: NULL bitmap in heap tuple header, zero per-column overhead (HIGH confidence — PostgreSQL documentation, widely verified)
+- [hashicorp/terraform-provider-aws releases — v6.38.0](https://github.com/hashicorp/terraform-provider-aws/releases)
+- [hashicorp/terraform-provider-azurerm releases — v4.66.0](https://github.com/hashicorp/terraform-provider-azurerm/releases)
+- [terraform-aws-modules/ecs releases — v7.5.0 (Mar 18 2026)](https://github.com/terraform-aws-modules/terraform-aws-ecs/releases)
+- [terraform-aws-modules/vpc on Terraform Registry — v6.6.0](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest)
+- [terraform-aws-modules/rds on Terraform Registry](https://registry.terraform.io/modules/terraform-aws-modules/rds/aws/latest)
+- [terraform-aws-modules/elasticache on Terraform Registry](https://registry.terraform.io/modules/terraform-aws-modules/elasticache/aws/latest)
+- [terraform-aws-modules/alb on Terraform Registry](https://registry.terraform.io/modules/terraform-aws-modules/alb/aws/latest)
+- [terraform-aws-modules/acm on Terraform Registry — v5.x (Jan 8 2026)](https://registry.terraform.io/modules/terraform-aws-modules/acm/aws/latest)
+- [terraform-aws-modules/secrets-manager on Terraform Registry](https://registry.terraform.io/modules/terraform-aws-modules/secrets-manager/aws/latest)
+- [azurerm_postgresql_flexible_server — Terraform Registry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server)
+- [azurerm_container_group — Terraform Registry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group)
+- [Azure PostgreSQL Resiliency Architecture (Terraform reference)](https://github.com/Azure-Samples/Azure-PostgreSQL-Resiliency-Architecture)
+- [ECS secrets via Secrets Manager — AWS docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html)
+- [GitHub Actions OIDC with AWS IAM roles](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/)
+- [aws-actions/amazon-ecr-login v2](https://github.com/aws-actions/amazon-ecr-login)
+- [aws-actions/amazon-ecs-deploy-task-definition](https://github.com/aws-actions/amazon-ecs-deploy-task-definition)
+- [FastAPI Docker deployment guide](https://fastapi.tiangolo.com/deployment/docker/)
+- [RDS logical replication docs — AWS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_MultiAZDBCluster_LogicalRepl.html)
+- [Migrate RDS PostgreSQL to Azure — Microsoft Learn](https://learn.microsoft.com/en-us/azure/dms/tutorial-rds-postgresql-server-azure-db-for-postgresql-online)
+- [ECS health check pitfall — terraform-aws-modules/ecs issue #148](https://github.com/terraform-aws-modules/terraform-aws-ecs/issues/148)
+- [Automated deployments with GitHub Actions for ECS Express Mode — AWS blog (Mar 2026)](https://aws.amazon.com/blogs/containers/automated-deployments-with-github-actions-for-amazon-ecs-express-mode/)

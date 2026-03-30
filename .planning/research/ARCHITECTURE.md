@@ -1,722 +1,576 @@
-# Architecture Patterns: PE Data Model Expansion
+# Architecture Research: Cloud Deployment
 
-**Domain:** Private Equity CRM — deal counterparty pipeline, reference data, model expansion
-**Researched:** 2026-03-26
-**Overall confidence:** HIGH (grounded in existing codebase; SQLAlchemy 2.0 / Pydantic v2 / Alembic patterns verified from live source files)
-
----
-
-## Context: What Already Exists
-
-The codebase uses a consistent set of conventions throughout. All new work must follow these patterns exactly — diverging creates maintenance burden and breaks the service layer's helpers.
-
-**Established conventions to preserve:**
-- All PKs are UUIDs with `default=uuid4`
-- All org-owned models carry `org_id: Mapped[UUID]` with `ForeignKey("organizations.id", ondelete="CASCADE")`
-- Nullable FKs to other entities use `ondelete="SET NULL"`
-- Required FKs use `ondelete="RESTRICT"` (prevents orphan records without cascading deletes)
-- Monetary values use `Numeric(14, 2)` stored as `Decimal`
-- `JSONVariant` alias (`JSON` falling back to `JSONB` on PostgreSQL) used for unstructured fields
-- `StringList` alias (`MutableList` wrapping `JSON`/`ARRAY(Text)`) used for tag arrays
-- `created_at` / `updated_at` with `server_default=func.now()` and `onupdate=func.now()`
-- Services receive `(db: AsyncSession, current_user: User)` in constructor; routes are thin
-- All queries filter by `org_id == current_user.org_id` — multi-tenancy at the query layer
-- Response objects are built by explicit field mapping in a `_*_response(row)` static method, not via `from_attributes` on ORM objects returned directly from complex joins
-- The `_crm.py` shared helpers (`clamp_pagination`, `count_rows`, `merge_custom_fields`, `ensure_*_in_org`, `user_name_expr`) are used by every service
-
-The initial Alembic migration (`0001_initial.py`) uses `Base.metadata.create_all(bind)` — a shortcut that works once. New migrations must use explicit `op.create_table` / `op.add_column` calls. See the Migration Ordering section.
+**Project:** Nexus CRM v1.2 — AWS Primary + Azure Warm Failover
+**Researched:** 2026-03-29
+**Overall confidence:** HIGH (existing Terraform modules read directly; AWS/Azure patterns verified against official docs and current sources)
 
 ---
 
-## Question 1: DealCounterparty Stage Progression
+## System Diagram (text)
 
-### The Three Options Evaluated
+### AWS Primary (normal operations)
 
-**Option A: Boolean date columns per stage**
 ```
-nda_sent_at: Date | None
-nda_signed_at: Date | None
-nrl_signed_at: Date | None
-intro_materials_sent_at: Date | None
-vdr_access_granted_at: Date | None
-```
+Internet
+   |
+   v
+Route 53 (crm.example.com)
+   |
+   v
+CloudFront Distribution
+   |
+   +--[/api/*]--> ALB (public subnets, 2 AZs) ---> ECS Fargate: api service
+   |                                                   (private subnets, port 8000)
+   |                                                        |
+   +--[/*]---> S3: frontend bucket (static Vite build)      +---> RDS PostgreSQL
+                                                            |     (private subnets, Multi-AZ prod)
+                                                            |
+ECS Fargate: worker service (private subnets)              +---> ElastiCache Redis
+   (Celery, queues: default,linkedin,ai)                         (private subnets)
+   |
+   +---> RDS PostgreSQL
+   +---> ElastiCache Redis
 
-**Option B: Single enum status column**
-```
-stage: str  # "nda_sent" | "nda_signed" | "vdr_access" | ...
-```
+GitHub Actions (CI/CD)
+   |
+   +--[OIDC]--> ECR (nexus-crm-{env}-api, nexus-crm-{env}-worker)
+   |
+   +--[1]--> run migration task (ECS one-off: alembic upgrade head)
+   +--[2]--> update ECS service: api (rolling deploy)
+   +--[3]--> update ECS service: worker (rolling deploy)
+   +--[4]--> s3 sync: frontend/dist --> S3 frontend bucket
+   +--[5]--> CloudFront invalidation
 
-**Option C: Separate counterparty-stage junction table**
-```
-deal_counterparty_stages (counterparty_id, stage_name, reached_at)
-```
-
-### Recommendation: Option A — Boolean Date Columns
-
-**Use boolean date columns (nullable `Date` per milestone).**
-
-Rationale grounded in the domain:
-
-1. **PE counterparty pipeline is non-linear.** A counterparty can have NDA signed but intro materials not yet sent. VDR access can be granted before formal NRL. Option B (enum) enforces sequential stages that the workflow does not guarantee. Option A captures which milestones have been hit and when, without imposing an order.
-
-2. **The TWG Deal Tracker spreadsheet confirms this.** The source spreadsheet has per-counterparty columns: NDA Signed, NRL Signed, Intro Materials Sent, VDR Access, Feedback Received. These are independent boolean states with dates, not a linear funnel.
-
-3. **Querying is trivial.** "Show all counterparties who have VDR access but no feedback" is `vdr_access_granted_at IS NOT NULL AND feedback_received_at IS NULL` — a single-table index scan. Option C requires a join to the stage table plus two correlated subqueries. Option B cannot represent this state at all.
-
-4. **Option C over-engineers.** A separate stage table is appropriate when stages are user-configurable (like `PipelineStage` for `Pipeline`). The PE counterparty stages are fixed domain concepts defined by TWG's workflow; they do not need user configuration.
-
-5. **Column count is bounded and known.** There are 5-6 milestones. Adding 6 nullable date columns is not "sparse" at this scale.
-
-### Concrete Schema
-
-```python
-class DealCounterparty(Base):
-    __tablename__ = "deal_counterparties"
-    __table_args__ = (
-        UniqueConstraint("deal_id", "company_id", name="uq_deal_counterparty"),
-        Index("ix_deal_counterparties_deal", "deal_id"),
-        Index("ix_deal_counterparties_company", "company_id"),
-        Index("ix_deal_counterparties_org", "org_id"),
-    )
-
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(
-        ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
-    )
-    deal_id: Mapped[UUID] = mapped_column(
-        ForeignKey("deals.id", ondelete="CASCADE"), nullable=False
-    )
-    # The investor / counterparty firm (optional link — firm may not yet be in CRM)
-    company_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
-    )
-    # Free-text name for counterparties not yet in Companies table
-    counterparty_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-
-    # Primary contact at the counterparty (optional link)
-    contact_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Classification
-    investor_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    tier: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-
-    # Financial profile
-    check_size_min: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-    check_size_max: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-    aum: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD", server_default="USD")
-
-    # Pipeline milestone dates — nullable = not yet reached
-    nda_sent_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    nda_signed_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    nrl_signed_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    intro_materials_sent_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    vdr_access_granted_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    feedback_received_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-
-    # Qualitative tracking
-    feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    passed_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    pass_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    # Relationships
-    deal: Mapped[Deal] = relationship(back_populates="counterparties")
-    company: Mapped[Optional[Company]] = relationship(foreign_keys=[company_id])
-    contact: Mapped[Optional[Contact]] = relationship(foreign_keys=[contact_id])
-    org: Mapped[Organization] = relationship()
+AWS Secrets Manager
+   /nexus-crm/{env}/DATABASE_URL
+   /nexus-crm/{env}/SECRET_KEY
+   /nexus-crm/{env}/REDIS_URL
+   /nexus-crm/{env}/LINKEDIN_CLIENT_ID
+   /nexus-crm/{env}/LINKEDIN_CLIENT_SECRET
+   /nexus-crm/{env}/OPENCLAW_API_KEY
+   /nexus-crm/{env}/SENDGRID_API_KEY
+   (injected into ECS tasks at startup via execution role; never in task def plaintext)
 ```
 
-**Add to `Deal`:**
-```python
-counterparties: Mapped[list[DealCounterparty]] = relationship(
-    back_populates="deal", cascade="all, delete-orphan"
-)
+### Azure Warm Failover (idle, no live traffic)
+
 ```
+Azure Resource Group: nexus-crm-failover
+   |
+   +---> Azure Database for PostgreSQL (Flexible Server)
+   |        Logical replication subscriber from RDS primary
+   |        pglogical extension; receives WAL stream continuously
+   |        READ-ONLY until manual cutover
+   |
+   +---> Azure Container Instances (ACI) — api + worker
+            Pre-deployed, stopped (deallocated)
+            Image: mirrored from ECR to Azure Container Registry
+            Env vars: Azure Key Vault references
+            NOT receiving traffic until cutover
 
-**Add to `Organization`:**
-```python
-deal_counterparties: Mapped[list[DealCounterparty]] = relationship(
-    back_populates="org", cascade="all, delete-orphan"
-)
-```
-
-**UniqueConstraint explanation:** `UNIQUE(deal_id, company_id)` prevents duplicating a firm on the same deal. This is a partial uniqueness constraint — it does not block `company_id=NULL` rows (counterparties not yet in the CRM), which is intentional. PostgreSQL treats `NULL != NULL` in unique constraints.
-
-**Derived "current stage" for UI:** Compute this in the service, not the DB, based on which milestone dates are populated. The display order is: `intro_materials_sent_at` → `nda_sent_at` → `nda_signed_at` → `nrl_signed_at` → `vdr_access_granted_at` → `feedback_received_at`. The service returns the name of the furthest reached milestone as a `current_stage: str` computed field in the Pydantic response.
-
----
-
-## Question 2: DealFunding Schema
-
-DealFunding tracks committed capital per deal from specific capital providers.
-
-```python
-class DealFunding(Base):
-    __tablename__ = "deal_fundings"
-    __table_args__ = (
-        Index("ix_deal_fundings_deal", "deal_id"),
-        Index("ix_deal_fundings_org", "org_id"),
-    )
-
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(
-        ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
-    )
-    deal_id: Mapped[UUID] = mapped_column(
-        ForeignKey("deals.id", ondelete="CASCADE"), nullable=False
-    )
-    # Capital provider — FK to company (preferred) or free text
-    company_id: Mapped[Optional[UUID]] = mapped_column(
-        ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
-    )
-    provider_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-
-    # Commitment tracking
-    projected_commitment: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-    actual_commitment: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD", server_default="USD")
-
-    # Terms and notes
-    instrument_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    terms: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    comments: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    deal: Mapped[Deal] = relationship(back_populates="fundings")
-    company: Mapped[Optional[Company]] = relationship(foreign_keys=[company_id])
-    org: Mapped[Organization] = relationship()
-```
-
-**Add to `Deal`:**
-```python
-fundings: Mapped[list[DealFunding]] = relationship(
-    back_populates="deal", cascade="all, delete-orphan"
-)
+Manual Cutover (operator action):
+   1. Promote Azure PostgreSQL from replica to standalone (break replication)
+   2. Start ACI container groups (api + worker)
+   3. Update DNS: Route 53 / external DNS A record points to Azure ACI IP or Azure Application Gateway
+   4. Monitor Azure logs
 ```
 
 ---
 
-## Question 3: Reference Data Tables
+## New Components
 
-### The Three Options Evaluated
+| Component | AWS/Azure Service | Integrates With | Notes |
+|-----------|------------------|-----------------|-------|
+| VPC | AWS VPC | All AWS resources | 10.0.0.0/16, 2 public subnets (ALB), 2 private subnets (ECS/RDS/Redis), 2 NAT gateways |
+| Application Load Balancer | AWS ALB | CloudFront (origin), ECS api | HTTPS listener (port 443) with ACM cert; HTTP → HTTPS redirect; target type = ip (awsvpc mode) |
+| CloudFront Distribution | AWS CloudFront | S3 frontend bucket, ALB | Default behavior: S3 (static). /api/* behavior: ALB (cache disabled). SPA error 403/404 → index.html |
+| ECS Cluster | AWS ECS Fargate | VPC private subnets | Regional; api service + worker service share cluster |
+| API Task Definition | AWS ECS Fargate | ALB target group, Secrets Manager | Family: nexus-crm-{env}-api; port 8000; health check: GET /health; execution role pulls secrets |
+| Worker Task Definition | AWS ECS Fargate | Redis, RDS, Secrets Manager | Family: nexus-crm-{env}-worker; no ALB; Celery queues: default,linkedin,ai |
+| Migration Task Definition | AWS ECS Fargate | RDS | One-off, same image as API; override command: alembic upgrade head; runs before service updates |
+| ECR Repositories | AWS ECR | GitHub Actions, ECS | nexus-crm-{env}-api, nexus-crm-{env}-worker; scan on push enabled |
+| RDS PostgreSQL 15 | AWS RDS | ECS api + worker tasks | Private subnet group; Multi-AZ in prod; backup retention 7d; logical replication enabled for Azure replica |
+| ElastiCache Redis | AWS ElastiCache | ECS api + worker tasks | Private subnet group; Celery broker + result backend |
+| AWS Secrets Manager | AWS Secrets Manager | ECS execution role | 7-secret set per environment under /nexus-crm/{env}/ prefix |
+| S3 Assets Bucket | AWS S3 | ECS task role | User-uploaded files; server-side encryption AES256; versioning enabled |
+| S3 Frontend Bucket | AWS S3 | CloudFront OAC | Vite build output; no public access; bucket policy allows CloudFront OAC only |
+| ACM Certificate | AWS ACM | ALB listener, CloudFront | Wildcard or exact domain; must be in us-east-1 for CloudFront; ALB cert in deployment region |
+| Route 53 | AWS Route 53 | CloudFront, ACM validation | A/AAAA alias to CloudFront; CNAME for ACM DNS validation |
+| IAM OIDC Provider | AWS IAM | GitHub Actions | Trusts token.actions.githubusercontent.com; no long-lived AWS credentials stored in GitHub |
+| GitHub Actions Role | AWS IAM | ECR, ECS, S3, CloudFront | Scoped to main branch of the repo; can push to ECR, register task defs, update ECS services |
+| Azure PostgreSQL Flexible Server | Azure | RDS (replication source) | pglogical subscriber; wal_level=logical on RDS; shared_preload_libraries=pglogical on both ends |
+| Azure Container Instances | Azure | Azure Key Vault, Azure PostgreSQL | Container groups for api + worker; stopped until cutover; images from Azure Container Registry |
+| Azure Container Registry | Azure | ACI, GitHub Actions (secondary push) | Mirror of ECR images pushed on each deploy |
+| Azure Key Vault | Azure | ACI container definitions | Mirrors of Secrets Manager secrets; provides env vars to ACI at startup |
 
-**Option A: Single polymorphic `ref_data` table**
+---
+
+## Modified Components
+
+These are existing app components that require changes for cloud operation. The app code itself is Docker-agnostic (reads env vars), so most changes are operational rather than code changes.
+
+### 1. entrypoint.sh — Migration Separation (CRITICAL)
+
+**Current behavior:** `entrypoint.sh` runs `alembic upgrade head` then starts uvicorn in the same container startup.
+
+**Problem:** In ECS rolling deployments, multiple api task instances start in parallel. All of them run `alembic upgrade head` simultaneously. This causes concurrent migration races and can corrupt migration state.
+
+**Required change:** The deploy pipeline must run migrations as a separate one-off ECS task before any service update. The entrypoint should detect whether it is running as a migration task (e.g., via `MIGRATION_ONLY=true` env var) and exit after migration, OR the migration step should override the container command entirely (`["alembic", "upgrade", "head"]`) in the one-off task definition rather than using the default entrypoint.
+
+**Simplest approach:** Create a separate `migration` task definition (same image as api) that overrides the command with `["sh", "-c", "alembic upgrade head"]` and does not start uvicorn. The `entrypoint.sh` in the api service task can keep or remove the `alembic upgrade head` call — removing it is cleaner and prevents the race condition.
+
+### 2. FastAPI app — /health endpoint (ALREADY PRESENT, verify)
+
+The ECS task definition and ALB target group both depend on `GET /health` returning HTTP 200. Confirm this endpoint exists in `backend/api/main.py`. The ALB health check is configured with path `/health`, matcher `200`, interval 30s, timeout 5s, thresholds 2 healthy / 3 unhealthy.
+
+### 3. Backend config — STORAGE_TYPE env var
+
+**Current:** Docker Compose runs with local filesystem or unset storage.
+
+**Cloud:** ECS tasks receive `STORAGE_TYPE=s3` and `S3_BUCKET_NAME={assets-bucket}` as plain environment variables (not secrets). The `backend/config.py` and `backend/storage/` module must handle `STORAGE_TYPE=s3` branching. This is already handled in the existing ECS task definitions (`container_environment` local in modules/ecs/main.tf and modules/ecs_worker/main.tf).
+
+### 4. DATABASE_URL format — async vs sync driver
+
+**Current:** `entrypoint.sh` already handles this: if `DATABASE_URL` uses `postgresql+asyncpg://` it derives `DATABASE_URL_SYNC` with `postgresql+psycopg://` for Alembic. This pattern must be preserved when the Alembic migration runs as a one-off ECS task — it needs `DATABASE_URL_SYNC` or the same derivation logic in its entrypoint.
+
+### 5. RDS parameter group — logical replication for Azure replica
+
+**Required RDS parameter group changes** (applied via Terraform, triggers instance restart):
+- `rds.logical_replication = 1`
+- `max_wal_senders = 10`
+- `max_replication_slots = 10`
+- `shared_preload_libraries = pglogical` (add to existing value)
+
+This is a **modification to the existing RDS module** — add an `aws_db_parameter_group` resource with these parameters, and reference it in `aws_db_instance.this`. Without this, the Azure PostgreSQL replica cannot subscribe via pglogical.
+
+### 6. GitHub Actions workflow — new file needed
+
+A `.github/workflows/deploy.yml` does not yet exist. It must be created. Key steps (see Build Order section for sequencing):
+- Trigger: push to `main`
+- Auth: `aws-actions/configure-aws-credentials` with OIDC (role ARN from Terraform output `github_actions_role_arn`)
+- Build: `docker build` api image, tag with `git sha` and `latest`
+- Push: `aws-actions/amazon-ecr-login` + `docker push` to ECR
+- Migrate: run one-off ECS task with `alembic upgrade head` command; wait for it to stop successfully
+- Deploy api: `aws-actions/amazon-ecs-deploy-task-definition` (renders new image URI into task def, updates service, waits for stability)
+- Deploy worker: same pattern for worker service
+- Deploy frontend: `npm run build`, `aws s3 sync`, `aws cloudfront create-invalidation`
+
+---
+
+## Terraform Structure
+
+### Current State (what exists)
+
+The existing Terraform lives in `/terraform/` as a **single root module** with environment distinguished by `var.environment` and separate `terraform.tfvars` files. This is a functional approach for a two-environment setup.
+
 ```
-ref_data (id, org_id, category, value, label, sort_order, is_active)
+terraform/
+  main.tf                   # root: providers, ECR, S3 assets, module calls
+  variables.tf
+  outputs.tf
+  terraform.tfvars          # currently staging values
+  modules/
+    networking/             # VPC, subnets, NAT, security groups
+    alb/                    # ALB, target group, listeners
+    cloudfront/             # CloudFront dist, S3 frontend bucket, OAC
+    ecs/                    # ECS cluster, api task def, api service, autoscaling
+    ecs_worker/             # worker task def, worker service
+    elasticache/            # Redis subnet group, cluster
+    iam/                    # execution role, task role, GitHub OIDC role
+    rds/                    # RDS instance, subnet group, parameter group
+    secrets/                # Secrets Manager secrets
 ```
 
-**Option B: Per-type tables**
+### Recommended Structure for Multi-Environment + Azure
+
+Add two new directories and a dedicated Azure module alongside the existing modules:
+
 ```
-sectors, sub_sectors, transaction_types, tiers, contact_types, ...
-```
-
-**Option C: Org `settings` JSONB blob**
-```
-Organization.settings["sectors"] = ["PE", "VC", ...]
-```
-
-### Recommendation: Option A — Single Polymorphic Reference Table
-
-**Use a single `ref_data` table with a `category` discriminator column.**
-
-Rationale:
-
-1. **Reference categories are structurally identical.** Every category needs the same columns: `value` (machine key), `label` (display text), `sort_order` (display ordering), `is_active` (soft delete), `is_system` (seeded values that cannot be deleted), `org_id` (org-scoped). There is no category that needs additional columns at this time.
-
-2. **Admin CRUD is one service, one route module.** With per-type tables (Option B), you write 10+ identical services and route handlers. With a single table, one `RefDataService` handles all categories via a `category` filter parameter.
-
-3. **Seeding is straightforward.** One Alembic migration seeds all categories in a single `op.bulk_insert` call. New categories are added as new seed rows, not schema changes.
-
-4. **Option C (JSONB blob) is wrong for structured reference data.** You cannot FK-reference a value inside a JSONB array from `deals.sector_id`. You cannot enforce uniqueness. You cannot query efficiently. Reserve JSONB for truly unstructured config.
-
-5. **The pattern already exists in the codebase.** `PipelineStage.stage_type` stores `"open" | "won" | "lost"` as discriminated string values in a common table. Reference data is the admin-managed equivalent.
-
-### Concrete Schema
-
-```python
-class RefData(Base):
-    __tablename__ = "ref_data"
-    __table_args__ = (
-        UniqueConstraint("org_id", "category", "value", name="uq_ref_data_org_category_value"),
-        Index("ix_ref_data_org_category", "org_id", "category"),
-        Index("ix_ref_data_org_category_active", "org_id", "category", "is_active"),
-    )
-
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    org_id: Mapped[UUID] = mapped_column(
-        ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
-    )
-    category: Mapped[str] = mapped_column(String(50), nullable=False)
-    # category values: "sector" | "sub_sector" | "transaction_type" | "tier"
-    #                  "contact_type" | "company_type" | "company_sub_type"
-    #                  "currency" | "deal_source_type" | "pass_dead_reason"
-
-    value: Mapped[str] = mapped_column(String(100), nullable=False)   # machine key, e.g. "financial_services"
-    label: Mapped[str] = mapped_column(String(255), nullable=False)   # display text, e.g. "Financial Services"
-    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="1")
-    is_system: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="0"
-    )
-    # is_system=True: seeded by migration, cannot be deleted via admin UI — only deactivated
-    parent_value: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    # parent_value: used for sub_sector → sector hierarchy. e.g. sub_sector.parent_value = "technology"
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-
-    org: Mapped[Organization] = relationship()
+terraform/
+  modules/
+    networking/             # (existing)
+    alb/                    # (existing)
+    cloudfront/             # (existing)
+    ecs/                    # (existing)
+    ecs_worker/             # (existing)
+    elasticache/            # (existing)
+    iam/                    # (existing)
+    rds/                    # (existing) — add parameter group for pglogical
+    secrets/                # (existing)
+    azure_failover/         # NEW: Azure PostgreSQL + ACI + ACR + Key Vault
+      main.tf
+      variables.tf
+      outputs.tf
+  environments/
+    staging/
+      main.tf               # calls all modules with staging vars
+      variables.tf
+      terraform.tfvars      # staging-specific (non-secret) values
+      backend.tfvars        # bucket=..., key=staging/terraform.tfstate, region=...
+    prod/
+      main.tf               # calls all modules with prod vars
+      variables.tf
+      terraform.tfvars      # prod-specific (non-secret) values
+      backend.tfvars        # bucket=..., key=prod/terraform.tfstate, region=...
 ```
 
-**`parent_value` for hierarchical categories:** Sub-sectors belong to sectors. Store the parent sector's `value` string in `sub_sector.parent_value`. This is a denormalized reference (not a FK) intentionally — it avoids a self-join and the parent is always within the same table/org/category. Query: `WHERE category='sub_sector' AND parent_value='technology' AND is_active=true`.
+**Why environments/ directories instead of workspaces:**
 
-**Seeded values in migration:** System seed rows are inserted with `is_system=True`. Admin UI must call `PATCH /ref-data/{id}` which sets `is_active=False` rather than allowing `DELETE` for system rows. `DELETE` is permitted for non-system rows only.
+Workspaces share one root module and use `terraform.workspace` to branch variable values. This creates a single `terraform plan` blast radius — a mistake in staging vars can plan against prod state. Separate environment directories are the AWS Prescriptive Guidance recommendation: each has its own state file path, its own `backend.tfvars`, and its own variable overrides. Teams can restrict prod backend access to CI only.
 
-**Linking ref_data to domain models:** Domain models (Deal, Contact, Company) store the `value` string as a plain `String` column, not a UUID FK to `ref_data`. This is intentional:
-- Avoids a FK constraint that would break if a ref_data row is deactivated
-- Keeps the deals/contacts tables readable without joining ref_data for every query
-- Ref data values are validated at write time in the service layer (check that the value exists and is active before persisting)
+**State Backend Strategy:**
 
-Example on `Deal`:
-```python
-sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-# Validated on write: assert ref_data WHERE category='sector' AND value=sector AND is_active=true EXISTS
+- **AWS state:** S3 bucket (`nexus-crm-terraform-state`) + native S3 locking (`use_lockfile = true` — DynamoDB locking is deprecated in Terraform's S3 backend). Separate keys per environment: `staging/terraform.tfstate`, `prod/terraform.tfstate`.
+- **Azure state:** Can share the same S3 bucket with a different key path (`azure-failover/terraform.tfstate`), OR use a separate Azure Storage Account backend. Sharing the S3 bucket is simpler to bootstrap because the S3 bucket is already managed by the AWS deploy pipeline.
+- **Bootstrap order:** S3 state bucket and DynamoDB table (if you keep it for legacy reasons) must exist before `terraform init`. Create them manually once, or with a separate `bootstrap/` Terraform root that uses local state.
+
+**Backend initialization:**
+
+```bash
+# staging
+cd terraform/environments/staging
+terraform init -backend-config=backend.tfvars
+
+# prod
+cd terraform/environments/prod
+terraform init -backend-config=backend.tfvars
 ```
 
-**Add to `Organization`:**
-```python
-ref_data: Mapped[list[RefData]] = relationship(back_populates="org", cascade="all, delete-orphan")
+**Variable file pattern:**
+
+```
+# terraform.tfvars (non-sensitive, committed)
+app_name        = "nexus-crm"
+environment     = "staging"
+aws_region      = "us-east-1"
+db_instance_class = "db.t3.micro"
+api_cpu         = 512
+...
+
+# Sensitive vars passed via CI environment or -var flag — never committed:
+secret_key, linkedin_client_secret, openclaw_api_key, sendgrid_api_key
+```
+
+**azure_failover module inputs:**
+
+```
+azure_region          = "eastasia"            # co-located with AWS us-east-1 is acceptable; choose by data residency requirement
+rds_endpoint          = module.rds.endpoint   # replication source
+rds_replication_slot  = "azure_replica"
+db_admin_password     = var.azure_db_password
+acr_name              = "${local.name_prefix}-acr"
+api_image_uri         = "${module.ecs.api_image_uri}"  # or ECR URI for cross-registry push
 ```
 
 ---
 
-## Question 4: Expanding Existing Models with Many New Fields
+## Data Flow: Normal Operations
 
-### Strategy: Direct Column Expansion, All Nullable
+### HTTPS Request (browser to API)
 
-**Add all new PE fields as nullable `mapped_column` entries directly on the existing models.** Do not use extension tables, JSON catch-all columns, or EAV patterns.
-
-Rationale:
-
-1. **The fields are not sparse enough to justify EAV.** 20-40 new fields sounds like a lot, but these are first-class PE data points that will be queried, sorted, and filtered. EAV (entity-attribute-value) makes every filter a join. Direct columns keep the query plan flat.
-
-2. **The existing `custom_fields: JSONVariant` already absorbs truly sparse one-off data.** New PE Blueprint fields are structured and known — they belong as typed columns. Unstructured data continues to go into `custom_fields`.
-
-3. **Extension tables add join complexity for no benefit here.** Extension tables (1-to-1 joined tables) are warranted when you have optional modules where most rows have no data at all (e.g., only 5% of contacts have the PE extension data). At TWG, all contacts and companies will have PE context — the data is the core use case, not an extension.
-
-4. **Nullable columns with `server_default=None` are backward compatible.** Existing API consumers receive `null` for new fields. This matches the Pydantic pattern in use (`str | None = None`).
-
-### Deal New Fields
-
-```python
-# Transaction classification
-transaction_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-fund: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-is_platform: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-# is_platform=False means add-on deal
-
-# Deal team (stored as list of user IDs or free-text names)
-deal_team_members: Mapped[list[str]] = mapped_column(StringList, nullable=False, default=list)
-
-# Source tracking
-deal_source_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-deal_source_detail: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-
-# Financial metrics
-revenue: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-ebitda: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-enterprise_value: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-equity_investment: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-
-# Date milestones
-cim_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-ioi_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-loi_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-management_presentation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-live_diligence_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-portfolio_company_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-
-# Outcome
-pass_reason: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-dead_reason: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-
-# Reference
-legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+```
+1. Browser: GET https://crm.example.com/api/v1/deals
+2. Route 53: resolves crm.example.com → CloudFront distribution CNAME
+3. CloudFront: matches /api/* behavior → origin: ALB (caching disabled, AllViewer request policy)
+4. ALB: HTTPS listener (port 443, ACM cert) → HTTP forward to target group (port 8000, target type ip)
+5. ALB health check: confirmed healthy ECS task IPs in target group
+6. ECS Fargate api task: receives request on port 8000 → uvicorn → FastAPI router
+7. FastAPI: reads DATABASE_URL from env (injected by Secrets Manager at task startup)
+8. FastAPI → asyncpg → RDS PostgreSQL (private subnet, port 5432)
+9. Response flows back: RDS → FastAPI → uvicorn → ALB → CloudFront → browser
 ```
 
-### Contact New Fields
+### HTTPS Request (browser to frontend)
 
-```python
-phone_mobile: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-phone_direct: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-assistant_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-assistant_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-contact_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # ref_data: contact_type
-sector_preferences: Mapped[list[str]] = mapped_column(StringList, nullable=False, default=list)
-coverage_person_id: Mapped[Optional[UUID]] = mapped_column(
-    ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-)
-previous_employment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-board_memberships: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+```
+1. Browser: GET https://crm.example.com/
+2. CloudFront: matches default behavior → origin: S3 frontend bucket (via OAC)
+3. S3: returns index.html (or hashed static asset)
+4. React app: hydrates, makes /api/* calls (same CloudFront domain, cached /api/* behavior)
 ```
 
-**Note on `coverage_person_id`:** Adds a second FK from `Contact` to `User`. The existing `owner_id` FK already exists. SQLAlchemy handles multiple FKs to the same table correctly, but the relationship definition on `User` needs `foreign_keys=` specified explicitly (the same pattern used for `Task.assignee_id` / `Task.created_by` already in the codebase).
+### Celery Task Dispatch
 
-### Company New Fields
+```
+1. FastAPI handler: enqueues task → Redis broker (ElastiCache, private subnet, port 6379)
+   DATABASE_URL / REDIS_URL injected by Secrets Manager at task startup
+2. Celery worker ECS task: polls Redis → receives task → executes (e.g., AI deal scoring, LinkedIn import)
+3. Worker → RDS (read/write) + Redis (result backend)
+4. Worker → S3 assets bucket (if storing files, via task role s3:PutObject)
+```
 
-```python
-company_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)   # ref_data: company_type
-company_sub_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # ref_data: company_sub_type
-aum: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-ebitda: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-bite_size_min: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-bite_size_max: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
-investment_preferences: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-tier: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)   # ref_data: tier
-sector: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # ref_data: sector
-sub_sector: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # ref_data: sub_sector
-co_invest: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-watchlist: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
-coverage_person_id: Mapped[Optional[UUID]] = mapped_column(
-    ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-)
-country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD", server_default="USD")
-legacy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+### Secret Injection Flow
+
+```
+ECS task startup (execution role):
+1. ECS agent: reads task definition container_definitions.secrets[]
+   Each entry: { name: "DATABASE_URL", valueFrom: "arn:aws:secretsmanager:..." }
+2. Execution role: secretsmanager:GetSecretValue on /nexus-crm/{env}/* ARN pattern
+3. ECS agent: fetches secret string, injects as env var into container process
+4. Container: reads os.environ["DATABASE_URL"] — no awareness of Secrets Manager
+```
+
+### GitHub Actions Deploy Flow
+
+```
+Push to main branch:
+1. GitHub Actions: requests OIDC token from token.actions.githubusercontent.com
+2. aws-actions/configure-aws-credentials: exchanges OIDC token for temporary AWS credentials
+   (AssumeRoleWithWebIdentity → github-actions-role, constrained to repo + main branch)
+3. docker build api image → tag with ${GITHUB_SHA:0:7} and "latest"
+4. aws ecr get-login-password | docker login → ECR
+5. docker push → ECR nexus-crm-{env}-api repo
+6. docker build worker image → push → ECR nexus-crm-{env}-worker repo
+7. Run one-off ECS migration task:
+   - Register task definition (api image, command override: ["sh", "-c", "alembic upgrade head"])
+   - ecs run-task --launch-type FARGATE --wait-for-task-stopped
+   - Check exit code — fail pipeline if non-zero
+8. Render api task definition with new image URI (amazon-ecs-render-task-definition)
+9. Deploy api service (amazon-ecs-deploy-task-definition, wait-for-service-stability: true)
+10. Render worker task definition with new image URI
+11. Deploy worker service (wait-for-service-stability: true)
+12. npm run build (frontend)
+13. aws s3 sync frontend/dist s3://{frontend-bucket} --delete
+14. aws cloudfront create-invalidation --paths "/*"
 ```
 
 ---
 
-## API Backward Compatibility
+## Data Flow: Failover
 
-### Rule: Additive Only, No Breaking Changes
+### What Changes During Cutover
 
-All new fields on existing models are `Optional` (nullable) with a default of `None`. This means:
+Failover is **manual** — it is a deliberate operator action, not automatic. Azure is in warm standby: containers are pre-deployed (stopped/deallocated), database is a live read-only replica. RTO is estimated 15-30 minutes.
 
-1. **Existing `POST /deals` requests continue to work.** The new fields are absent from the request body — Pydantic treats absent optional fields as `None`.
-2. **Existing `GET /deals` responses include new fields with `null` values.** Frontend consumers that do not know about the new fields ignore unknown keys (standard JSON behavior; TanStack Query does not break on extra keys).
-3. **No URL versioning required.** The change is additive. URL versioning (`/api/v2/deals`) is only needed when a breaking change is unavoidable — removing a required field, changing a field's type, or restructuring the response envelope. None of those apply here.
-
-### Pydantic v2 Schema Extension Pattern
-
-The codebase uses `BaseModel` with `ConfigDict(from_attributes=True)` on response schemas. The correct extension pattern is field addition with `Optional[T] = None` default — not schema inheritance or `model_config` changes.
-
-**For `DealCreate` / `DealUpdate` (input schemas):** Add optional fields with defaults.
-
-```python
-class DealCreate(BaseModel):
-    # ... existing fields unchanged ...
-    transaction_type: str | None = None
-    fund: str | None = None
-    is_platform: bool = False
-    revenue: float | None = None
-    ebitda: float | None = None
-    enterprise_value: float | None = None
-    equity_investment: float | None = None
-    cim_date: date | None = None
-    ioi_date: date | None = None
-    loi_date: date | None = None
-    # ... etc
-```
-
-**For `DealResponse` (output schema):** Add optional fields with `None` default. Because the service builds `DealResponse` via explicit constructor call (not `model_validate(orm_obj)`), each new field must also be added to the `_deal_response()` static method in `DealService`.
-
-```python
-class DealResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    # ... existing fields unchanged ...
-    transaction_type: str | None = None
-    fund: str | None = None
-    is_platform: bool = False
-    revenue: float | None = None
-    # ... etc
-    counterparties: list[DealCounterpartyResponse] | None = None  # optional sideload
-```
-
-**Pydantic v2 caveat on `from_attributes`:** The `_deal_response()` method in `DealService` constructs `DealResponse` by passing individual keyword arguments (not `model_validate(row[0])`). This means adding a field to `DealResponse` does NOT automatically populate it — you must also add the field to the explicit constructor call in `_deal_response()`. This is a subtle trap. The pattern is correct and safe; just remember both files must be updated together.
-
-### New Sub-Entities: Nested vs Separate Routes
-
-DealCounterparty and DealFunding are sub-resources of Deal. Use nested routes:
+### Pre-cutover State (warm standby running)
 
 ```
-GET    /deals/{deal_id}/counterparties
-POST   /deals/{deal_id}/counterparties
-GET    /deals/{deal_id}/counterparties/{counterparty_id}
-PUT    /deals/{deal_id}/counterparties/{counterparty_id}
-DELETE /deals/{deal_id}/counterparties/{counterparty_id}
+RDS primary (us-east-1, port 5432)
+   |
+   +--[pglogical logical replication]-->  Azure PostgreSQL Flexible Server (eastasia)
+                                          - wal_level=logical on RDS
+                                          - pglogical subscriber on Azure
+                                          - receives WAL continuously, ~seconds behind
+                                          - READ-ONLY (replica mode)
 
-GET    /deals/{deal_id}/fundings
-POST   /deals/{deal_id}/fundings
-GET    /deals/{deal_id}/fundings/{funding_id}
-PUT    /deals/{deal_id}/fundings/{funding_id}
-DELETE /deals/{deal_id}/fundings/{funding_id}
+Azure Container Instances (ACI):
+   - Container groups defined, images current (mirrored from ECR on each deploy)
+   - Status: STOPPED (zero cost for compute)
+   - Key Vault: populated with failover env vars pointing to Azure PostgreSQL endpoint
 ```
 
-**Why nested:** The existing `/{deal_id}/activities` and `/{deal_id}/move-stage` routes in `deals.py` establish this pattern. Sub-resources of a deal live under the deal's URL path.
-
-**Service pattern:** Create `DealCounterpartyService(db, current_user)` and `DealFundingService(db, current_user)` following the exact constructor signature of `DealService`. Register the new routes either in `deals.py` (if the team prefers a single file for deal-related resources) or in new files `deal_counterparties.py` and `deal_fundings.py` mounted to the same `/deals` prefix. The separate files approach is preferred for maintainability.
-
-### Reference Data Routes
+### Cutover Procedure (step by step)
 
 ```
-GET    /ref-data?category=sector          # list values for a category
-POST   /ref-data                          # admin: create a custom value
-PATCH  /ref-data/{id}                     # admin: update label/sort_order/is_active
-DELETE /ref-data/{id}                     # admin: delete (non-system rows only)
-GET    /ref-data/categories               # list all known categories
+Step 1 — Stop writes to AWS
+   a. Update ECS api service desired_count = 0 (stops new requests)
+      OR set Route 53 health check failure to stop routing to ALB
+   b. Wait for in-flight requests to drain (ALB connection draining, ~30s)
+
+Step 2 — Promote Azure PostgreSQL
+   a. Break pglogical subscription on Azure: SELECT pglogical.drop_subscription('aws_primary')
+   b. Confirm replication lag is near-zero before stopping (check pg_stat_replication on RDS)
+   c. Azure PostgreSQL becomes a standalone writable instance
+
+Step 3 — Start ACI containers
+   a. az container start --resource-group nexus-crm-failover --name nexus-crm-api
+   b. az container start --resource-group nexus-crm-failover --name nexus-crm-worker
+   c. Wait for health checks to pass (ACI → Azure PostgreSQL connection verified)
+
+Step 4 — Cut DNS
+   a. Route 53: update A record (or CNAME) for crm.example.com
+      FROM: CloudFront distribution (→ ALB → ECS)
+      TO:   Azure ACI public IP or Azure Application Gateway IP
+   b. Set low TTL (60s) before cutover to minimize caching impact
+   c. DNS propagation: 1-5 minutes globally given low TTL
+
+Step 5 — Verify
+   a. Smoke test: GET https://crm.example.com/health → 200
+   b. Test authenticated API call
+   c. Monitor Azure Container Instances logs
+
+Step 6 (post-incident) — Fail back to AWS
+   a. Restore RDS primary (if failed) or confirm it is still running
+   b. Re-establish replication (Azure → RDS or fresh pg_dump/restore)
+   c. Drain ACI, cut DNS back to CloudFront
 ```
 
-Authorization: `GET` is available to all authenticated users in the org. `POST`/`PATCH`/`DELETE` requires `require_role("org_admin", "super_admin")` using the existing `require_role` dependency.
+### What Does NOT Change During Failover
 
----
+- The application code — same Docker images (mirrored to ACR)
+- The secret values — Azure Key Vault mirrors Secrets Manager contents
+- The database schema — Azure replica is schema-identical via logical replication
+- The frontend — S3/CloudFront static assets are independent; optionally mirror to Azure Blob + Azure CDN, or keep on AWS CloudFront (frontend calls will still work if API DNS is updated)
 
-## Alembic Migration Ordering
-
-The initial migration (`0001_initial.py`) uses `Base.metadata.create_all(bind)` which is a one-shot schema creation. All subsequent migrations must use explicit DDL operations. The migration chain must respect foreign key dependencies.
-
-### Migration Dependency Graph
+### Failover Data Flow
 
 ```
-0001_initial.py  (organizations, teams, users, contacts, companies, deals, ...)
-  └── 0002_ref_data.py
-        Creates: ref_data table + org_id FK to organizations
-        Seeds: all TWG system values (is_system=True)
-
-  └── 0003_expand_contacts.py
-        ALTER contacts: ADD COLUMN phone_mobile, phone_direct, assistant_name,
-                        assistant_email, contact_type, sector_preferences,
-                        coverage_person_id, previous_employment, board_memberships, legacy_id
-
-  └── 0004_expand_companies.py
-        ALTER companies: ADD COLUMN company_type, company_sub_type, aum, ebitda,
-                         bite_size_min, bite_size_max, investment_preferences, tier,
-                         sector, sub_sector, co_invest, watchlist, coverage_person_id,
-                         country, currency, legacy_id
-
-  └── 0005_expand_deals.py
-        ALTER deals: ADD COLUMN transaction_type, fund, is_platform, deal_team_members,
-                     deal_source_type, deal_source_detail, revenue, ebitda,
-                     enterprise_value, equity_investment, cim_date, ioi_date, loi_date,
-                     management_presentation_date, live_diligence_date,
-                     portfolio_company_date, pass_reason, dead_reason, legacy_id
-
-  └── 0006_deal_counterparties.py
-        Creates: deal_counterparties table
-        FKs: organizations.id, deals.id, companies.id, contacts.id
-        Depends on: 0001 (organizations, deals, companies, contacts)
-
-  └── 0007_deal_fundings.py
-        Creates: deal_fundings table
-        FKs: organizations.id, deals.id, companies.id
-        Depends on: 0001 (organizations, deals, companies)
-```
-
-**Rule:** Tables that have FKs into other tables must be created after those tables. The `ref_data` table only depends on `organizations`, so it can be migration 0002. `deal_counterparties` depends on `deals`, `companies`, `contacts`, and `organizations` — all in `0001`, so it is safe as 0006.
-
-**ALTER TABLE ordering:** Alembic `op.add_column` is safe on a running PostgreSQL database when adding nullable columns or columns with defaults — no table lock is acquired for the data rewrite (PostgreSQL 11+). All new columns here are either nullable or have `server_default` values. Do not combine dozens of `ADD COLUMN` calls in one `op.execute(ALTER TABLE...)` string; use individual `op.add_column()` calls so Alembic can correctly generate downgrade operations.
-
-**Downgrade operations:** Always implement `downgrade()` using `op.drop_column` / `op.drop_table`. The initial migration's `metadata.drop_all` approach is acceptable only for the initial schema — later migrations must be individually reversible for safe rollbacks in production.
-
-### Migration File Template for ALTER
-
-```python
-"""expand deals with PE fields"""
-
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
-
-revision = "0005_expand_deals"
-down_revision = "0004_expand_companies"
-branch_labels = None
-depends_on = None
-
-
-def upgrade() -> None:
-    op.add_column("deals", sa.Column("transaction_type", sa.String(50), nullable=True))
-    op.add_column("deals", sa.Column("fund", sa.String(100), nullable=True))
-    op.add_column("deals", sa.Column("is_platform", sa.Boolean(), nullable=False,
-                                     server_default="0"))
-    op.add_column("deals", sa.Column("revenue", sa.Numeric(14, 2), nullable=True))
-    # ... etc
-    op.create_index("ix_deals_legacy_id", "deals", ["legacy_id"])
-
-
-def downgrade() -> None:
-    op.drop_index("ix_deals_legacy_id", table_name="deals")
-    op.drop_column("deals", "revenue")
-    op.drop_column("deals", "is_platform")
-    op.drop_column("deals", "fund")
-    op.drop_column("deals", "transaction_type")
-    # ... etc
+Browser: GET https://crm.example.com/api/v1/deals
+DNS: crm.example.com → Azure ACI public IP (or Azure Application Gateway)
+ACI api container: uvicorn → FastAPI
+FastAPI → psycopg (sync) / asyncpg (async) → Azure PostgreSQL Flexible Server (standalone, writable)
+Response: ACI → browser
 ```
 
 ---
 
-## SQLAlchemy 2.0 Relationship Patterns for New Entities
+## Recommended Build Order
 
-### Multiple FKs to the Same Table
+Each phase has a dependency that must be satisfied before the next can proceed. Networking must exist before compute references subnet IDs. Compute must exist before the CI/CD pipeline can reference cluster names and service names. Azure failover is last because it depends on a live RDS instance as replication source.
 
-`Contact` and `Company` will have both `owner_id` and `coverage_person_id` pointing to `users`. The existing codebase already demonstrates the required pattern in `Task` (two FKs to `users`: `assignee_id` and `created_by`):
+### Phase 1 — State Backend Bootstrap (prerequisite, one-time manual)
 
-```python
-# In Contact model:
-owner: Mapped[Optional[User]] = relationship(
-    back_populates="owned_contacts", foreign_keys=[owner_id]
-)
-coverage_person: Mapped[Optional[User]] = relationship(
-    foreign_keys=[coverage_person_id]
-    # No back_populates needed unless User needs to list all contacts it covers
-)
-```
+**What:** Create the S3 bucket and enable S3 native locking that will hold Terraform state.
 
-Do NOT add `back_populates` on `User` for `coverage_person` unless the frontend needs to query "which contacts does this user cover." If needed, add:
-```python
-# In User model:
-covered_contacts: Mapped[list[Contact]] = relationship(
-    back_populates="coverage_person", foreign_keys="Contact.coverage_person_id"
-)
-```
+**Why first:** Terraform cannot `init` with an S3 backend until that bucket exists. This is a chicken-and-egg problem. The bucket is created manually (AWS console or CLI) once, then all subsequent Terraform operations use it.
 
-### Async Lazy Loading is Disabled
+**Tasks:**
+- Create S3 bucket `nexus-crm-terraform-state` with versioning enabled, SSE-AES256, block public access
+- Enable `use_lockfile = true` in backend config (replaces DynamoDB)
+- Create `environments/staging/backend.tfvars` and `environments/prod/backend.tfvars` with distinct key paths
+- Run `terraform init -backend-config=backend.tfvars` in each environment directory
 
-SQLAlchemy 2.0 async sessions do not support implicit lazy loading. Any `relationship()` attribute access outside of a `select()` with `joinedload()` or explicit `selectinload()` will raise `MissingGreenlet`.
-
-The codebase correctly avoids this: `DealService._deal_response()` builds response objects from explicit join queries (the `_base_deal_stmt` method joins User, Pipeline, PipelineStage, Contact, Company). New services must follow the same pattern — build a `SELECT` with all needed joins, then map columns to the response schema explicitly.
-
-For `DealCounterparty`, the base statement:
-```python
-stmt = (
-    select(
-        DealCounterparty,
-        Company.name.label("company_name"),
-        Contact.first_name.label("contact_first_name"),
-        Contact.last_name.label("contact_last_name"),
-    )
-    .outerjoin(Company, Company.id == DealCounterparty.company_id)
-    .outerjoin(Contact, Contact.id == DealCounterparty.contact_id)
-    .where(
-        DealCounterparty.deal_id == deal_id,
-        DealCounterparty.org_id == current_user.org_id,
-    )
-)
-```
-
-### cascade="all, delete-orphan" for Sub-Entities
-
-`DealCounterparty` and `DealFunding` are owned by `Deal`. Use `cascade="all, delete-orphan"` on the `Deal.counterparties` and `Deal.fundings` relationships (already shown in the schema above). This ensures that deleting a `Deal` cascades to its counterparties and fundings at the SQLAlchemy ORM level, in addition to the `ON DELETE CASCADE` at the DB level.
-
-Both constraints are needed: the FK cascade handles direct SQL deletes (e.g., Alembic running `DELETE FROM deals`); the ORM cascade handles `session.delete(deal)` calls in service code.
+**Dependencies:** None (manual AWS console or CLI)
 
 ---
 
-## Component Boundaries
+### Phase 2 — AWS Core Infrastructure (networking, data, secrets)
 
-| Component | Responsibility | New Work |
-|-----------|---------------|----------|
-| `backend/models.py` | All ORM model definitions | Add `DealCounterparty`, `DealFunding`, `RefData`; extend `Deal`, `Contact`, `Company` |
-| `backend/schemas/deal_counterparties.py` | Pydantic I/O schemas for counterparties | New file |
-| `backend/schemas/deal_fundings.py` | Pydantic I/O schemas for fundings | New file |
-| `backend/schemas/ref_data.py` | Pydantic I/O schemas for reference data | New file |
-| `backend/schemas/deals.py` | Extend `DealCreate`, `DealUpdate`, `DealResponse` | Additive field additions |
-| `backend/schemas/contacts.py` | Extend `ContactCreate`, `ContactUpdate`, `ContactResponse` | Additive field additions |
-| `backend/schemas/companies.py` | Extend `CompanyCreate`, `CompanyUpdate`, `CompanyResponse` | Additive field additions |
-| `backend/services/deal_counterparties.py` | CRUD for `DealCounterparty` | New service |
-| `backend/services/deal_fundings.py` | CRUD for `DealFunding` | New service |
-| `backend/services/ref_data.py` | CRUD + seeding for `RefData` | New service |
-| `backend/api/routes/deal_counterparties.py` | HTTP endpoints for counterparties | New route module |
-| `backend/api/routes/deal_fundings.py` | HTTP endpoints for fundings | New route module |
-| `backend/api/routes/ref_data.py` | HTTP endpoints for reference data | New route module |
-| `backend/api/main.py` | Router registration | Add 3 new router includes |
-| `alembic/versions/` | Schema migrations | 6 new migrations (0002–0007) |
+**What:** VPC, subnets, NAT gateways, security groups, RDS, ElastiCache, Secrets Manager, IAM roles, ECR repositories.
 
----
+**Why second:** ECS and ALB depend on subnet IDs and security group IDs from networking. ECS depends on secrets ARNs. GitHub Actions depends on IAM role ARN. All compute depends on data stores existing first.
 
-## Anti-Patterns to Avoid
+**Terraform apply order** (modules have implicit dependency via references, but conceptual order):
+1. `module.networking` — VPC, subnets, security groups, NAT
+2. `module.rds` — uses `private_subnet_ids`, `rds_security_group_id`
+3. `module.elasticache` — uses `private_subnet_ids`, `redis_security_group_id`
+4. `module.secrets` — uses database_url (RDS endpoint output), redis_url (ElastiCache endpoint output)
+5. `module.iam` + ECR repositories — independent of data stores; uses `assets_bucket_arn`
 
-### Anti-Pattern 1: Using `custom_fields` for PE Blueprint Fields
+**Key output values needed by later phases:**
+- `module.networking.vpc_id`
+- `module.networking.private_subnet_ids`
+- `module.networking.public_subnet_ids`
+- `module.networking.*_security_group_id` (api, worker, rds, redis, alb)
+- `module.rds.endpoint` (needed for DATABASE_URL secret and Azure replication)
+- `module.elasticache.endpoint`
+- `module.secrets.secret_arns` (map passed to ECS task definitions)
+- `module.iam.execution_role_arn`, `module.iam.task_role_arn`, `module.iam.github_actions_role_arn`
+- `aws_ecr_repository.api.repository_url`, `aws_ecr_repository.worker.repository_url`
 
-**What:** Storing `transaction_type`, `ebitda`, `sector` etc. inside the existing `custom_fields: JSONB` column on Deal/Contact/Company instead of adding typed columns.
-
-**Why bad:** JSONB fields cannot be indexed for range queries (`ebitda > 10000000`), cannot have type enforcement, cannot be validated by Pydantic at model level, and require `->` / `->>` extraction operators in every query. The PE Blueprint fields are the core data model, not custom data.
-
-**Instead:** Typed nullable columns as described above.
-
-### Anti-Pattern 2: Enum Types for Counterparty Stage
-
-**What:** Using PostgreSQL `ENUM` type or a Python `enum.Enum` for `DealCounterparty` stage.
-
-**Why bad:** PostgreSQL ENUM types require `ALTER TYPE` to add values — a DDL operation that cannot be rolled back and requires exclusive lock. Python `Enum` in SQLAlchemy with `native_enum=True` has the same problem. The PE workflow may add new milestone types (e.g., "management presentation scheduled").
-
-**Instead:** `String` columns for all status/type fields (matching the codebase's convention: `Deal.status`, `PipelineStage.stage_type`, `User.role` are all `String`, not ENUM).
-
-### Anti-Pattern 3: FK from ref_data Value Columns
-
-**What:** Making `Deal.transaction_type` a UUID FK to `ref_data.id` rather than storing the `value` string directly.
-
-**Why bad:** FK to a reference row that might be deactivated blocks deactivation or orphans the deal. UUID FK requires a JOIN in every deal query to resolve the display label. If the admin renames a ref_data label, deals that stored the UUID still display the old label through the join (the label is on the ref_data row, not the deal).
-
-**Instead:** Store the `value` string on the domain model. Validate on write (ensure the value exists and is active). Display label is fetched as ref_data at render time in the frontend, not re-joined at query time in the backend.
-
-### Anti-Pattern 4: Breaking the `_deal_response()` Explicit Mapping
-
-**What:** Switching from the explicit `DealResponse(field=value, ...)` constructor to `DealResponse.model_validate(deal_orm_object)` to avoid adding new fields to both schema and service.
-
-**Why bad:** The deal query returns a `Row` tuple (deal ORM object + computed column scalars like `pipeline_name`, `stage_name`, `owner_name`). Computed columns are not attributes of `Deal` — they live on the row object. `model_validate(deal)` would silently drop all computed fields. The explicit mapping is required.
-
-**Instead:** When adding a new field to `DealResponse`, always add it to both `DealResponse` schema AND `DealService._deal_response()`. The same applies to `ContactService` and `CompanyService`.
-
-### Anti-Pattern 5: Registering New Routes Under `/api/v2`
-
-**What:** Creating a new `/api/v2` prefix for new endpoints.
-
-**Why bad:** There is no breaking change — all new endpoints are net-new resources and all changes to existing endpoints are additive. API versioning creates frontend client complexity (two base URLs) for no benefit.
-
-**Instead:** All new routes mount at `/api/v1` following the existing convention.
+**RDS parameter group addition (required for Azure replica, do it now):**
+Add `aws_db_parameter_group` with `rds.logical_replication=1`, `max_wal_senders=10`, `max_replication_slots=10`, `shared_preload_libraries=pglogical`. Apply requires RDS restart — acceptable at initial provisioning, disruptive in production later.
 
 ---
 
-## Scalability Considerations
+### Phase 3 — AWS Compute and CDN (ALB, ECS, CloudFront)
 
-| Concern | At Current Scale (TWG, ~100 deals) | At 10K deals |
-|---------|-------------------------------------|--------------|
-| `deal_counterparties` table size | ~500-2000 rows — trivial | ~500K rows — index on `deal_id` covers all per-deal lookups |
-| `ref_data` table | ~100-200 rows — fits in PG buffer pool | Static — grows only when admin adds values |
-| `op.add_column` on contacts/companies/deals | Instant (PostgreSQL 11+ metadata-only ADD for nullable columns) | Instant — same |
-| New joined fields in deal list query | 0 additional joins (new columns on `deals` table already in query) | 0 additional joins |
-| `DealCounterparty` query joins | 2 outer joins (companies, contacts) — covered by index | Same — index handles it |
+**What:** ALB, target groups, listeners, ECS cluster, api service, worker service, CloudFront distribution, S3 frontend bucket.
+
+**Why third:** Depends on Phase 2 outputs (subnet IDs, security groups, secrets ARNs, ECR URIs).
+
+**Note on first deploy:** At initial `terraform apply`, `ecr_api_image_uri` and `ecr_worker_image_uri` are empty in `terraform.tfvars`. The existing `main.tf` handles this with a fallback: `var.ecr_api_image_uri != "" ? var.ecr_api_image_uri : "${aws_ecr_repository.api.repository_url}:latest"`. However, there is no `latest` image in ECR yet at this point — ECS service will be in a pending state until Phase 4 pushes the first image. This is expected behavior; ECS will retry.
+
+**For ACM + HTTPS:** The ACM certificate ARN must be provided before the ALB HTTPS listener and CloudFront aliases are usable. ACM DNS validation requires a Route 53 record. Either:
+- (a) Create the ACM cert manually in AWS console, validate via Route 53, then pass the ARN to Terraform
+- (b) Add `aws_acm_certificate` + `aws_route53_record` (validation) + `aws_acm_certificate_validation` to Terraform — this works but adds ~2-3 minutes for DNS propagation during `apply`
+
+Option (a) is simpler for initial bootstrap. Option (b) is more repeatable for staging.
+
+---
+
+### Phase 4 — First Image Build and Pipeline Bootstrap
+
+**What:** Push the first Docker images to ECR so ECS services can start. Set up GitHub Actions workflow. Add GitHub repository secrets (AWS role ARN, ECR URIs, ECS cluster/service names from Terraform outputs).
+
+**Why fourth:** ECR repos must exist (Phase 2) before images can be pushed. ECS services must exist (Phase 3) before the deploy workflow can reference them.
+
+**Steps:**
+1. Build `deploy/Dockerfile` (api + frontend bundled) locally: `docker build -f deploy/Dockerfile -t {ecr-api-uri}:latest .`
+2. Push: `docker push {ecr-api-uri}:latest`
+3. Build `deploy/Dockerfile.worker`: `docker build -f deploy/Dockerfile.worker -t {ecr-worker-uri}:latest .`
+4. Push: `docker push {ecr-worker-uri}:latest`
+5. Force ECS service update: `aws ecs update-service --cluster ... --service ... --force-new-deployment`
+6. Create `.github/workflows/deploy.yml` with full pipeline (build → ECR push → migration task → ECS deploy → frontend sync)
+7. Add GitHub secrets: `AWS_ROLE_ARN`, `AWS_REGION`, `ECR_API_URI`, `ECR_WORKER_URI`, `ECS_CLUSTER`, `ECS_API_SERVICE`, `ECS_WORKER_SERVICE`, `CLOUDFRONT_DISTRIBUTION_ID`, `S3_FRONTEND_BUCKET`
+
+**Migration task on first deploy:**
+The one-off migration ECS task runs `alembic upgrade head`. At first deploy this runs all 11 existing migrations (0001 through 0011) against the fresh RDS instance. This is the only time seed data should be considered — set `RUN_SEED_DATA=true` on the migration task or run seed separately if needed for staging.
+
+---
+
+### Phase 5 — HTTPS, DNS, Custom Domain
+
+**What:** Route 53 hosted zone records, ACM certificate activation, CloudFront alias.
+
+**Why fifth:** Requires Phase 3 (CloudFront distribution ARN, ALB DNS name) to be complete. ACM validation can overlap with Phase 3 but HTTPS is not usable until cert is issued.
+
+**Key wiring:**
+- Route 53 A alias: `crm.example.com` → CloudFront distribution domain
+- Route 53 CNAME: `_acme-challenge.crm.example.com` → ACM validation CNAME
+- ALB listener 443: ACM cert ARN → target group (api, port 8000)
+- CloudFront aliases: `[crm.example.com]` with `acm_certificate_arn` (cert must be in us-east-1)
+- HTTP → HTTPS redirect: ALB listener 80 redirects to 443
+
+**Testing before DNS cutover:** Access via CloudFront default domain (`*.cloudfront.net`) to verify API and frontend work end-to-end before routing custom domain.
+
+---
+
+### Phase 6 — Azure Warm Failover Infrastructure
+
+**What:** Azure resource group, Azure PostgreSQL Flexible Server, pglogical replication setup, Azure Container Registry, ACI container groups, Azure Key Vault.
+
+**Why last:** Depends on RDS endpoint (Phase 2) as replication source. Depends on ECR image URIs (Phase 4) to mirror images to ACR. Must be done after RDS parameter group changes (Phase 2) take effect.
+
+**Terraform:** New `azure_failover` module called from `environments/prod/main.tf` (not staging — failover is prod-only). Uses `azurerm` provider alongside `aws` provider. State stored at `prod/azure-failover/terraform.tfstate` in the same S3 state bucket (separate key).
+
+**pglogical setup sequence (partially outside Terraform, requires SQL):**
+1. Terraform provisions Azure PostgreSQL with `pglogical` in `shared_preload_libraries`
+2. Manual step on RDS primary (or run via `null_resource` provisioner):
+   ```sql
+   CREATE EXTENSION pglogical;
+   SELECT pglogical.create_node(node_name := 'provider', dsn := 'host=... dbname=nexuscrm user=nexuscrm password=...');
+   SELECT pglogical.create_replication_set('default');
+   SELECT pglogical.replication_set_add_all_tables('default', ARRAY['public']);
+   ```
+3. Manual step on Azure PostgreSQL:
+   ```sql
+   CREATE EXTENSION pglogical;
+   SELECT pglogical.create_node(node_name := 'subscriber', dsn := 'host=azure-host dbname=nexuscrm user=...');
+   SELECT pglogical.create_subscription('from_aws', 'host=rds-host dbname=nexuscrm user=...', ARRAY['default']);
+   ```
+4. Verify replication lag: `SELECT * FROM pglogical.show_subscription_status()`
+
+**Important pglogical constraint:** pglogical does not replicate DDL automatically. Every Alembic migration that runs on RDS must be replicated manually to Azure PostgreSQL **before** the schema change is applied on RDS, or the replication slot will error. The recommended mitigation: run `pglogical.replicate_ddl_command()` for each DDL statement, OR run the migration on both sides simultaneously (apply to Azure first, then RDS).
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| AWS networking pattern | HIGH | Verified against existing terraform/modules/networking/main.tf; matches AWS docs for ECS Fargate private subnet pattern |
+| ECS Fargate + Secrets Manager | HIGH | Existing task definitions verified; platform version 1.4.0+ confirmed for JSON key injection |
+| CloudFront + ALB + S3 pattern | HIGH | Read cloudfront/main.tf directly; /api/* path routing to ALB, default to S3 is implemented |
+| GitHub Actions OIDC | HIGH | IAM OIDC provider and role already provisioned in iam/main.tf |
+| Terraform state backend (S3 native locking) | HIGH | DynamoDB locking deprecated; use_lockfile=true confirmed from HashiCorp docs |
+| Terraform multi-env directory structure | MEDIUM | Workspaces vs directories is a matter of team convention; directory approach is AWS Prescriptive Guidance recommendation |
+| pglogical cross-cloud replication | MEDIUM | RDS logical replication + Azure pglogical subscriber is the supported pattern; DDL replication constraint is a known limitation requiring operational discipline |
+| Azure ACI warm failover | MEDIUM | ACI standby pool feature exists but is preview; stopped container groups are the safe approach; manual DNS cutover pattern verified |
+| Migration one-off task pattern | MEDIUM | Community actions (geekcell/github-action-aws-ecs-run-task) are well-established; AWS native support via run-task + wait is confirmed |
 
 ---
 
 ## Sources
 
-- Codebase: `/Users/oscarmack/OpenClaw/nexus-crm/backend/models.py` — HIGH confidence (primary source)
-- Codebase: `/Users/oscarmack/OpenClaw/nexus-crm/backend/services/deals.py` — HIGH confidence (primary source)
-- Codebase: `/Users/oscarmack/OpenClaw/nexus-crm/backend/schemas/deals.py` — HIGH confidence (primary source)
-- Codebase: `/Users/oscarmack/OpenClaw/nexus-crm/backend/services/_crm.py` — HIGH confidence (primary source)
-- Codebase: `/Users/oscarmack/OpenClaw/nexus-crm/alembic/versions/0001_initial.py` — HIGH confidence (primary source)
-- SQLAlchemy 2.0 async relationship patterns — HIGH confidence (established API, knowledge cutoff August 2025)
-- Pydantic v2 `ConfigDict(from_attributes=True)` + optional field extension — HIGH confidence (established API)
-- Alembic `op.add_column` behavior for nullable columns on PostgreSQL 11+ — HIGH confidence (established behavior)
-- PostgreSQL `UNIQUE` constraint behavior with `NULL` values — HIGH confidence (SQL standard + PG docs)
-
-*Architecture analysis: 2026-03-26*
+- AWS ECS Fargate task networking: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-networking.html
+- ECS Secrets Manager injection: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html
+- RDS logical replication + pglogical setup: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.pglogical.setup-replication.html
+- Terraform S3 backend (use_lockfile): https://developer.hashicorp.com/terraform/language/backend/s3
+- Terraform backend best practices (AWS): https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html
+- Azure PostgreSQL logical replication: https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-logical
+- Azure DNS manual failover pattern: https://learn.microsoft.com/en-us/azure/reliability/reliability-dns
+- GitHub Actions OIDC AWS integration: https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/
+- ECS one-off migration task action: https://github.com/geekcell/github-action-aws-ecs-run-task
+- ALB shared across multiple ECS services: https://containersonaws.com/pattern/cdk-shared-alb-for-amazon-ecs-fargate-service/
+- RDS PostgreSQL cross-region/cross-cloud replication best practices: https://aws.amazon.com/blogs/database/best-practices-for-amazon-rds-for-postgresql-cross-region-read-replicas/
