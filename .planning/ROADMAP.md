@@ -192,7 +192,7 @@ Plans:
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
-| 13. AWS Core Infrastructure | v1.2 | 3/3 | Complete   | 2026-03-30 |
+| 13. AWS Core Infrastructure | v1.2 | 3/3 | Complete    | 2026-03-30 |
 | 14. AWS Compute, CDN & HTTPS | v1.2 | 0/? | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
