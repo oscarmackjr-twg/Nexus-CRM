@@ -4,6 +4,7 @@
 
 - ✅ **v1.0 PE CRM Foundation** — Phases 1-6 (shipped 2026-03-28) — [archive](.planning/milestones/v1.0-ROADMAP.md)
 - 📋 **v1.1 UI Professionalism** — Phases 7-12 (in progress)
+- 📋 **v1.2 Cloud Deployment** — Phases 13-16 (planned)
 
 ---
 
@@ -29,6 +30,13 @@
 - [ ] **Phase 10: Detail Page Polish** — section card headers, field layout, empty values, tab bar
 - [ ] **Phase 11: Contact & Company Data Completeness** — API label resolution + detail/list UI for Contact and Company PE fields
 - [ ] **Phase 12: Deal & Fund Data Completeness** — Deal detail/edit UI for all PE expansion fields, Fund selector on Deal form
+
+### v1.2 Cloud Deployment
+
+- [ ] **Phase 13: AWS Core Infrastructure** — Terraform bootstrap, VPC, RDS, RDS Proxy, ElastiCache, ECR, Secrets Manager, IAM OIDC
+- [ ] **Phase 14: AWS Compute, CDN & HTTPS** — ECS Fargate cluster + task definitions, ALB, CloudFront + S3 frontend, ACM cert, Route 53 DNS
+- [ ] **Phase 15: CI/CD Pipeline** — GitHub Actions build → migration → deploy pipeline, multi-environment support, entrypoint cleanup
+- [ ] **Phase 16: Azure Warm Failover** — Azure PostgreSQL, ACR, ACI standby containers, pg_dump schedule, failover runbook
 
 ---
 
@@ -112,6 +120,56 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+### Phase 13: AWS Core Infrastructure
+**Goal**: All foundational AWS networking, data stores, secrets, and access control are provisioned via Terraform — compute and pipeline have everything they need to reference
+**Depends on**: Nothing (first phase of v1.2; Terraform bootstrap is a prerequisite manual step within this phase)
+**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-07, INFRA-09, INFRA-10
+**Success Criteria** (what must be TRUE):
+  1. `terraform apply` in `environments/staging/` and `environments/prod/` completes without error; state is stored in a versioned, KMS-encrypted S3 bucket with native lockfile — no DynamoDB table required
+  2. VPC exists with public and private subnets across two AZs, a NAT gateway, and security groups that allow ALB → ECS and ECS → RDS/Redis traffic only (no ECS task has a public IP)
+  3. RDS PostgreSQL instance is reachable from the private subnet using a custom parameter group with `rds.logical_replication = 1`, `idle_in_transaction_session_timeout = 30000`, and `wal_sender_timeout = 0` set at initial creation
+  4. ElastiCache provisioned Redis replication group (not Serverless) is reachable from the ECS security group; Celery can connect and queue tasks
+  5. ECR repositories exist for `api` and `worker` with immutable image tags and lifecycle policies; a test push with a SHA-tagged image succeeds and is visible in the ECR console
+  6. AWS Secrets Manager secrets exist at `/nexus/staging/` and `/nexus/prod/` paths for `db_password`, `jwt_secret`, and `redis_url`; the GitHub Actions OIDC role can read them and has least-privilege ECS/ECR permissions
+**Plans**: TBD
+
+### Phase 14: AWS Compute, CDN & HTTPS
+**Goal**: The application is reachable over HTTPS at the production domain — ECS tasks run in private subnets, the React frontend is served from CloudFront/S3, and the ALB is the only public ingress
+**Depends on**: Phase 13
+**Requirements**: INFRA-05, INFRA-06, INFRA-08
+**Success Criteria** (what must be TRUE):
+  1. ECS Fargate cluster has running task definitions for the API service, Celery worker service, and a one-shot migration runner; all secrets are injected via the `secrets[]` block (not `environment[]`) — no credentials appear in CloudWatch logs or the console
+  2. `GET https://crm.twgasia.com/api/v1/health` returns HTTP 200 with DB connectivity confirmed; ALB health checks and ECS container health checks both pass
+  3. The React SPA loads from the CloudFront URL; `/api/*` requests route through to the ALB; direct S3 access is blocked (origin access control enforced)
+  4. ACM certificate is issued and attached to both the ALB HTTPS listener and the CloudFront distribution; all HTTP traffic redirects to HTTPS
+  5. Route 53 A alias record for `crm.twgasia.com` resolves to the CloudFront distribution; no browser certificate warning appears
+  6. `lifecycle { ignore_changes = [task_definition] }` is set on all ECS service resources in Terraform — a `terraform apply` with no image changes does not trigger a rolling restart
+**Plans**: TBD
+
+### Phase 15: CI/CD Pipeline
+**Goal**: Every merge to `main` automatically builds, migrates, and deploys to staging; production deploys require a manual approval gate; the app never runs Alembic at container startup
+**Depends on**: Phase 14
+**Requirements**: DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
+**Success Criteria** (what must be TRUE):
+  1. `entrypoint.sh` no longer calls `alembic upgrade head` — app containers start without running any migration; this change is committed before the first ECS deploy
+  2. Merging a PR to `main` triggers the GitHub Actions pipeline: Docker images are built for `linux/amd64`, tagged with the Git commit SHA, and pushed to ECR; ECR tag immutability prevents overwriting existing tags
+  3. The pipeline runs the Alembic migration as a one-shot ECS task (`run-task` with command override), polls `aws ecs wait tasks-stopped`, and asserts `exitCode == 0` before any service update proceeds; a failed migration aborts the deploy
+  4. After a successful migration, ECS services are updated via rolling deployment with `minimum_healthy_percent = 100` and `maximum_percent = 200`; deployment circuit breaker is enabled with auto-rollback on failure
+  5. Staging deploys automatically on every merge to `main`; production deploy is gated by a GitHub Environment protection rule requiring manual approval; both environments use separate Terraform state files and separate Secrets Manager paths
+**Plans**: TBD
+
+### Phase 16: Azure Warm Failover
+**Goal**: A warm Azure failover environment is pre-deployed and idle — Azure PostgreSQL has a current copy of the data, ACI containers exist but receive no traffic, and a tested runbook enables manual cutover within 30 minutes
+**Depends on**: Phase 13 (RDS endpoint as replication source), Phase 15 (ECR image URIs to mirror via CI)
+**Requirements**: FAILOVER-01, FAILOVER-02, FAILOVER-03, FAILOVER-04, FAILOVER-05
+**Success Criteria** (what must be TRUE):
+  1. Azure PostgreSQL Flexible Server is provisioned via Terraform with `pg_failover_slots` extension enabled and configured before any replication subscription is created; logical replication slot survives an Azure Flexible Server HA failover test
+  2. GitHub Actions pipeline mirrors every ECR image push to ACR in the same workflow run; ACI container definitions reference ACR images and exist in stopped/idle state — no traffic reaches them during normal operation
+  3. The Azure PostgreSQL schema matches RDS (applied via pg_dump --schema-only after each Alembic migration); scheduled pg_dump/restore job runs on a 4-hour cadence with confirmed successful restores, providing documented 4-hour RPO
+  4. Azure Key Vault contains mirrored secrets including the identical JWT secret from AWS Secrets Manager; ACI containers can start and accept existing user sessions without requiring re-login
+  5. Failover runbook is documented and has been executed once against the staging environment — an operator can follow it to stop AWS writes, confirm restore is current, start ACI containers, and update DNS to the Azure endpoint within 30 minutes
+**Plans**: TBD
+
 ---
 
 ## Progress
@@ -130,3 +188,7 @@ Plans:
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
+| 13. AWS Core Infrastructure | v1.2 | 0/? | Not started | - |
+| 14. AWS Compute, CDN & HTTPS | v1.2 | 0/? | Not started | - |
+| 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
+| 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |

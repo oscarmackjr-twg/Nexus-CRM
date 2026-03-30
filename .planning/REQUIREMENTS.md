@@ -64,7 +64,7 @@
 
 ---
 
-## v1.2 Cloud Deployment (Phases 13+)
+## v1.2 Cloud Deployment (Phases 13-16)
 
 **Defined:** 2026-03-29 | **Status:** Active
 
@@ -131,6 +131,23 @@
 | COMPANY-10 to COMPANY-12 | Phase 11 | TBD |
 | DEAL-11 to DEAL-12 | Phase 12 | TBD |
 | FUND-05 | Phase 12 | TBD |
-| INFRA-01 to INFRA-10 | Phase 13-14 | TBD |
-| DEPLOY-01 to DEPLOY-05 | Phase 15 | TBD |
-| FAILOVER-01 to FAILOVER-05 | Phase 16 | TBD |
+| INFRA-01 | Phase 13 | TBD |
+| INFRA-02 | Phase 13 | TBD |
+| INFRA-03 | Phase 13 | TBD |
+| INFRA-04 | Phase 13 | TBD |
+| INFRA-07 | Phase 13 | TBD |
+| INFRA-09 | Phase 13 | TBD |
+| INFRA-10 | Phase 13 | TBD |
+| INFRA-05 | Phase 14 | TBD |
+| INFRA-06 | Phase 14 | TBD |
+| INFRA-08 | Phase 14 | TBD |
+| DEPLOY-01 | Phase 15 | TBD |
+| DEPLOY-02 | Phase 15 | TBD |
+| DEPLOY-03 | Phase 15 | TBD |
+| DEPLOY-04 | Phase 15 | TBD |
+| DEPLOY-05 | Phase 15 | TBD |
+| FAILOVER-01 | Phase 16 | TBD |
+| FAILOVER-02 | Phase 16 | TBD |
+| FAILOVER-03 | Phase 16 | TBD |
+| FAILOVER-04 | Phase 16 | TBD |
+| FAILOVER-05 | Phase 16 | TBD |

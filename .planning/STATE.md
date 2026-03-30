@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Cloud Deployment
-status: Defining requirements
-stopped_at: Milestone v1.2 started
+status: Roadmap defined
+stopped_at: v1.2 roadmap created — Phases 13-16 planned
 last_updated: "2026-03-29T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,16 +16,16 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-03-28)
+See: `.planning/PROJECT.md` (updated 2026-03-29)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 08 — login-banner-sidebar
+**Current focus:** v1.2 — Phase 13 is next: AWS Core Infrastructure (Terraform bootstrap, VPC, RDS, ECR, Secrets Manager, IAM OIDC)
 
 ## Current Status
 
-**Milestone:** v1.2 — Cloud Deployment — DEFINING REQUIREMENTS
-**Active phase:** None — defining requirements
-**Last action:** 2026-03-29 — Milestone v1.2 started: AWS primary + Azure warm failover via Terraform + GitHub Actions
+**Milestone:** v1.2 — Cloud Deployment — ROADMAP DEFINED
+**Active phase:** None — roadmap complete, ready to plan Phase 13
+**Last action:** 2026-03-29 — v1.2 roadmap created: 4 phases (13-16), 20 requirements mapped, 0% complete
 
 ## Phase Completion
 
@@ -38,17 +38,22 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 | 5 | DealCounterparty & DealFunding | Done (4/4 plans complete) |
 | 6 | Admin Reference Data UI | Done (3/3 plans complete) |
 | 7 | Brand Foundation | Done (1/1 plans complete) — VERIFIED 2026-03-29 |
-| 8 | Login, Banner & Sidebar | Not started |
+| 8 | Login, Banner & Sidebar | Done (2/2 plans complete) — VERIFIED 2026-03-29 |
 | 9 | Data Grids | Not started |
 | 10 | Detail Page Polish | Not started |
 | 11 | Contact & Company Data Completeness | Not started |
 | 12 | Deal & Fund Data Completeness | Not started |
+| 13 | AWS Core Infrastructure | Not started |
+| 14 | AWS Compute, CDN & HTTPS | Not started |
+| 15 | CI/CD Pipeline | Not started |
+| 16 | Azure Warm Failover | Not started |
 
 ## Key Files
 
 - `.planning/PROJECT.md` — project goals and requirements
-- `.planning/REQUIREMENTS.md` — 27 v1.1 requirements across 6 phases (Phases 7-12)
-- `.planning/ROADMAP.md` — phase breakdown with success criteria
+- `.planning/REQUIREMENTS.md` — 27 v1.1 requirements (Phases 7-12) + 20 v1.2 requirements (Phases 13-16)
+- `.planning/ROADMAP.md` — phase breakdown with success criteria (Phases 7-16)
+- `.planning/research/SUMMARY.md` — v1.2 stack, pitfalls, build order, confidence assessment
 - `.planning/research/` — 4 domain research documents (stack, features, architecture, pitfalls)
 - `.planning/codebase/` — 7 codebase map documents
 
@@ -93,6 +98,13 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 - 08-02: NavGroups data structure replaces flat navItems — Dashboard (unlabeled), DEALS, TOOLS, ADMIN groups
 - 08-02: overflow-y-auto on nav prevents user footer clip on short viewports (Pitfall 3)
 - 08-02: AIQueryBar placed outside flex-1 sidebar+main wrapper to avoid layout interference (Pitfall 5)
+- v1.2-arch: INFRA split at Phase 13/14 boundary: 13 = networking+data+IAM+ECR (no public ingress), 14 = compute+CDN+HTTPS+DNS (app goes live)
+- v1.2-arch: ElastiCache provisioned Redis only — Serverless is incompatible with Celery 5.3+ (documented AWS re:Post issue)
+- v1.2-arch: DEPLOY-05 (remove Alembic from entrypoint.sh) is a Phase 15 prerequisite task, must be committed before first ECS deploy
+- v1.2-arch: FAILOVER-01 pg_failover_slots must be enabled BEFORE replication subscription is created — order is mandatory
+- v1.2-arch: Terraform uses separate environment directories (environments/staging/, environments/prod/) not workspaces — HashiCorp guidance
+- v1.2-arch: ACM certificate for CloudFront requires us-east-1 provider alias regardless of deployment region
+- v1.2-arch: lifecycle { ignore_changes = [task_definition] } on all ECS services from day 1 — Terraform owns infra, CI owns image versions
 
 ## Notes
 
@@ -102,8 +114,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 - v1.0 complete: 6 phases, 23/23 plans done. Light theme active.
 - v1.1 roadmap defined: Phases 7-12 covering 27 requirements.
 - Phase 7 (Brand Foundation) is complete and verified — CSS vars + Montserrat font baseline established.
-- Phase 8 is unblocked: Login, Banner & Sidebar can now proceed.
-- Phases 11-12 involve both backend (label resolution) and frontend — more complex than pure UI polish phases.
+- Phase 8 (Login, Banner & Sidebar) is complete and verified.
+- v1.2 roadmap defined: Phases 13-16 covering 20 requirements (7 INFRA → Phase 13, 3 INFRA → Phase 14, 5 DEPLOY → Phase 15, 5 FAILOVER → Phase 16).
+- v1.1 Phases 9-12 are still pending — v1.2 planning does not block v1.1 completion.
 
 ## Performance Metrics
 
@@ -130,8 +143,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-28)
 
 ## Session Continuity
 
-Last session: 2026-03-29T02:10:00.000Z
-Stopped at: Session resumed — Phase 8 complete, proceeding to plan Phase 9 (Data Grids)
+Last session: 2026-03-29T00:00:00.000Z
+Stopped at: v1.2 roadmap created — Phases 13-16 defined, 20/20 requirements mapped. Ready to plan Phase 13 (AWS Core Infrastructure).
 
 ---
-*Last updated: 2026-03-29 — Phase 7 (Brand Foundation) verified complete*
+*Last updated: 2026-03-29 — v1.2 roadmap defined: Phases 13-16*
