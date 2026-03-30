@@ -1,6 +1,19 @@
 # Nexus CRM — PE Deal Management Platform
 
-## Current Milestone: v1.1 UI Professionalism
+## Current Milestone: v1.2 Cloud Deployment
+
+**Goal:** Deploy Nexus CRM to AWS (primary) with a warm Azure failover using Terraform IaC and GitHub Actions CI/CD.
+
+**Target features:**
+- Terraform: AWS VPC, ECS Fargate, RDS PostgreSQL, ElastiCache Redis, ALB, ACM, Route 53, ECR, Secrets Manager
+- Terraform: Azure warm failover — PostgreSQL read replica + idle ACI containers, pre-deployed, no traffic until manual cutover
+- GitHub Actions pipeline — build images → push to ECR → deploy to ECS on merge to main
+- AWS Secrets Manager — all secrets injected into ECS task definitions at runtime
+- HTTPS with ACM certificate + ALB HTTPS listener + DNS records
+- Alembic migration step baked into deploy pipeline (runs before app containers start)
+- Multi-environment support (staging + prod)
+
+## Previous Milestone: v1.1 UI Professionalism (in progress — Phases 7-12)
 
 **Goal:** Apply the TWG Global brand identity across all screens for a professional enterprise CRM appearance.
 
@@ -55,12 +68,21 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 
 ### Active
 
-<!-- Gaps from v1.0 carried forward as tech debt — build in v1.1 -->
+<!-- v1.1 UI Professionalism (in progress) -->
 
-- [ ] Contact API label resolution and detail screen (CONTACT-08, CONTACT-09, CONTACT-10) — Phase 3 plans 03-02/03-04/03-05/03-06 not executed in v1.0
-- [ ] Company API label resolution and detail screen updates (COMPANY-10, COMPANY-11, COMPANY-12) — same gap
-- [ ] Deal detail screen and edit form for all new PE fields (DEAL-11, DEAL-12) — Phase 4 plan 04-04 not executed
-- [ ] Fund selector available on Deal edit form (FUND-05) — depends on DEAL-11/12 UI work
+- [ ] Contact API label resolution and detail screen (CONTACT-08, CONTACT-09, CONTACT-10) — v1.1 Phase 11
+- [ ] Company API label resolution and detail screen updates (COMPANY-10, COMPANY-11, COMPANY-12) — v1.1 Phase 11
+- [ ] Deal detail screen and edit form for all new PE fields (DEAL-11, DEAL-12) — v1.1 Phase 12
+- [ ] Fund selector available on Deal edit form (FUND-05) — v1.1 Phase 12
+
+<!-- v1.2 Cloud Deployment -->
+
+- [ ] AWS infrastructure provisioned via Terraform (INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05)
+- [ ] Azure warm failover provisioned via Terraform (INFRA-06, INFRA-07)
+- [ ] GitHub Actions CI/CD pipeline for ECS deployments (DEPLOY-01, DEPLOY-02, DEPLOY-03)
+- [ ] Secrets management via AWS Secrets Manager (DEPLOY-04)
+- [ ] HTTPS with ACM + ALB + DNS (INFRA-08)
+- [ ] Multi-environment (staging + prod) support (DEPLOY-05)
 
 ### Out of Scope
 
@@ -117,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 8 complete: login + banner + white sidebar delivered*
+*Last updated: 2026-03-29 — Milestone v1.2 started: Cloud Deployment (AWS primary + Azure warm failover)*
