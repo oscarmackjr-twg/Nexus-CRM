@@ -73,7 +73,7 @@
 - [ ] **INFRA-01**: VPC provisioned via Terraform with public/private subnets, NAT gateway, and security groups for all services
 - [ ] **INFRA-02**: RDS PostgreSQL (Flexible / Multi-AZ capable) provisioned with parameter group configured for logical replication readiness
 - [ ] **INFRA-03**: RDS Proxy provisioned alongside RDS for connection pooling — ECS services connect via Proxy endpoint, not RDS directly
-- [ ] **INFRA-04**: ECR repositories created with immutable tags and lifecycle policies (one repo per service: api, worker, frontend)
+- [ ] **INFRA-04**: ECR repositories created with immutable tags and lifecycle policies (one repo per service: api and worker (frontend is served from S3+CloudFront, not a container))
 - [ ] **INFRA-05**: ALB with HTTPS listener, ACM certificate (DNS validation), and Route 53 A-record alias pointing to ALB
 - [ ] **INFRA-06**: CloudFront distribution backed by S3 bucket serving the Vite-built React frontend; `/api/*` path behavior routes to ALB
 - [ ] **INFRA-07**: AWS Secrets Manager secrets created for all runtime secrets (DB password, JWT secret, Redis URL) with staging/prod path separation (`/nexus/staging/` vs `/nexus/prod/`)
@@ -131,13 +131,13 @@
 | COMPANY-10 to COMPANY-12 | Phase 11 | TBD |
 | DEAL-11 to DEAL-12 | Phase 12 | TBD |
 | FUND-05 | Phase 12 | TBD |
-| INFRA-01 | Phase 13 | TBD |
-| INFRA-02 | Phase 13 | TBD |
-| INFRA-03 | Phase 13 | TBD |
-| INFRA-04 | Phase 13 | TBD |
-| INFRA-07 | Phase 13 | TBD |
-| INFRA-09 | Phase 13 | TBD |
-| INFRA-10 | Phase 13 | TBD |
+| INFRA-01 | Phase 13 | 13-01, 13-02 |
+| INFRA-02 | Phase 13 | 13-01, 13-02 |
+| INFRA-03 | Phase 13 | 13-03 |
+| INFRA-04 | Phase 13 | 13-03 |
+| INFRA-07 | Phase 13 | 13-02 |
+| INFRA-09 | Phase 13 | 13-02 |
+| INFRA-10 | Phase 13 | 13-03 |
 | INFRA-05 | Phase 14 | TBD |
 | INFRA-06 | Phase 14 | TBD |
 | INFRA-08 | Phase 14 | TBD |
@@ -145,7 +145,7 @@
 | DEPLOY-02 | Phase 15 | TBD |
 | DEPLOY-03 | Phase 15 | TBD |
 | DEPLOY-04 | Phase 15 | TBD |
-| DEPLOY-05 | Phase 15 | TBD |
+| DEPLOY-05 | Phase 13 (precondition), Phase 15 | 13-03 (entrypoint fix) |
 | FAILOVER-01 | Phase 16 | TBD |
 | FAILOVER-02 | Phase 16 | TBD |
 | FAILOVER-03 | Phase 16 | TBD |

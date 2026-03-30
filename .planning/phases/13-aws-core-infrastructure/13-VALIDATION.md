@@ -2,7 +2,7 @@
 phase: 13
 slug: aws-core-infrastructure
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-29
 ---
@@ -36,15 +36,14 @@ created: 2026-03-29
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 13-01-01 | 01 | 1 | INFRA-01 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-01-02 | 01 | 1 | INFRA-02 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-02-01 | 02 | 1 | INFRA-03 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-02-02 | 02 | 1 | INFRA-04 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-03-01 | 03 | 2 | INFRA-07 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-04-01 | 04 | 2 | INFRA-09 | structural | `terraform validate` | ❌ W0 | ⬜ pending |
-| 13-04-02 | 04 | 2 | INFRA-10 | manual | `aws sts get-caller-identity` | N/A | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status |
+|---------|------|------|-------------|-----------|-------------------|--------|
+| 13-01-T1 | 01 | 1 | INFRA-01, INFRA-02 | structural | `ls terraform/bootstrap/main.tf terraform/environments/staging/backend.tf terraform/environments/prod/backend.tf && echo OK` | ⬜ pending |
+| 13-01-T2 | 01 | 1 | INFRA-01 (D-03) | structural | `test ! -f terraform/main.tf && test -d terraform/modules && test -d terraform/environments && echo OK` | ⬜ pending |
+| 13-02-T1 | 02 | 2 | INFRA-01, INFRA-02 | structural | `grep "rds_proxy" terraform/modules/networking/main.tf && grep 'engine_version.*"17"' terraform/modules/rds/main.tf && echo OK` | ⬜ pending |
+| 13-02-T2 | 02 | 2 | INFRA-09, INFRA-07 | structural | `grep "aws_elasticache_replication_group" terraform/modules/elasticache/main.tf && grep "/nexus/" terraform/modules/secrets/main.tf && echo OK` | ⬜ pending |
+| 13-03-T1 | 03 | 3 | INFRA-03, INFRA-10 | structural | `grep "aws_db_proxy" terraform/modules/rds_proxy/main.tf && grep "StringLike" terraform/modules/iam/main.tf && echo OK` | ⬜ pending |
+| 13-03-T2 | 03 | 3 | INFRA-04, DEPLOY-05 | structural | `grep "IMMUTABLE" terraform/environments/staging/main.tf && test -f terraform/environments/prod/outputs.tf && grep "rds_proxy_endpoint" terraform/environments/prod/outputs.tf && ! grep "alembic" deploy/entrypoint.sh && echo OK` | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,11 +51,11 @@ created: 2026-03-29
 
 ## Wave 0 Requirements
 
-- [ ] `environments/staging/` directory with main.tf, variables.tf, outputs.tf, backend.tf
-- [ ] `environments/prod/` directory with main.tf, variables.tf, outputs.tf, backend.tf
-- [ ] Terraform initialized in both environment directories
+- [ ] `environments/staging/` directory with backend.tf, variables.tf, terraform.tfvars
+- [ ] `environments/prod/` directory with backend.tf, variables.tf, terraform.tfvars
+- [ ] `terraform/bootstrap/` directory with main.tf, outputs.tf
 
-*Wave 0 creates the Terraform environment directory structure before modules can be validated.*
+*Wave 0 (Plan 01) creates the Terraform environment directory structure before modules can be validated.*
 
 ---
 
@@ -64,20 +63,20 @@ created: 2026-03-29
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| RDS reachable from private subnet | INFRA-03 | Requires live AWS resources | Connect via bastion/ECS task: `psql -h <rds-endpoint> -U postgres` |
-| ElastiCache reachable from ECS SG | INFRA-04 | Requires live AWS resources | Connect via ECS task: `redis-cli -h <redis-endpoint> ping` |
-| ECR test push succeeds | INFRA-09 | Requires ECR repo and Docker | `docker push <ecr-uri>:<sha-tag>` then verify in console |
-| OIDC role can read Secrets Manager | INFRA-10 | Requires live AWS + GitHub Actions | Run workflow job, check it reads secrets without error |
+| RDS reachable from private subnet via Proxy | INFRA-03 | Requires live AWS resources | Connect via bastion/ECS task: `psql -h <rds-proxy-endpoint> -U postgres` |
+| ElastiCache reachable from ECS SG | INFRA-09 | Requires live AWS resources | Connect via ECS task: `redis-cli -h <redis-endpoint> ping` |
+| ECR test push succeeds | INFRA-04 | Requires ECR repo and Docker | `docker push <ecr-uri>:<sha-tag>` then verify in console |
+| OIDC role can assume via GitHub Actions | INFRA-10 | Requires live AWS + GitHub Actions | Run workflow job, check it assumes role without error |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify commands
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all structural prerequisites
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
