@@ -1,0 +1,10 @@
+app_name             = "nexus-crm"
+environment          = "prod"
+aws_region           = "ap-southeast-1"
+db_instance_class    = "db.t4g.large"
+db_storage_gb        = 50
+db_multi_az          = true
+redis_node_type      = "cache.t4g.medium"
+github_repository    = ""
+nat_gateway_count    = 2
+create_oidc_provider = false
