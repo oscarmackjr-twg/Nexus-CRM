@@ -77,7 +77,7 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 
 <!-- v1.2 Cloud Deployment -->
 
-- [ ] AWS infrastructure provisioned via Terraform (INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05)
+- ✓ AWS infrastructure provisioned via Terraform — Bootstrap (S3 state), Networking, RDS PG17, ElastiCache replication group, Secrets Manager, IAM, RDS Proxy, ECR (INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-07, INFRA-09, INFRA-10) — Validated in Phase 13
 - [ ] Azure warm failover provisioned via Terraform (INFRA-06, INFRA-07)
 - [ ] GitHub Actions CI/CD pipeline for ECS deployments (DEPLOY-01, DEPLOY-02, DEPLOY-03)
 - [ ] Secrets management via AWS Secrets Manager (DEPLOY-04)
@@ -139,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 — Milestone v1.2 started: Cloud Deployment (AWS primary + Azure warm failover)*
+*Last updated: 2026-03-30 — Phase 13 complete: AWS core infrastructure Terraform configuration validated (Bootstrap, Networking, RDS PG17, ElastiCache, Secrets, IAM, RDS Proxy, ECR, multi-env)*
