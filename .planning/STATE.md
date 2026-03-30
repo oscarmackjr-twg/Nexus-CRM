@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Cloud Deployment
-status: Roadmap defined
-stopped_at: v1.2 roadmap created — Phases 13-16 planned
-last_updated: "2026-03-29T00:00:00.000Z"
+milestone: v1.1
+milestone_name: UI Professionalism
+status: Executing Phase 13
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-30T02:16:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 10
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-29)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** v1.2 — Phase 13 is next: AWS Core Infrastructure (Terraform bootstrap, VPC, RDS, ECR, Secrets Manager, IAM OIDC)
+**Current focus:** Phase 13 — aws-core-infrastructure
 
 ## Current Status
 
@@ -43,7 +43,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | 10 | Detail Page Polish | Not started |
 | 11 | Contact & Company Data Completeness | Not started |
 | 12 | Deal & Fund Data Completeness | Not started |
-| 13 | AWS Core Infrastructure | Not started |
+| 13 | AWS Core Infrastructure | In progress (1/3 plans complete) |
 | 14 | AWS Compute, CDN & HTTPS | Not started |
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
@@ -105,6 +105,10 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 - v1.2-arch: Terraform uses separate environment directories (environments/staging/, environments/prod/) not workspaces — HashiCorp guidance
 - v1.2-arch: ACM certificate for CloudFront requires us-east-1 provider alias regardless of deployment region
 - v1.2-arch: lifecycle { ignore_changes = [task_definition] } on all ECS services from day 1 — Terraform owns infra, CI owns image versions
+- 13-01: S3 native locking (use_lockfile = true) used instead of DynamoDB — requires Terraform >= 1.10, eliminates separate table
+- 13-01: Provider version ~> 6.0 with required_version >= 1.10, < 2.0; region ap-southeast-1 for TWG Asia context
+- 13-01: create_oidc_provider = true in staging, false in prod — OIDC provider is account-scoped; staging creates it, prod reuses
+- 13-01: Phase 14 forward-compat vars (app_domain, acm_certificate_arn) included in both env variables.tf with empty defaults
 
 ## Notes
 
@@ -140,11 +144,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | 07-brand-foundation | 01 | 5min | 2 | 2 |
 | Phase 08-login-banner-sidebar P01 | 1min | 2 tasks | 4 files |
 | Phase 08-login-banner-sidebar P02 | 2min | 2 tasks | 2 files |
+| 13-aws-core-infrastructure | 01 | 12min | 2 | 9 |
 
 ## Session Continuity
 
-Last session: 2026-03-29T00:00:00.000Z
-Stopped at: v1.2 roadmap created — Phases 13-16 defined, 20/20 requirements mapped. Ready to plan Phase 13 (AWS Core Infrastructure).
+Last session: 2026-03-30T02:16:00.000Z
+Stopped at: Completed 13-01-PLAN.md
 
 ---
-*Last updated: 2026-03-29 — v1.2 roadmap defined: Phases 13-16*
+*Last updated: 2026-03-30 — Phase 13 Plan 01 complete: Terraform bootstrap + environment structure*
