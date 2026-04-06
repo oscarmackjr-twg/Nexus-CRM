@@ -496,7 +496,7 @@ class DealActivity(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     deal_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), nullable=True, index=True)
-    contact_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("contacts.id", ondelete="SET NULL"), nullable=True, index=True)
+    contact_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     activity_type: Mapped[str] = mapped_column(String(30), nullable=False)
     title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

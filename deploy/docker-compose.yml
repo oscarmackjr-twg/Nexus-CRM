@@ -40,7 +40,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: dev-secret-key-change-in-prod
       ENVIRONMENT: development
-      CORS_ORIGINS: http://localhost:5173
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
       RUN_SEED_DATA: "true"
     env_file:
       - ../.env
