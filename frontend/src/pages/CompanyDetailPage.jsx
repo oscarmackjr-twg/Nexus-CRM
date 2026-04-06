@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { FieldRow } from '@/components/FieldRow';
 
 export default function CompanyDetailPage() {
   const { id } = useParams();
@@ -181,7 +182,7 @@ export default function CompanyDetailPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
+        <TabsList className="detail-tabs">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="deals">Deals</TabsTrigger>
@@ -193,7 +194,7 @@ export default function CompanyDetailPage() {
 
           {/* Card 1 — Identity */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle>Identity</CardTitle>
               <Button
                 variant="ghost"
@@ -374,7 +375,7 @@ export default function CompanyDetailPage() {
 
           {/* Card 2 — Investment Profile */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle>Investment Profile</CardTitle>
               <Button
                 variant="ghost"
@@ -623,7 +624,7 @@ export default function CompanyDetailPage() {
 
           {/* Card 3 — Internal */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle>Internal</CardTitle>
               <Button
                 variant="ghost"
@@ -696,7 +697,7 @@ export default function CompanyDetailPage() {
         {/* Contacts Tab */}
         <TabsContent value="contacts" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b border-gray-200 pb-3">
               <CardTitle>Contacts</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -717,7 +718,7 @@ export default function CompanyDetailPage() {
         {/* Deals Tab */}
         <TabsContent value="deals" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b border-gray-200 pb-3">
               <CardTitle>Deals</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">

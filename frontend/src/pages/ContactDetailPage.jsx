@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { FieldRow } from '@/components/FieldRow';
 
 const activitySchema = z.object({
   activity_type: z.string().min(1),
@@ -206,7 +207,7 @@ export default function ContactDetailPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
+        <TabsList className="detail-tabs">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="deals">Deals</TabsTrigger>
@@ -220,7 +221,7 @@ export default function ContactDetailPage() {
             <div className="space-y-4">
               {/* Card 1 — Identity */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
                   <CardTitle className="text-base font-semibold">Identity</CardTitle>
                   <Button
                     variant="ghost"
@@ -400,7 +401,7 @@ export default function ContactDetailPage() {
 
               {/* Employment History Card */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
                   <CardTitle className="text-base font-semibold">Employment history</CardTitle>
                   <Button
                     variant="ghost"
@@ -480,7 +481,7 @@ export default function ContactDetailPage() {
 
               {/* Board Memberships Card */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
                   <CardTitle className="text-base font-semibold">Board memberships</CardTitle>
                   <Button
                     variant="ghost"
@@ -548,7 +549,7 @@ export default function ContactDetailPage() {
             <div className="space-y-4">
               {/* Card 2 — Investment Preferences */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
                   <CardTitle className="text-base font-semibold">Investment Preferences</CardTitle>
                   <Button
                     variant="ghost"
@@ -657,7 +658,7 @@ export default function ContactDetailPage() {
 
               {/* Card 3 — Internal Coverage */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
                   <CardTitle className="text-base font-semibold">Internal Coverage</CardTitle>
                   <Button
                     variant="ghost"
@@ -739,7 +740,7 @@ export default function ContactDetailPage() {
 
               {/* AI Insight */}
               <Card>
-                <CardHeader>
+                <CardHeader className="border-b border-gray-200 pb-3">
                   <CardTitle className="flex items-center gap-2 text-base font-semibold">
                     <Linkedin className="h-4 w-4" />AI contact insight
                   </CardTitle>
