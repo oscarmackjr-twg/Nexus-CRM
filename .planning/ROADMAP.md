@@ -84,8 +84,8 @@ Plans:
 **Plans:** 2/3 plans executed
 Plans:
 - [x] 09-01-PLAN.md — Shared DataGrid + Pagination components + test infrastructure
-- [x] 09-02-PLAN.md — ContactsPage + CompaniesPage list views + /contacts and /companies routes
-- [ ] 09-03-PLAN.md — DealsPage list view + Deals sidebar nav link + /deals route
+- [ ] 09-02-PLAN.md — ContactsPage + CompaniesPage list views + /contacts and /companies routes
+- [x] 09-03-PLAN.md — DealsPage list view + Deals sidebar nav link + /deals route
 **UI hint**: yes
 
 ### Phase 10: Detail Page Polish

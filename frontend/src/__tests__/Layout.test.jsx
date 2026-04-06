@@ -49,7 +49,7 @@ describe('Layout sidebar', () => {
 
   it('renders all nav items with correct names', () => {
     renderWithProviders(<Layout />, { route: '/', path: '/*' });
-    const expectedItems = ['Dashboard', 'Contacts', 'Companies', 'Pipelines', 'Boards', 'Pages', 'Automations', 'Analytics', 'AI', 'LinkedIn', 'Admin', 'Team Settings'];
+    const expectedItems = ['Dashboard', 'Contacts', 'Companies', 'Deals', 'Pipelines', 'Boards', 'Pages', 'Automations', 'Analytics', 'AI', 'LinkedIn', 'Admin', 'Team Settings'];
     expectedItems.forEach((name) => {
       expect(screen.getByText(name)).toBeInTheDocument();
     });

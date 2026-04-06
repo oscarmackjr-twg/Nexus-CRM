@@ -33,9 +33,9 @@
 
 ### Data Grids
 
-- [x] **GRID-01**: Contacts list view uses compact row density (`py-2`, `text-sm`)
-- [x] **GRID-02**: Companies list view uses compact row density (`py-2`, `text-sm`)
-- [ ] **GRID-03**: Deals list view uses compact row density (`py-2`, `text-sm`)
+- [ ] **GRID-01**: Contacts list view uses compact row density (`py-2`, `text-sm`)
+- [ ] **GRID-02**: Companies list view uses compact row density (`py-2`, `text-sm`)
+- [x] **GRID-03**: Deals list view uses compact row density (`py-2`, `text-sm`)
 - [x] **GRID-04**: Column headers are uppercase, `text-xs`, `text-gray-500`, `tracking-wide`, with bottom border and sort indicators
 - [x] **GRID-05**: Row hover highlights with `bg-gray-50`; row action buttons visible on hover only
 - [x] **GRID-06**: Pagination bar shows page count, prev/next buttons, records-per-page selector in TWG style
