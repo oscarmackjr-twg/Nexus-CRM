@@ -16,7 +16,23 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Skill(gsd:progress)",
-      "Skill(gsd:quick)"
+      "Skill(gsd:quick)",
+      "Skill(gsd:resume-work)",
+      "Bash(docker compose:*)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(grep -h \"from backend.services._crm import\" backend/services/*.py -A 20)",
+      "Bash(curl:*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[0]; print\\(d['State']\\); print\\(d['Config']['Cmd']\\)\")",
+      "Bash(python3.exe -c \"import json,sys; d=json.load\\(sys.stdin\\)[0]; print\\('State:', d['State']['Status']\\); print\\('Cmd:', d['Config']['Cmd']\\)\")",
+      "Bash(docker exec:*)",
+      "Bash(npm install:*)",
+      "Bash(docker volume:*)",
+      "Bash(docker run:*)",
+      "Bash(grep -v \"^$\")",
+      "Skill(gsd:discuss-phase)",
+      "Skill(gsd:ui-phase)"
     ]
   }
 }

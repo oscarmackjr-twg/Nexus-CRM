@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
-status: Milestone complete
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-04-06T17:56:54.268Z"
+status: Executing Phase 09
+stopped_at: Phase 9 UI-SPEC approved
+last_updated: "2026-04-06T17:45:48.223Z"
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 35
-  completed_plans: 30
+  completed_plans: 29
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-29)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 13 — aws-core-infrastructure
+**Current focus:** Phase 09 — data-grids
 
 ## Current Status
 
@@ -113,9 +113,6 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 - 13-01: Provider version ~> 6.0 with required_version >= 1.10, < 2.0; region ap-southeast-1 for TWG Asia context
 - 13-01: create_oidc_provider = true in staging, false in prod — OIDC provider is account-scoped; staging creates it, prod reuses
 - 13-01: Phase 14 forward-compat vars (app_domain, acm_certificate_arn) included in both env variables.tf with empty defaults
-- 09-01: Sort state (sortKey/sortDir/onSort) lives in page component — DataGrid is stateless for sort to prevent re-render state loss
-- 09-01: Client-side sort only via useMemo — no API sort params per CONTEXT.md D-01; page reload resets to unsorted
-- 09-01: Literal middle dot · in JSX text nodes — \u00B7 escape does not interpolate in JSX text nodes
 
 ## Notes
 
@@ -154,12 +151,11 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | 13-aws-core-infrastructure | 01 | 12min | 2 | 9 |
 | Phase 13-aws-core-infrastructure P02 | 3min | 2 tasks | 11 files |
 | Phase 13-aws-core-infrastructure P03 | 3min | 2 tasks | 11 files |
-| Phase 09-data-grids P01 | 6min | 2 tasks | 5 files |
 
 ## Session Continuity
 
-Last session: 2026-04-06T17:56:54.255Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-04-06T17:31:18.587Z
+Stopped at: Phase 9 UI-SPEC approved
 
 ---
 *Last updated: 2026-03-30 — Phase 13 Plan 01 complete: Terraform bootstrap + environment structure*
