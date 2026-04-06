@@ -135,7 +135,7 @@ Plans:
   4. ElastiCache provisioned Redis replication group (not Serverless) is reachable from the ECS security group; Celery can connect and queue tasks
   5. ECR repositories exist for `api` and `worker` with immutable image tags and lifecycle policies; a test push with a SHA-tagged image succeeds and is visible in the ECR console
   6. AWS Secrets Manager secrets exist at `/nexus/staging/` and `/nexus/prod/` paths for `db_password`, `jwt_secret`, and `redis_url`; the GitHub Actions OIDC role can read them and has least-privilege ECS/ECR permissions
-**Plans:** 3/3 plans complete
+**Plans:** 1/2 plans executed
 Plans:
 - [x] 13-01-PLAN.md — Bootstrap config, environment directory structure, provider upgrade, delete flat root
 - [x] 13-02-PLAN.md — Fix networking, RDS, ElastiCache, and Secrets modules
@@ -197,7 +197,7 @@ Plans:
 | 7. Brand Foundation | v1.1 | 1/1 | Complete   | 2026-03-29 |
 | 8. Login, Banner & Sidebar | v1.1 | 2/2 | Complete   | 2026-03-29 |
 | 9. Data Grids | v1.1 | 2/3 | In Progress|  |
-| 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
+| 10. Detail Page Polish | v1.1 | 1/2 | In Progress|  |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
 | 13. AWS Core Infrastructure | v1.2 | 3/3 | Complete    | 2026-03-30 |

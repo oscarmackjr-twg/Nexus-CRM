@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
-status: Ready to plan
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-04-06T18:11:45.024Z"
+status: Executing Phase 10
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-04-06T22:01:19.116Z"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 10
-  total_plans: 35
-  completed_plans: 32
+  total_plans: 37
+  completed_plans: 33
 ---
 
 # Project State
@@ -19,13 +19,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-29)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 09 — data-grids
+**Current focus:** Phase 10 — detail-page-polish
 
 ## Current Status
 
-**Milestone:** v1.2 — Cloud Deployment — ROADMAP DEFINED
-**Active phase:** None — roadmap complete, ready to plan Phase 13
-**Last action:** 2026-03-29 — v1.2 roadmap created: 4 phases (13-16), 20 requirements mapped, 0% complete
+**Milestone:** v1.1 — UI Professionalism (in progress — Phases 7-12)
+**Active phase:** Phase 10 — detail-page-polish (Plan 1 of 2 complete)
+**Last action:** 2026-04-06 — Plan 10-01 complete: FieldRow component, .detail-tabs CSS, ContactDetailPage + CompanyDetailPage CardHeader borders and tab styling
 
 ## Phase Completion
 
@@ -40,7 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | 7 | Brand Foundation | Done (1/1 plans complete) — VERIFIED 2026-03-29 |
 | 8 | Login, Banner & Sidebar | Done (2/2 plans complete) — VERIFIED 2026-03-29 |
 | 9 | Data Grids | Not started |
-| 10 | Detail Page Polish | Not started |
+| 10 | Detail Page Polish | In progress (1/2 plans complete) |
 | 11 | Contact & Company Data Completeness | Not started |
 | 12 | Deal & Fund Data Completeness | Not started |
 | 13 | AWS Core Infrastructure | In progress (1/3 plans complete) |
@@ -113,6 +113,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 - 13-01: Provider version ~> 6.0 with required_version >= 1.10, < 2.0; region ap-southeast-1 for TWG Asia context
 - 13-01: create_oidc_provider = true in staging, false in prod — OIDC provider is account-scoped; staging creates it, prod reuses
 - 13-01: Phase 14 forward-compat vars (app_domain, acm_certificate_arn) included in both env variables.tf with empty defaults
+- 10-01: FieldRow uses named export matching Phase 9 DataGrid pattern; em-dash logic safe for zero values (financial fields); empty arrays also render as em-dash
+- 10-01: ContactDetailPage and CompanyDetailPage FieldRow import added but not yet used — inline-edit Label+Input patterns preserved; FieldRow migration deferred to Phase 11
+- 10-01: .detail-tabs CSS uses > button selector with data-state=active attribute; margin-bottom: -1px ensures active tab border overlaps container border cleanly
 
 ## Notes
 
@@ -152,11 +155,12 @@ See: `.planning/PROJECT.md` (updated 2026-03-29)
 | Phase 13-aws-core-infrastructure P02 | 3min | 2 tasks | 11 files |
 | Phase 13-aws-core-infrastructure P03 | 3min | 2 tasks | 11 files |
 | Phase 09-data-grids P03 | 3min | 2 tasks | 4 files |
+| Phase 10-detail-page-polish P01 | 8 | 4 tasks | 4 files |
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:04:15.575Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-04-06T22:01:19.111Z
+Stopped at: Completed 10-01-PLAN.md
 
 ---
 *Last updated: 2026-03-30 — Phase 13 Plan 01 complete: Terraform bootstrap + environment structure*

@@ -42,10 +42,10 @@
 
 ### Detail Page Polish
 
-- [ ] **DETAIL-01**: Every section card header has `font-semibold` title, optional Edit button, and `border-b` separator
-- [ ] **DETAIL-02**: Field label/value pairs use two-column grid — muted `text-xs uppercase` label, normal value, consistent vertical spacing
-- [ ] **DETAIL-03**: Null/empty field values display `—` (em dash) instead of blank
-- [ ] **DETAIL-04**: Detail page tab bar uses navy underline for active tab with clean bottom border
+- [x] **DETAIL-01**: Every section card header has `font-semibold` title, optional Edit button, and `border-b` separator
+- [x] **DETAIL-02**: Field label/value pairs use two-column grid — muted `text-xs uppercase` label, normal value, consistent vertical spacing
+- [x] **DETAIL-03**: Null/empty field values display `—` (em dash) instead of blank
+- [x] **DETAIL-04**: Detail page tab bar uses navy underline for active tab with clean bottom border
 
 ### Contact & Company Data Completeness
 
