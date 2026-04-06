@@ -81,9 +81,9 @@ Plans:
   2. Column headers are uppercase, `text-xs`, `text-gray-500`, `tracking-wide`, with a bottom border and sort indicator arrows
   3. Hovering a row highlights it with `bg-gray-50`; row action buttons (View/Edit) are only visible on hover
   4. The pagination bar shows page count, previous/next buttons, and a records-per-page selector in consistent TWG style
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
-- [ ] 09-01-PLAN.md — Shared DataGrid + Pagination components + test infrastructure
+- [x] 09-01-PLAN.md — Shared DataGrid + Pagination components + test infrastructure
 - [ ] 09-02-PLAN.md — ContactsPage + CompaniesPage list views + /contacts and /companies routes
 - [ ] 09-03-PLAN.md — DealsPage list view + Deals sidebar nav link + /deals route
 **UI hint**: yes
@@ -196,7 +196,7 @@ Plans:
 | 6. Admin Reference Data UI | v1.0 | 3/3 | Complete | 2026-03-28 |
 | 7. Brand Foundation | v1.1 | 1/1 | Complete   | 2026-03-29 |
 | 8. Login, Banner & Sidebar | v1.1 | 2/2 | Complete   | 2026-03-29 |
-| 9. Data Grids | v1.1 | 0/3 | Not started | - |
+| 9. Data Grids | v1.1 | 1/3 | In Progress|  |
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
