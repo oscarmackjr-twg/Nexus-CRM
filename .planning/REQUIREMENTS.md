@@ -125,7 +125,7 @@
 | LOGIN-01 to LOGIN-04 | Phase 8 | 08-01 |
 | BANNER-01 | Phase 8 | 08-01 |
 | NAV-01 to NAV-05 | Phase 8 | 08-02 |
-| GRID-01 to GRID-06 | Phase 9 | TBD |
+| GRID-01 to GRID-06 | Phase 9 | 09-01, 09-02, 09-03 |
 | DETAIL-01 to DETAIL-04 | Phase 10 | TBD |
 | CONTACT-08 to CONTACT-10 | Phase 11 | TBD |
 | COMPANY-10 to COMPANY-12 | Phase 11 | TBD |

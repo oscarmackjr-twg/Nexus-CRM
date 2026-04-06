@@ -83,7 +83,7 @@ Plans:
   4. The pagination bar shows page count, previous/next buttons, and a records-per-page selector in consistent TWG style
 **Plans:** 3 plans
 Plans:
-- [ ] 09-01-PLAN.md — deals.js API module + shared DataGrid component + Pagination component
+- [ ] 09-01-PLAN.md — Shared DataGrid + Pagination components + test infrastructure
 - [ ] 09-02-PLAN.md — ContactsPage + CompaniesPage list views + /contacts and /companies routes
 - [ ] 09-03-PLAN.md — DealsPage list view + Deals sidebar nav link + /deals route
 **UI hint**: yes
