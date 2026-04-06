@@ -57,6 +57,7 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 - ✓ Login page — real TWG logo, StagingBanner, navy primary button, backend health indicator — v1.1 Phase 8
 - ✓ White left sidebar layout — TWG logo header, grouped nav (DEALS/TOOLS/ADMIN), navy active highlight, user footer, staging banner on every authenticated page — v1.1 Phase 8
 - ✓ Compact Salesforce-density data grids — shared DataGrid+Pagination components, 8-column layouts, sort indicators, hover View button, status filter bar on Deals, Deals nav link — v1.1 Phase 9
+- ✓ Detail page polish — shared FieldRow component, `.detail-tabs` navy underline tabs, CardHeader border separators across Contact, Company, and Deal detail pages — v1.1 Phase 10
 - ✓ Admin-configurable reference data — 12 categories, 96+ seed values, soft-delete, org-scoped — v1.0
 - ✓ RefSelect component + useRefData hook — canonical dropdown infrastructure for all entities — v1.0
 - ✓ Admin Reference Data UI — 12-category management page, full CRUD, query prefix invalidation — v1.0
