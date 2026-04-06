@@ -11,3 +11,7 @@ export const logDealActivity = async (dealId, data) =>
   (await client.post(`/deals/${dealId}/activities`, data)).data;
 export const moveDealStage = async (dealId, data) =>
   (await client.post(`/deals/${dealId}/move`, data)).data;
+export const scoreDeal = async (id) => (await client.get(`/deals/${id}/score`)).data;
+// alias used in some pages
+export const logActivity = async (dealId, data) =>
+  (await client.post(`/deals/${dealId}/activities`, data)).data;

@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
-def create_refresh_token() -> str:
+def create_refresh_token(payload: dict | None = None) -> str:
     return secrets.token_urlsafe(64)
 
 

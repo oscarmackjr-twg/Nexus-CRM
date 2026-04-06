@@ -77,11 +77,17 @@ services:
         condition: service_healthy
 
   frontend:
-    image: node:22-alpine
-    command: sh -c "npm install && npm run dev"
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    command: npm run dev
     working_dir: /app
     volumes:
-      - ../frontend:/app
+      - ../frontend/src:/app/src
+      - ../frontend/index.html:/app/index.html
+      - ../frontend/vite.config.js:/app/vite.config.js
+      - ../frontend/tailwind.config.js:/app/tailwind.config.js
+      - ../frontend/postcss.config.js:/app/postcss.config.js
     ports:
       - "5173:5173"
     environment:
