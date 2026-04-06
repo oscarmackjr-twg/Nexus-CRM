@@ -147,7 +147,7 @@ Source: CONTEXT.md D-10; RESEARCH.md Section 3.1, 5.
 
 - Sits between the page header and the DataGrid.
 - Tab options: "All" / "Open" / "Won" / "Lost".
-- Layout: `flex gap-1` inline tab bar with `px-3 py-1.5 text-sm rounded-md` buttons.
+- Layout: `flex gap-1` inline tab bar with `px-3 py-2 text-sm rounded-md` buttons.
 - Active tab: `bg-white border border-gray-200 font-semibold text-[#1a3868]` with a `border-b-2 border-[#1a3868]` underline indicator.
 - Inactive tab: `text-gray-500 hover:text-gray-700 hover:bg-gray-100`.
 - Selecting a tab passes `?status=` to the API. "All" sends no status param (CONTEXT.md D-04).
@@ -300,12 +300,12 @@ flex gap-1 mb-4
 
 ### Deals status filter — inactive tab
 ```
-px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors
+px-3 py-2 text-sm rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors
 ```
 
 ### Deals status filter — active tab
 ```
-px-3 py-1.5 text-sm rounded-md font-semibold text-[#1a3868] bg-white border border-gray-200 shadow-sm
+px-3 py-2 text-sm rounded-md font-semibold text-[#1a3868] bg-white border border-gray-200 shadow-sm
 ```
 
 ### Empty state container
