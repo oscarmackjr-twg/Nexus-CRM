@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/omack/nexus/Nexus-CRM/backend -name \"*.py\" -exec wc -l {} +)",
+      "Bash(grep \"^from backend\\\\|^import backend\" /c/Users/omack/nexus/Nexus-CRM/backend/api/routes/*.py)",
+      "Bash(grep \"^from backend\\\\|^import backend\" /c/Users/omack/nexus/Nexus-CRM/backend/services/*.py)",
+      "Bash(grep \"from backend.services._crm import\" /c/Users/omack/nexus/Nexus-CRM/backend/services/*.py)",
+      "Bash(xargs grep:*)",
+      "Bash(grep \"create_table\\\\|op.create_table\" /c/Users/omack/nexus/Nexus-CRM/alembic/versions/*.py)",
+      "Bash(grep -rn \"import.*client\\\\|from.*client\" /c/Users/omack/nexus/Nexus-CRM/frontend/src/api/*.js)",
+      "Bash(grep -rn \"from\\\\|import\" /c/Users/omack/nexus/Nexus-CRM/frontend/src/__tests__/*.jsx)",
+      "Bash(grep -rn \"import\" /c/Users/omack/nexus/Nexus-CRM/frontend/src/pages/*.jsx)",
+      "Bash(grep -rn \"import\" /c/Users/omack/nexus/Nexus-CRM/frontend/src/components/*.jsx)",
+      "Bash(grep -rn \"from backend\" /c/Users/omack/nexus/Nexus-CRM/backend/tests/*.py)",
+      "Bash(wc -l .planning/codebase/*.md)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Skill(gsd:progress)",
+      "Skill(gsd:quick)"
+    ]
+  }
+}
