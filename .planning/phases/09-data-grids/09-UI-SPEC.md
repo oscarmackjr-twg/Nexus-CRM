@@ -40,7 +40,7 @@ Declared values (multiples of 4):
 | 2xl | 48px | Page-level top spacing |
 | 3xl | 64px | Not used in this phase |
 
-**Phase-specific exception:** Table row padding is `py-2 px-3` (8px vertical / 12px horizontal). The 12px horizontal does not fall on the 4-point scale but is explicitly required by GRID-01, GRID-02, GRID-03 for Salesforce-density matching. This is the only exception. Source: REQUIREMENTS.md GRID-01 through GRID-03 + CONTEXT.md D-05.
+**Phase-specific exception:** Table row vertical padding is `py-2` (8px) — locked by CONTEXT.md D-05. Horizontal cell padding is `px-4` (16px), on the 4-point scale. No off-scale spacing is used in this phase.
 
 **Touch target minimum:** Row "View" button uses `size="sm"` (`h-8`/ 32px). Grid rows are not touch-primary — this is a desktop deal-team CRM. 32px is acceptable.
 
@@ -94,10 +94,10 @@ All components listed below are available without installation. Source files con
 |-----------|------|----------|
 | `Table` | `ui/table.jsx` | DataGrid wrapper — override default padding via `className` props |
 | `TableHeader` | `ui/table.jsx` | Column header row container |
-| `TableHead` | `ui/table.jsx` | Individual header cell — override with `py-2 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500` |
+| `TableHead` | `ui/table.jsx` | Individual header cell — override with `py-2 px-4 text-xs font-semibold uppercase tracking-wide text-gray-500` |
 | `TableBody` | `ui/table.jsx` | Data rows container |
 | `TableRow` | `ui/table.jsx` | Data row — override with `group hover:bg-gray-50 cursor-pointer` |
-| `TableCell` | `ui/table.jsx` | Data cell — override with `py-2 px-3 text-sm` |
+| `TableCell` | `ui/table.jsx` | Data cell — override with `py-2 px-4 text-sm` |
 | `Button` | `ui/button.jsx` | Pagination prev/next (`variant="outline" size="sm"`), row View action (`variant="ghost" size="sm"`) |
 | `Badge` | `ui/badge.jsx` | Deal status (`variant="success"` for Won, custom classes for Open/Lost), lifecycle stage on Contacts |
 | `Skeleton` | `ui/skeleton.jsx` | Loading state — render 10 skeleton rows while `isLoading` is true |
@@ -249,12 +249,12 @@ These are the precise Tailwind classes the executor must use. Do not deviate.
 
 ### TableHead (column header cell)
 ```
-py-2 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-200
+py-2 px-4 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-200
 ```
 
 ### TableCell (data cell)
 ```
-py-2 px-3 text-sm text-gray-900
+py-2 px-4 text-sm text-gray-900
 ```
 
 ### TableRow (data row)
@@ -274,7 +274,7 @@ font-medium text-[#1a3868] hover:underline
 
 ### Pagination bar container
 ```
-flex items-center justify-between px-3 py-2 border-t border-gray-200 text-sm text-gray-600 bg-white
+flex items-center justify-between px-4 py-2 border-t border-gray-200 text-sm text-gray-600 bg-white
 ```
 
 ### Pagination records label
