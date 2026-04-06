@@ -1,6 +1,11 @@
+---
+updated: 2026-04-06
+focus: tech
+---
+
 # External Integrations
 
-**Analysis Date:** 2026-03-26
+**Analysis Date:** 2026-04-06
 
 ---
 
@@ -291,4 +296,4 @@ No external metrics backend (Prometheus server, Datadog agent, etc.) is configur
 
 ---
 
-*Integration audit: 2026-03-26*
+*Integration audit: 2026-04-06*

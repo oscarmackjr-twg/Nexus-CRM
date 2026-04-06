@@ -1,391 +1,253 @@
+---
+updated: 2026-04-06
+focus: arch
+---
+
 # Codebase Structure
 
-**Analysis Date:** 2026-03-26
+**Analysis Date:** 2026-04-06
 
 ## Directory Layout
 
 ```
-nexus-crm/
-├── backend/                    # Python FastAPI application
-│   ├── api/                    # HTTP layer (routes, middleware, deps)
-│   │   ├── main.py             # FastAPI app factory + lifespan
-│   │   ├── middleware.py       # Custom Starlette middlewares
-│   │   ├── dependencies.py     # Reusable FastAPI Depends factories
-│   │   └── routes/             # One file per domain resource
-│   │       ├── auth.py
-│   │       ├── contacts.py
-│   │       ├── companies.py
-│   │       ├── deals.py
-│   │       ├── pipelines.py
-│   │       ├── boards.py
-│   │       ├── tasks.py
-│   │       ├── pages.py
-│   │       ├── automations.py
-│   │       ├── ai_query.py
-│   │       ├── linkedin.py
-│   │       ├── orgs.py
-│   │       ├── teams.py
-│   │       ├── webhooks.py
-│   │       └── analytics.py
-│   ├── auth/                   # Auth utilities (JWT, bcrypt, OAuth)
-│   │   ├── security.py         # Token creation/verification, get_current_user
-│   │   ├── schemas.py          # UserRole enum, Token/UserCreate Pydantic models
-│   │   ├── validators.py       # Input validators (email, password strength)
-│   │   ├── rate_limiter.py     # Auth-specific rate limit helpers
-│   │   └── create_admin.py     # CLI script to seed admin user
-│   ├── services/               # Business logic layer (one class per domain)
-│   │   ├── _crm.py             # Shared helpers: org scoping, pagination, SQL exprs
-│   │   ├── deals.py            # DealService
-│   │   ├── contacts.py         # ContactService
-│   │   ├── companies.py        # CompanyService
-│   │   ├── pipelines.py        # PipelineService
-│   │   ├── boards.py           # BoardService
-│   │   ├── pages.py            # PageService
-│   │   ├── automations.py      # AutomationService
-│   │   ├── ai_service.py       # AIService (LLM queries, scoring, forecasting)
-│   │   ├── linkedin_service.py # LinkedInService (OAuth, profile enrichment)
-│   │   ├── analytics_service.py
-│   │   └── email_service.py
-│   ├── schemas/                # Pydantic request/response models (per domain)
-│   │   ├── deals.py
-│   │   ├── contacts.py
-│   │   ├── companies.py
-│   │   ├── pipelines.py
-│   │   ├── boards.py
-│   │   ├── pages.py
-│   │   ├── automations.py
-│   │   ├── ai.py
-│   │   ├── linkedin.py
-│   │   ├── analytics.py
-│   │   └── tasks.py
-│   ├── workers/                # Celery async task definitions
-│   │   ├── celery_app.py       # Celery app + config (broker=Redis)
-│   │   ├── ai_enrichment.py    # ai.enrichment.batch task
-│   │   ├── automation_runner.py # automation.run task
-│   │   ├── automation_trigger.py # fire_trigger() helper (async)
-│   │   ├── linkedin_sync.py    # linkedin.sync_contact/company tasks
-│   │   └── email_sync.py       # email sync stub
-│   ├── math/                   # Pure-Python scoring algorithms (no DB deps)
-│   │   ├── deal_scoring.py     # compute_win_probability (sigmoid model)
-│   │   ├── lead_scoring.py     # compute_lead_score
-│   │   └── pipeline_forecast.py # compute_forecast
-│   ├── storage/                # Pluggable file storage abstraction
-│   │   ├── base.py             # StorageBackend ABC
-│   │   ├── local.py            # Filesystem implementation
-│   │   └── s3.py               # AWS S3 implementation
-│   ├── utils/                  # Cross-cutting utilities
-│   │   ├── structured_logging.py # structlog setup, request context binding
-│   │   ├── telemetry.py        # OpenTelemetry + Prometheus CounterMetric
-│   │   ├── graceful_shutdown.py # Signal handlers for clean shutdown
-│   │   ├── sql_validator.py    # AI-query SQL sanitiser/validator
-│   │   └── db_constraints.py   # Constraint helper utilities
-│   ├── tests/                  # pytest test suite (see TESTING.md)
-│   ├── models.py               # All SQLAlchemy ORM models (single file)
-│   ├── database.py             # Async engine + session factory
-│   ├── config.py               # Pydantic Settings (env-driven config)
-│   ├── seed_data.py            # Development seed script
-│   └── requirements.txt        # Python dependencies (duplicates pyproject.toml)
-│
-├── frontend/                   # React SPA (Vite + JSX)
+Nexus-CRM/
+├── alembic/                    # Database migration runner config
+│   └── versions/               # Sequential migration scripts (0002–0011)
+├── backend/                    # Python FastAPI application (monorepo package)
+│   ├── api/                    # HTTP layer
+│   │   ├── main.py             # FastAPI app factory, lifespan, middleware, router registration
+│   │   └── routes/             # One router module per domain
+│   ├── models.py               # All SQLAlchemy ORM models (single file, ~700 lines)
+│   ├── schemas/                # Pydantic v2 request/response schemas per domain
+│   ├── services/               # Business logic service classes per domain
+│   ├── seed_data.py            # Development seed data script
+│   └── tests/                  # Pytest test suite
+├── deploy/                     # Runtime deployment artifacts
+│   └── entrypoint.sh           # Container start script (migration + uvicorn)
+├── frontend/                   # React SPA (Vite)
+│   ├── index.html              # HTML entry point
+│   ├── vite.config.js          # Vite + Vitest config; dev proxy to backend:8000
+│   ├── tailwind.config.js      # Tailwind CSS config
 │   └── src/
-│       ├── main.jsx            # Vite entry point
-│       ├── App.jsx             # Provider tree + BrowserRouter + all Routes
-│       ├── styles.css          # Global CSS
-│       ├── api/                # Axios API modules (one per domain)
-│       │   ├── client.js       # Shared axios instance with auth interceptors
-│       │   ├── auth.js
-│       │   ├── contacts.js
-│       │   ├── companies.js
-│       │   ├── deals.js
-│       │   ├── pipelines.js
-│       │   ├── boards.js
-│       │   ├── pages.js
-│       │   ├── automations.js
-│       │   ├── ai.js
-│       │   ├── linkedin.js
-│       │   ├── analytics.js
-│       │   ├── search.js
-│       │   ├── teams.js
-│       │   └── users.js
-│       ├── store/              # Zustand stores (synchronous client state)
-│       │   ├── useAuthStore.js       # JWT tokens + user; localStorage persisted
-│       │   ├── usePipelineStore.js   # Active pipeline + optimistic deal moves
-│       │   ├── useUIStore.js         # Sidebar + theme; localStorage persisted
-│       │   └── useContactStore.js    # Contact list cache
-│       ├── context/            # React contexts (bridge Zustand <-> TanStack Query)
-│       │   ├── AuthContext.jsx # Login/logout mutations + /me bootstrap query
-│       │   └── OrgContext.jsx  # Current org resolution
-│       ├── hooks/              # TanStack Query wrappers (server state)
-│       │   ├── useDeals.js
-│       │   ├── useContacts.js
-│       │   ├── useAuth.js
-│       │   ├── useAIQuery.js
-│       │   ├── useTeamScope.js
-│       │   └── useDebounce.js
-│       ├── pages/              # Route-level page components
-│       │   ├── LoginPage.jsx
-│       │   ├── DashboardPage.jsx
-│       │   ├── ContactsPage.jsx
-│       │   ├── ContactDetailPage.jsx
-│       │   ├── CompaniesPage.jsx
-│       │   ├── CompanyDetailPage.jsx
-│       │   ├── PipelinePage.jsx
-│       │   ├── DealDetailPage.jsx
-│       │   ├── BoardsPage.jsx
-│       │   ├── BoardDetailPage.jsx
-│       │   ├── PagesPage.jsx
-│       │   ├── PageDetailPage.jsx
-│       │   ├── AutomationsPage.jsx
-│       │   ├── AnalyticsPage.jsx
-│       │   ├── AIQueryPage.jsx
-│       │   ├── LinkedInPage.jsx
-│       │   ├── TeamSettingsPage.jsx
-│       │   └── AdminPage.jsx
-│       ├── components/         # Reusable UI components
-│       │   ├── Layout.jsx      # App shell with sidebar and nav
-│       │   ├── AuthGuard.jsx   # Redirects unauthenticated users to /login
-│       │   ├── KanbanBoard.jsx # Drag-and-drop kanban implementation
-│       │   ├── PipelineView.jsx
-│       │   ├── DealCard.jsx
-│       │   ├── ContactCard.jsx
-│       │   ├── ActivityFeed.jsx
-│       │   ├── AutomationBuilder.jsx
-│       │   ├── RichTextEditor.jsx
-│       │   ├── AIQueryBar.jsx
-│       │   ├── LinkedInPanel.jsx
-│       │   ├── TeamSelector.jsx
-│       │   └── ui/             # Generic UI primitives (shadcn/radix wrappers)
-│       │       ├── avatar.jsx, badge.jsx, button.jsx, card.jsx
-│       │       ├── dialog.jsx, dropdown-menu.jsx, input.jsx
-│       │       ├── label.jsx, select.jsx, sheet.jsx, skeleton.jsx
-│       │       ├── switch.jsx, table.jsx, tabs.jsx, textarea.jsx
-│       ├── lib/                # Shared utilities (utils.js — clsx/tw merge helper)
-│       ├── test/               # Vitest setup file (setup.js)
-│       └── __tests__/          # Component/hook tests
-│
-├── mobile/                     # React Native app (no tests)
-│   └── src/
-│       ├── screens/            # Screen components
-│       │   ├── HomeScreen.jsx
-│       │   ├── ContactsScreen.jsx
-│       │   ├── DealsScreen.jsx
-│       │   ├── ActivityScreen.jsx
-│       │   └── AIQueryScreen.jsx
-│       ├── navigation/         # AppNavigator.jsx (React Navigation)
-│       └── api/                # client.js (mirrors frontend API client)
-│
-├── alembic/                    # Database migrations
-│   ├── env.py                  # Alembic env (points to backend.database)
-│   └── versions/
-│       └── 0001_initial.py     # Initial full schema migration
-│
-├── deploy/                     # Deployment configuration
-│   ├── Dockerfile              # Backend image (FastAPI + uvicorn)
-│   ├── Dockerfile.worker       # Celery worker image
-│   ├── docker-compose.yml      # Full local dev stack (postgres, redis, backend, worker, frontend)
-│   ├── entrypoint.sh           # Container entrypoint (runs migrations then uvicorn)
-│   └── .dockerignore
-│
-├── terraform/                  # AWS infrastructure as code
-│   ├── main.tf                 # Root module, wires sub-modules together
-│   ├── variables.tf / outputs.tf / terraform.tfvars
-│   └── modules/
-│       ├── alb/                # Application Load Balancer
-│       ├── cloudfront/         # CDN for frontend static assets
-│       ├── ecs/                # ECS Fargate service (API)
-│       ├── ecs_worker/         # ECS Fargate service (Celery worker)
-│       ├── elasticache/        # Redis (ElastiCache)
-│       ├── iam/                # IAM roles and policies
-│       ├── networking/         # VPC, subnets, security groups
-│       ├── rds/                # PostgreSQL (RDS)
-│       └── secrets/            # Secrets Manager
-│
-├── specs/                      # Product/feature specifications (YAML + JSON)
-│   ├── nexus-crm-spec.yaml
-│   └── openapi-spec.json
-├── docs/                       # Developer documentation
-│   └── RUNBOOK.md
-├── .github/workflows/
-│   └── deploy.yml              # CI/CD pipeline
-├── .env.example                # Required environment variables template
-├── alembic.ini                 # Alembic config
-├── pyproject.toml              # Python tooling config + pytest settings
-├── Makefile                    # Dev task shortcuts (test, lint, format, migrate, seed)
-└── test_nexus.db               # SQLite file created at test/dev runtime
+│       ├── api/                # Axios API client modules per domain
+│       ├── assets/             # Static assets (logo, images)
+│       ├── components/         # Shared React components
+│       ├── hooks/              # Custom React hooks
+│       ├── lib/                # Pure utility functions and constants
+│       ├── pages/              # Page-level React components (route targets)
+│       ├── store/              # Zustand state stores
+│       ├── __tests__/          # Frontend unit/component tests
+│       └── styles.css          # Global CSS (Tailwind base)
+├── terraform/                  # Infrastructure-as-code (Terraform)
+│   ├── bootstrap/              # One-time state bucket + KMS key setup
+│   ├── environments/
+│   │   ├── staging/            # Staging environment root module
+│   │   └── prod/               # Production environment root module
+│   └── modules/                # Reusable Terraform modules
+│       ├── networking/         # VPC, subnets, IGW, NAT, route tables, security groups
+│       ├── rds/                # RDS PostgreSQL instance + parameter group
+│       ├── rds_proxy/          # AWS RDS Proxy + IAM role for Secrets Manager
+│       ├── elasticache/        # ElastiCache Redis replication group
+│       ├── secrets/            # AWS Secrets Manager shell resources
+│       └── iam/                # ECS execution/task roles, GitHub OIDC role
+├── .planning/                  # Project planning and GSD docs (not shipped)
+├── Makefile                    # Developer workflow shortcuts
+└── .gitignore
 ```
 
----
+## Directory Purposes
 
-## Key Files and Their Purpose
+**`backend/api/`:**
+- Purpose: HTTP entry point — FastAPI app, middleware, router mounting
+- Contains: `main.py` (app factory), `routes/` (19 domain router files), `middleware` (imported package — not committed individually but provides `AuditLogMiddleware`, `OrgScopingMiddleware`, `RequestIDMiddleware`, `RequestLoggingMiddleware`, `SecurityHeadersMiddleware`), `dependencies` (imported package — provides `get_current_user`, `get_db`, `require_role`)
+- Key files: `backend/api/main.py`
 
-| File | Purpose |
-|---|---|
-| `backend/api/main.py` | FastAPI app definition, middleware registration, router mounting, health/metrics endpoints |
-| `backend/models.py` | Single file with all SQLAlchemy ORM models — edit here when adding columns or tables |
-| `backend/config.py` | All environment-driven config via Pydantic `Settings`; `settings` singleton via `lru_cache` |
-| `backend/database.py` | Engine and session factory; `DATABASE_URL` env var swapped to SQLite during tests |
-| `backend/services/_crm.py` | Shared internal utilities consumed by all service classes: pagination, role checks, SQL helpers |
-| `backend/auth/security.py` | `create_access_token`, `get_current_user` FastAPI dependency, `hash_password`, `encrypt_linkedin_token` |
-| `backend/utils/sql_validator.py` | Validates and sanitises AI-generated SQL before execution |
-| `frontend/src/api/client.js` | The single Axios instance; add global request/response interceptors here |
-| `frontend/src/App.jsx` | All route definitions live here; add new routes by importing a page and adding a `<Route>` |
-| `frontend/src/store/useAuthStore.js` | Source of truth for the JWT token; read by `client.js` interceptor |
-| `frontend/src/__tests__/test-utils.jsx` | `renderWithProviders` helper used by all frontend tests |
-| `deploy/docker-compose.yml` | Full local dev stack definition — postgres, redis, backend, worker, frontend |
-| `Makefile` | Primary developer interface: `make test`, `make lint`, `make dev`, `make migrate`, `make seed` |
+**`backend/api/routes/`:**
+- Purpose: One FastAPI `APIRouter` per domain; thin layer that validates inputs and delegates to services
+- Contains: `admin.py`, `ai_query.py`, `analytics.py`, `auth.py`, `automations.py`, `boards.py`, `companies.py`, `contacts.py`, `counterparties.py`, `deals.py`, `funding.py`, `funds.py`, `linkedin.py`, `orgs.py`, `pages.py`, `pipelines.py`, `tasks.py`, `teams.py`, `webhooks.py`
+- Note: `auth.py` is the exception — it contains non-trivial auth logic directly rather than delegating to a service
 
----
+**`backend/models.py`:**
+- Purpose: Single file containing all SQLAlchemy ORM model classes (~700 lines)
+- Contains: `Organization`, `Team`, `User`, `ContactCoveragePerson`, `Contact`, `Company`, `Pipeline`, `PipelineStage`, `Fund`, `DealTeamMember`, `DealCounterparty`, `DealFunding`, `Deal`, `DealActivity`, `Board`, `BoardColumn`, `Task`, `Page`, `Automation`, `AutomationRun`, `AIQuery`, `RefData`
 
-## Module Boundaries
+**`backend/schemas/`:**
+- Purpose: Pydantic v2 models for API request validation and response serialisation
+- Contains: `companies.py`, `contacts.py`, `counterparties.py`, `deals.py`, `funding.py`, `funds.py`, `ref_data.py`
+- Pattern: `{Entity}Create`, `{Entity}Update`, `{Entity}Response` per domain
 
-The backend enforces a strict layered dependency direction. Never import in the reverse direction.
+**`backend/services/`:**
+- Purpose: Business logic; all DB queries and mutations live here
+- Contains: `companies.py`, `contacts.py`, `counterparties.py`, `deals.py`, `funding.py`, `funds.py`, `ref_data.py`
+- Pattern: Service class with `__init__(self, db: AsyncSession, current_user: User)`, async methods
 
-```
-routes/ --> services/ --> models.py + schemas/
-                 |
-                 +--> math/    (pure functions, no DB or HTTP)
-                 +--> storage/ (file I/O abstraction)
-                 +--> utils/   (cross-cutting, no business logic)
+**`backend/tests/`:**
+- Purpose: Pytest test suite
+- Contains: `conftest.py` (fixtures, test DB setup), `test_deals_pe.py`, `test_funds.py`, `test_ref_data.py`
+- Key files: `backend/tests/conftest.py`
 
-workers/ --> services/        (same direction as routes)
-          --> workers/celery_app.py
+**`alembic/versions/`:**
+- Purpose: Database migration history
+- Contains: Numbered scripts `0002_pe_ref_data.py` through `0011_deal_funding.py`
+- Pattern: Sequential integers as prefix; descriptive name suffix
 
-auth/ --> models.py (User model only)
-       --> config.py
+**`deploy/`:**
+- Purpose: Runtime deployment scripts
+- Contains: `entrypoint.sh` only — run at container start
+- Generated: No. Committed: Yes.
 
-frontend/src/hooks/ --> frontend/src/api/
-frontend/src/context/ --> frontend/src/store/ + frontend/src/hooks/
-frontend/src/pages/ --> frontend/src/hooks/ + frontend/src/store/ + frontend/src/components/
-```
+**`frontend/src/api/`:**
+- Purpose: Axios client wrappers — one module per backend domain
+- Contains: `companies.js`, `contacts.js`, `counterparties.js`, `funding.js`, `refData.js`, `users.js`
+- Pattern: Named exports of async functions that call a shared `client` (Axios instance): `export const getCompanies = async (params) => (await client.get('/companies', { params })).data`
 
-**Rules to maintain:**
-- `routes/` must not import from other `routes/` files
-- `services/` must not import from `routes/`
-- `models.py` must not import from `services/` or `routes/`
-- `math/` must remain pure Python with zero database or HTTP dependencies
-- Frontend `api/` modules must not import from `hooks/`, `store/`, or `context/`
+**`frontend/src/components/`:**
+- Purpose: Shared/reusable React components
+- Contains: `Layout.jsx` (sidebar + nav shell), `RefSelect.jsx` (ref-data dropdown), `StagingBanner.jsx`, `AIQueryBar` (imported in Layout, not found as separate file — may be inline or missing)
 
----
+**`frontend/src/hooks/`:**
+- Purpose: Custom React hooks
+- Contains: `useRefData.js` (React Query wrapper for ref data by category)
 
-## Notable Patterns
+**`frontend/src/lib/`:**
+- Purpose: Pure utilities and constants
+- Contains: `refCategories.js` (list of valid ref-data category strings)
 
-### Schema Separation
+**`frontend/src/pages/`:**
+- Purpose: Route-level page components mounted by React Router
+- Contains: `LoginPage.jsx`, `DashboardPage.jsx`, `ContactDetailPage.jsx`, `CompanyDetailPage.jsx`, `DealDetailPage.jsx`, `AdminPage.jsx`
 
-Request/response Pydantic models in `backend/schemas/` are separate from ORM models in `backend/models.py`. Response schemas include computed fields (e.g., `DealResponse.pipeline_name`, `owner_name`, `is_rotting`, `days_in_stage`) that are resolved by SQL joins in service query methods — not by loading ORM relationships.
+**`frontend/src/store/`:**
+- Purpose: Zustand global state
+- Contains: `useUIStore.js` — sidebar collapsed state, persisted to `localStorage`
 
-### Service Class Pattern
+**`terraform/modules/`:**
+- Purpose: Reusable, parameterised Terraform modules — not deployed directly
+- Each module follows the standard pattern: `main.tf`, `variables.tf`, `outputs.tf`
 
-Every service receives `(db: AsyncSession, current_user: User)` at construction. All org-scope filtering, role checks, and pagination logic live in the service, not in route handlers. Routes are responsible only for input validation and response shaping.
+**`terraform/environments/staging/` and `terraform/environments/prod/`:**
+- Purpose: Environment root modules — call all child modules with environment-specific variable values
+- Both environments have identical module compositions; prod differs via variable values (multi-AZ, deletion protection)
 
-```python
-# Route (thin)
-async def list_deals(...) -> DealListResponse:
-    return await DealService(db, current_user).list_deals(...)
+**`terraform/bootstrap/`:**
+- Purpose: One-time setup of Terraform remote state infrastructure (S3 + KMS)
+- State: Managed locally (`.gitignore` covers bootstrap state files)
 
-# Service (fat)
-class DealService:
-    def __init__(self, db: AsyncSession, current_user: User): ...
-    async def list_deals(self, **filters) -> DealListResponse: ...
-```
+## Key File Locations
 
-### Automation Trigger Pattern
+**Entry Points:**
+- `backend/api/main.py` — FastAPI application factory and startup
+- `deploy/entrypoint.sh` — Container start script
+- `frontend/index.html` — SPA HTML shell
+- `frontend/vite.config.js` — Frontend build and dev server config
 
-After any mutating service operation that could trigger automations, the route fires `await fire_trigger(trigger_type, payload, org_id)` via FastAPI `BackgroundTasks`. This queries active automations and dispatches Celery tasks without blocking the HTTP response.
+**Configuration:**
+- `backend/config` — Python settings module (imported as `from backend.config import settings`)
+- `terraform/environments/staging/main.tf` — Staging infrastructure root
+- `terraform/environments/prod/main.tf` — Production infrastructure root
+- `terraform/bootstrap/main.tf` — State bucket bootstrap
 
-### Dual-DB Dialect Support
+**Core Business Logic:**
+- `backend/models.py` — All ORM models
+- `backend/services/deals.py` — Deal service (largest service, ~25KB)
+- `backend/services/contacts.py` — Contact service (~16KB)
+- `backend/services/companies.py` — Company service (~15KB)
+- `backend/api/routes/auth.py` — Auth, token management, LinkedIn OAuth (~18KB)
 
-`backend/models.py` uses `JSONVariant` and `StringList` type aliases that resolve to `JSON`/`JSONB` and `JSON`/`ARRAY(Text)` depending on the dialect. This keeps the same model file working for both SQLite (tests/dev) and PostgreSQL (prod):
+**Infrastructure:**
+- `terraform/modules/networking/main.tf` — VPC, subnets, security groups
+- `terraform/modules/rds/main.tf` — RDS PostgreSQL instance
+- `terraform/modules/rds_proxy/main.tf` — RDS Proxy
+- `terraform/modules/elasticache/main.tf` — Redis cluster
+- `terraform/modules/iam/main.tf` — ECS roles, GitHub OIDC role
+- `terraform/modules/secrets/main.tf` — Secrets Manager shell resources
 
-```python
-JSONVariant = JSON().with_variant(JSONB, "postgresql")
-StringList = MutableList.as_mutable(JSON()).with_variant(ARRAY(Text()), "postgresql")
-```
+**Testing:**
+- `backend/tests/conftest.py` — Pytest fixtures and test DB
+- `backend/tests/test_deals_pe.py` — Deal PE fields tests
+- `frontend/src/__tests__/` — React component tests (Layout, LoginPage, RefSelect)
 
-### Frontend Query Key Convention
+**Developer Workflow:**
+- `Makefile` — `make dev`, `make test`, `make lint`, `make migrate`, `make seed`, `make tf-*`
 
-TanStack Query keys follow `[resource, params]`:
-```js
-queryKey: ['deals', { pipeline_id, page }]
-queryKey: ['contacts', { search, page }]
-queryKey: ['auth', 'me']
-```
-Invalidate with `queryClient.invalidateQueries({ queryKey: ['deals'] })` to bust all deal queries.
+## Naming Conventions
 
-### `ui/` Component Layer
+**Files:**
+- Backend Python: `snake_case.py` — matches domain name (e.g., `companies.py`, `ref_data.py`)
+- Frontend JS/JSX: `camelCase.js` for API/hooks/lib; `PascalCase.jsx` for React components and pages
+- Terraform: `main.tf`, `variables.tf`, `outputs.tf` (standard)
+- Alembic migrations: `{NNNN}_{description}.py` with zero-padded sequential number
 
-`frontend/src/components/ui/` contains thin wrappers around Radix UI primitives styled with Tailwind. These are generic, stateless, and should not import from `hooks/`, `store/`, or `api/`. Business-aware components live in `frontend/src/components/` (one level up).
+**Backend Modules:**
+- Route files: domain noun, singular or plural as appropriate (e.g., `contacts.py`, `auth.py`)
+- Schema classes: `{Entity}Create`, `{Entity}Update`, `{Entity}Response`
+- Service classes: `{Entity}Service`
 
----
+**Frontend Modules:**
+- API modules: domain noun, camelCase (e.g., `refData.js`, `companies.js`)
+- Hooks: `use{Name}.js` (e.g., `useRefData.js`, `useAuth.js`)
+- Stores: `use{Name}Store.js` (e.g., `useUIStore.js`)
 
 ## Where to Add New Code
 
-**New domain resource (e.g., "notes"):**
-1. Add ORM model to `backend/models.py`
-2. Create `backend/schemas/notes.py` with Create/Update/Response Pydantic models
-3. Create `backend/services/notes.py` with a `NoteService` class
-4. Create `backend/api/routes/notes.py` with an `APIRouter`
-5. Register router in `backend/api/main.py`
-6. Create `frontend/src/api/notes.js` with API functions
-7. Create `frontend/src/hooks/useNotes.js` as a TanStack Query wrapper
-8. Create `frontend/src/pages/NotesPage.jsx`
-9. Add route to `frontend/src/App.jsx`
-10. Generate Alembic migration: `alembic revision --autogenerate -m "add_notes"`
+**New API domain (backend):**
+1. Add ORM model class to `backend/models.py`
+2. Create Alembic migration: `alembic/versions/{NNNN}_{description}.py`
+3. Create Pydantic schemas: `backend/schemas/{domain}.py`
+4. Create service class: `backend/services/{domain}.py`
+5. Create FastAPI router: `backend/api/routes/{domain}.py`
+6. Register router in `backend/api/main.py` in the `for router in [...]` block
 
-**New Celery task:**
-- Add task function to an existing file in `backend/workers/` or create a new one
-- Decorate with `@celery_app.task(bind=True, max_retries=3, name="domain.action")`
-- Use `asyncio.run()` or a sync session to bridge async DB code inside the task
+**New frontend page:**
+1. Create page component: `frontend/src/pages/{Name}Page.jsx`
+2. Add route to React Router config (location inferred — likely in main app entry or Layout)
+3. Add nav entry to `navGroups` in `frontend/src/components/Layout.jsx` if it needs sidebar navigation
+4. Add API client functions: `frontend/src/api/{domain}.js`
 
-**New middleware:**
-- Add class to `backend/api/middleware.py`
-- Register with `app.add_middleware(...)` in `backend/api/main.py`
-- Middleware is applied in reverse registration order (last registered runs first on request)
+**New Terraform resource:**
+- Add to the appropriate module under `terraform/modules/`
+- Or add inline to the environment root (`terraform/environments/staging/main.tf` and `prod/main.tf`) for resources not worth modularising (ECR repositories follow this pattern)
 
-**New Zustand store:**
-- Add file `frontend/src/store/useXxxStore.js` using `create()` from `zustand`
-- Persist to localStorage only if the state must survive page reloads
+**New Alembic migration:**
+- Use next sequential number: current highest is `0011_deal_funding.py`
+- Filename: `alembic/versions/{NNNN}_{description}.py`
 
-**New math/scoring function:**
-- Add to `backend/math/` as a pure Python module with no imports from `backend.models` or `backend.services`
+**New RefData category:**
+- Add category string to `frontend/src/lib/refCategories.js`
+- Add seed data entries to `backend/seed_data.py`
+- No migration needed — `RefData` table handles all categories via `category` column
 
-**New shadcn/Radix primitive:**
-- Add wrapper component to `frontend/src/components/ui/`
-- Keep it stateless; all behavior lives in the calling page or component
-
----
+**Utilities:**
+- Shared backend helpers: `backend/utils/` (imported as `backend.utils.*`)
+- Shared frontend helpers: `frontend/src/lib/`
 
 ## Special Directories
 
-**`.venv/`:**
-- Purpose: Python virtual environment
-- Generated: Yes
-- Committed: No
+**`.planning/`:**
+- Purpose: GSD project planning docs, phase plans, roadmap, codebase analysis
+- Generated: No (human + AI-authored)
+- Committed: Yes
 
 **`alembic/versions/`:**
-- Purpose: Database migration scripts
-- Generated: Via `alembic revision --autogenerate`
-- Committed: Yes — every migration file is committed
+- Purpose: Migration history — every schema change tracked here
+- Generated: Partially (Alembic generates boilerplate; developer writes upgrade/downgrade SQL)
+- Committed: Yes — required for deployment
 
-**`frontend/node_modules/`:**
-- Purpose: npm packages
+**`frontend/dist/` (gitignored):**
+- Purpose: Vite production build output; deployed to S3
 - Generated: Yes
 - Committed: No
 
-**`terraform/`:**
-- Purpose: AWS infrastructure definitions (ECS, RDS, ElastiCache, ALB, CloudFront)
-- Generated: No (hand-authored)
-- Committed: Yes
+**`terraform/environments/*/.terraform/` (gitignored):**
+- Purpose: Terraform provider cache and module downloads
+- Generated: Yes (`terraform init`)
+- Committed: No
 
-**`test_nexus.db`:**
-- Purpose: SQLite database file created during local testing (test suite target)
-- Generated: Yes (at runtime by the test suite)
-- Committed: No (should be in `.gitignore`)
-
-**`specs/`:**
-- Purpose: Product feature specifications and OpenAPI schema
-- Generated: No
-- Committed: Yes
+**`terraform/environments/*/terraform.tfstate*` (gitignored):**
+- Purpose: Terraform state (stored remotely in S3 after init)
+- Generated: Yes
+- Committed: No
 
 ---
 
-*Structure analysis: 2026-03-26*
+*Structure analysis: 2026-04-06*

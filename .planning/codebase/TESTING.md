@@ -1,32 +1,26 @@
-# Testing Patterns
+---
+updated: 2026-04-06
+focus: quality
+---
 
-**Analysis Date:** 2026-03-26
+# Testing Patterns
 
 ## Test Frameworks
 
 **Backend:**
-- Runner: `pytest` 8.x with `pytest-asyncio` 0.23.x
-- Coverage: `pytest-cov` 5.x
+- Runner: `pytest` with `pytest-asyncio`
+- Coverage: `pytest-cov`
 - HTTP client: `httpx.AsyncClient` with `ASGITransport` (in-process, no real server)
-- Config in `pyproject.toml`:
-  ```toml
-  [tool.pytest.ini_options]
-  asyncio_mode = "auto"
-  testpaths = ["backend/tests"]
-  ```
-- Also mirrored in `backend/tests/pytest.ini`:
-  ```ini
-  [pytest]
-  asyncio_mode = auto
-  ```
+- Async mode configured in `backend/tests/conftest.py` via `os.environ` and pytest-asyncio
+- Asyncio mode: `asyncio_mode = "auto"` (tests are `async def`, `@pytest.mark.asyncio` decorator is explicit on most test functions)
 
 **Frontend:**
-- Runner: Vitest 2.x (configured inside `frontend/vite.config.js`)
+- Runner: Vitest (configured inside `frontend/vite.config.js`)
 - DOM environment: jsdom
-- Component rendering: `@testing-library/react` 16.x
-- User interactions: `@testing-library/user-event` 14.x
-- Matchers: `@testing-library/jest-dom` (imported in `frontend/src/test/setup.js`)
-- Globals enabled: `vi`, `describe`, `it`, `expect`, `beforeEach`, `afterEach` — no imports needed in test files
+- Component rendering: `@testing-library/react`
+- User interactions: `@testing-library/user-event`
+- Matchers: `@testing-library/jest-dom` (imported via setup file `frontend/src/test/setup.js`)
+- Globals enabled: `vi`, `describe`, `it`, `expect`, `beforeEach`, `afterEach` — some test files import them explicitly (`import { describe, it, expect, vi, beforeEach } from 'vitest'`), others rely on globals
 
 ---
 
@@ -53,11 +47,13 @@ cd frontend && npm test          # vitest run
 cd frontend && npm run test:watch  # vitest
 ```
 
+Note: `make test` runs tests inside the Docker container. The SQLite test database (`test_nexus.db`) is created on disk and ignored by `.gitignore`.
+
 ---
 
 ## Coverage Requirements
 
-**Backend:** 85% minimum enforced. `--cov-fail-under=85` in `make test` causes the command to exit non-zero if coverage drops below this threshold. Coverage report is written to `htmlcov/`.
+**Backend:** 85% minimum enforced. `--cov-fail-under=85` in `make test` causes exit non-zero if coverage drops below threshold. Coverage HTML report written to `htmlcov/`.
 
 **Frontend:** No coverage target configured. Vitest runs without `--coverage` flag.
 
@@ -65,93 +61,61 @@ cd frontend && npm run test:watch  # vitest
 
 ## Test File Organization
 
-**Backend:** All tests are in `backend/tests/`. They are a sibling package to the application, not co-located with source files.
+**Backend:** All tests live in `backend/tests/`. Sibling package to the application, not co-located with source.
 
 ```
 backend/tests/
-├── conftest.py                       # Shared fixtures, FakeRedis, DB lifecycle, seeded data
-├── pytest.ini                        # asyncio_mode = auto
-├── test_auth.py                      # Auth endpoints: login, refresh, logout, me, user CRUD
-├── test_crm_core.py                  # CRUD flows: contacts, companies, pipelines, deals
-├── test_permissions.py               # RBAC matrix — parametrized by role
-├── test_security.py                  # JWT expiry, token blacklist, cross-org rejection, SQL injection
-├── test_boards_pages_automations.py  # Boards, board columns, pages, automations
-├── test_linkedin_ai.py               # LinkedIn sync routes and AI lead scoring
-├── test_integration.py               # Full end-to-end sales workflow (multi-step)
-├── test_performance.py               # Query count budgets and latency assertions
-└── test_health.py                    # Health check and metrics endpoints
+├── conftest.py        # Shared fixtures, FakeRedis, DB lifecycle, seeded data
+├── test_deals_pe.py   # PE field persistence, label resolution, deal_team CRUD
+├── test_funds.py      # Fund CRUD API — /api/v1/funds
+└── test_ref_data.py   # Reference data ORM and API (REFDATA-01 through REFDATA-14)
 ```
 
-**Frontend:** Test files are in `frontend/src/__tests__/`, separate from source files.
+**Important:** The test suite was substantially reduced during Phase 4–8 development. The earlier suite contained tests for auth, CRM core, permissions, security, boards/pages/automations, LinkedIn/AI, integration, performance, and health. These files no longer exist on disk. Only the three domain-specific test files listed above remain.
+
+**Frontend:** Test files in `frontend/src/__tests__/`, separate from source files.
 
 ```
 frontend/src/__tests__/
-├── test-utils.jsx           # Shared renderWithProviders helper
-├── LoginPage.test.jsx
-├── ContactsPage.test.jsx
-├── DealDetailPage.test.jsx
-├── KanbanBoard.test.jsx
-├── PipelinePage.test.jsx
-└── AIQueryPage.test.jsx
+├── Layout.test.jsx      # Sidebar structure, nav items, user footer, staging banner
+├── LoginPage.test.jsx   # Form submission, error handling, backend status, staging banner
+└── RefSelect.test.jsx   # RefSelect component — loading, error, options, placeholder states
 ```
 
 Frontend test files are named `ComponentName.test.jsx`.
+
+**Missing test-utils file:** `Layout.test.jsx` and `LoginPage.test.jsx` import `./test-utils` (`renderWithProviders`), but `frontend/src/__tests__/test-utils.jsx` does **not exist on disk**. These two test files will fail to run until this file is created. `RefSelect.test.jsx` uses bare `render` from `@testing-library/react` and does not depend on `test-utils`.
 
 ---
 
 ## Backend Test Structure
 
 **Async tests:**
-Every test function that touches the database or HTTP client is `async def` and decorated with `@pytest.mark.asyncio`. With `asyncio_mode = "auto"`, the decorator is optional but is still used explicitly in most files for clarity.
+Every test that touches the database or HTTP client is `async def`. With `asyncio_mode = "auto"` in pytest-asyncio, the `@pytest.mark.asyncio` decorator is redundant but is used explicitly on all test functions in the current test files for clarity.
 
-**Class grouping:**
-Related tests that share setup or form a permission matrix are grouped into classes:
-- `TestPermissionMatrix` in `test_permissions.py`
-- `TestPerformance` in `test_performance.py`
-- `TestSalesWorkflow` in `test_integration.py`
-- `TestSecurity` in `test_security.py`
-
-Standalone scenario tests use module-level functions (most of `test_auth.py`, `test_crm_core.py`).
+**Local fixtures vs. conftest fixtures:**
+New test files (`test_deals_pe.py`, `test_funds.py`) define their own seed fixtures (`pe_seed`, `fund_seed`) instead of using `seeded_org` from `conftest.py`. Both approaches are valid; the local pattern avoids fixture coupling but duplicates setup logic.
 
 **Assertion style:**
 - Assert `response.status_code` before accessing `.json()`
-- Use specific key access, not bulk dict equality: `response.json()["id"]`, `response.json()["total"]`
+- Use specific key access, not bulk dict equality: `response.json()["id"]`, `response.json()["fund_name"]`
 - Boolean flags: `assert x is True` / `assert x is False` (not `== True`)
+- `assert x in (200, 201)` used in new tests where create endpoints may return either status
 
 ```python
 @pytest.mark.asyncio
-async def test_login_valid_credentials_returns_token(client, seeded_users):
-    response = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "admin@example.com", "password": "secret123"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["access_token"]
-    assert body["token_type"] == "bearer"
+async def test_create_fund(client, fund_seed):
+    """POST /api/v1/funds creates a new fund"""
+    headers = auth_header(fund_seed["admin"])
+    response = await client.post("/api/v1/funds", json={"fund_name": "Test Fund I"}, headers=headers)
+    assert response.status_code in (200, 201)
+    data = response.json()
+    assert "id" in data
+    assert data["fund_name"] == "Test Fund I"
 ```
 
-**Parametrize pattern** (permissions matrix):
-```python
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("username", "expected_status"),
-    [
-        ("super", 201),
-        ("admin", 201),
-        ("alpha-manager", 201),
-        ("alpha-rep", 403),
-        ("viewer", 403),
-    ],
-)
-async def test_pipeline_create_permissions(self, async_client, seeded_org, username, expected_status):
-    response = await async_client.post(
-        "/api/v1/pipelines",
-        json={"name": f"Pipeline-{username}", ...},
-        headers=auth_header(seeded_org[username]),
-    )
-    assert response.status_code == expected_status
-```
+**Pending tests with `@pytest.mark.xfail`:**
+`test_ref_data.py` contains four tests marked `@pytest.mark.xfail(strict=False, reason="Plan 02-02 implements the routes")`. These cover the admin ref-data API routes (REFDATA-11 through REFDATA-14) and will pass once those routes are implemented. They are currently expected to fail.
 
 ---
 
@@ -161,14 +125,14 @@ All shared backend fixtures live in `backend/tests/conftest.py`.
 
 **Database lifecycle:**
 
-`setup_db` (session-scoped, autouse) — creates all tables once per test session using SQLite. The `DATABASE_URL` and `DATABASE_URL_SYNC` env vars are set to SQLite paths before any imports run:
+`setup_db` (session-scoped, autouse) — creates all tables once per session using SQLite:
 
 ```python
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test_nexus.db")
 os.environ.setdefault("DATABASE_URL_SYNC", "sqlite:///./test_nexus.db")
 ```
 
-`clean_db` (function-scoped, autouse) — truncates all tables between every test using `delete(table)` in reverse dependency order. This ensures full isolation without re-creating the schema on each test.
+`clean_db` (function-scoped, autouse) — truncates all tables between every test using `delete(table)` in reverse dependency order. Full isolation without schema re-creation on each test:
 
 ```python
 @pytest_asyncio.fixture(autouse=True)
@@ -181,7 +145,7 @@ async def clean_db():
     yield
 ```
 
-**Key fixtures:**
+**Key fixtures in conftest.py:**
 
 | Fixture | Scope | What it provides |
 |---|---|---|
@@ -192,14 +156,18 @@ async def clean_db():
 | `seeded_org` | function | One org, two teams (alpha/beta), eight users across all roles |
 | `pipeline` | function | Sales pipeline with 4 stages (depends on `seeded_org`) |
 | `stages` | function | List of 4 `PipelineStage` objects (depends on `pipeline`) |
-| `seed_50_deals` | function | 50 deals spread across stages (for performance tests) |
+| `seed_50_deals` | function | 50 deals spread across stages |
 | `seed_100_contacts` | function | 100 contacts, alternating lifecycle stages |
-| `seed_50_pages` | function | 50 pages with parent-child nesting (for tree query tests) |
+| `seed_50_pages` | function | 50 pages with parent-child nesting |
 | `seed_1000_activities` | function | 1 deal with 1000 activities (for pagination latency tests) |
+| `seed_ref_data` | function | One row per category (sector, sub_sector, transaction_type, tier, etc.) |
 | `query_counter` | function | SQLAlchemy `before_cursor_execute` event listener; `counts["count"]` |
-| `mock_linkedin` | function | Monkeypatches `_client` with a `MockLinkedIn` returning fixed data |
+| `mock_linkedin` | function | Monkeypatches `backend.api.routes.linkedin._client` |
+| `admin_token` | function | Raw JWT string for the `admin` user |
+| `rep_token` | function | Raw JWT string for the `alpha-rep` user |
+| `auth_tokens` | function | Stub `{ access_token, refresh_token, token_type }` dict |
 
-**`seeded_org` user set** — referenced across all permission and CRUD tests by key:
+**`seeded_org` user set:**
 
 | Key | Role | Team |
 |---|---|---|
@@ -212,13 +180,13 @@ async def clean_db():
 | `beta-rep` | `rep` | beta |
 | `viewer` | `viewer` | alpha |
 
-**`auth_header` helper** (defined in `conftest.py`, re-exported by convention):
+**`auth_header` helper** (defined in `conftest.py` and also re-defined locally in new test files):
 ```python
 def auth_header(user: User) -> dict[str, str]:
     token = create_access_token({"sub": str(user.id), "org_id": str(user.org_id), "role": user.role})
     return {"Authorization": f"Bearer {token}"}
 ```
-Always use this helper to produce headers for authenticated requests; never construct JWT strings manually in tests.
+Always use this helper — never construct JWT strings manually in tests.
 
 ---
 
@@ -226,66 +194,32 @@ Always use this helper to produce headers for authenticated requests; never cons
 
 ### Backend — Redis
 
-`FakeRedis` is an in-memory async class in `conftest.py` that implements the full Redis interface used by the app, including sorted-set operations needed by the rate limiter. It is patched via `monkeypatch.setattr` at all call sites in the `fake_redis` fixture:
-
-```python
-@pytest.fixture
-def fake_redis(monkeypatch) -> FakeRedis:
-    client = FakeRedis()
-    monkeypatch.setattr("backend.api.main.redis_async.from_url", lambda *args, **kwargs: client)
-    monkeypatch.setattr("backend.api.routes.auth.redis_async.from_url", lambda *args, **kwargs: client)
-    monkeypatch.setattr("backend.api.routes.ai_query.redis_async.from_url", lambda *args, **kwargs: client)
-    monkeypatch.setattr("backend.services.ai_service.redis_async.from_url", lambda *args, **kwargs: client)
-    return client
-```
-
-`async_client` depends on `fake_redis`, so all HTTP tests automatically get a patched Redis.
+`FakeRedis` in `conftest.py` is an in-memory async class implementing the full Redis interface used by the app, including sorted-set operations for the rate limiter. Patched via `monkeypatch.setattr` at all call sites in the `fake_redis` fixture. `async_client` depends on `fake_redis`, so all HTTP tests automatically get a patched Redis.
 
 ### Backend — Storage
 
-`check_storage` is monkeypatched to a no-op coroutine in the `async_client` fixture so tests do not require S3 or a local disk path:
+`check_storage` is monkeypatched to a no-op coroutine in the `async_client` fixture:
 
 ```python
 async def fake_check_storage() -> None:
     return None
-
 monkeypatch.setattr("backend.api.main.check_storage", fake_check_storage)
 ```
 
 ### Backend — LinkedIn
 
-The `mock_linkedin` fixture patches `backend.api.routes.linkedin._client` with a `MockLinkedIn` class that returns fixed `LinkedInPersonResult` and `LinkedInCompanyResult` objects. Tests that exercise LinkedIn routes must include this fixture.
-
-### Backend — Celery
-
-In `test_integration.py`, `backend.workers.automation_runner.run_automation.delay` is monkeypatched to run inline as an asyncio task, so automation workflows execute synchronously within the test:
-
-```python
-def run_inline(automation_id: str, payload: dict):
-    _pending.append(asyncio.get_running_loop().create_task(
-        execute_automation_by_id(automation_id, payload)
-    ))
-
-monkeypatch.setattr("backend.workers.automation_runner.run_automation.delay", run_inline)
-```
+The `mock_linkedin` fixture patches `backend.api.routes.linkedin._client` with a `MockLinkedIn` class returning fixed `LinkedInPersonResult` and `LinkedInCompanyResult` objects. Include this fixture in any test exercising LinkedIn routes.
 
 ### Frontend — API modules
 
-Every frontend test mocks the entire API module with `vi.mock`. Mock functions are created with `vi.fn()` at the top of the file and configured with `.mockResolvedValue(...)` in `beforeEach`:
+Every frontend test mocks the entire API module with `vi.mock`. Mock functions are created with `vi.fn()` at module top-level and configured with `.mockReturnValue(...)` or `.mockResolvedValue(...)`:
 
 ```javascript
-const getContacts = vi.fn();
-
-vi.mock('@/api/contacts', () => ({
-  getContacts,
-  createContact
-}));
+vi.mock('@/hooks/useRefData');
+import { useRefData } from '@/hooks/useRefData';
 
 beforeEach(() => {
-  getContacts.mockResolvedValue({
-    items: [{ id: 'c1', first_name: 'Taylor', ... }],
-    total: 1
-  });
+  useRefData.mockReturnValue({ data: mockItems, isLoading: false, isError: false });
 });
 
 afterEach(() => {
@@ -293,107 +227,77 @@ afterEach(() => {
 });
 ```
 
-### Frontend — Third-party libraries
+### Frontend — Utility mocking
 
-Libraries that interact with pointer events or DOM APIs unavailable in jsdom are fully mocked. Example for `@dnd-kit/core` in `KanbanBoard.test.jsx`:
+`vi.hoisted()` is used to hoist mock function creation before module-level `vi.mock()` calls:
 
 ```javascript
-vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd }) => {
-    dragEndHandler = onDragEnd;
-    return <div>{children}</div>;
-  },
-  // ... rest of module
+const { login, navigate, toastError } = vi.hoisted(() => ({
+  login: vi.fn(),
+  navigate: vi.fn(),
+  toastError: vi.fn()
+}));
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({ login, isAuthenticated: false })
 }));
 ```
+
+Static assets are mocked inline: `vi.mock('@/assets/twg-logo.png', () => ({ default: 'twg-logo.png' }))`.
 
 ---
 
 ## Frontend Test Utilities
 
-**`renderWithProviders`** in `frontend/src/__tests__/test-utils.jsx`:
+**`renderWithProviders`** — expected in `frontend/src/__tests__/test-utils.jsx` but this file does not currently exist on disk. The function wraps a component in a fresh `QueryClient` (with `retry: false`) and a `MemoryRouter`. `Layout.test.jsx` and `LoginPage.test.jsx` will fail until this file is created.
 
-Wraps the component under test in a fresh `QueryClient` (with `retry: false`) and a `MemoryRouter` with the specified route/path. Every frontend test uses this helper instead of bare `render`.
+**`RefSelect.test.jsx`** uses bare `render` from `@testing-library/react` directly — no `renderWithProviders` dependency.
 
-```javascript
-export function renderWithProviders(ui, { route = '/', path = '/' } = {}) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } }
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[route]}>
-        <Routes>
-          <Route path={path} element={ui} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-}
-```
-
-**Setup file** `frontend/src/test/setup.js`:
-- Imports `@testing-library/jest-dom/vitest` to extend `expect` with DOM matchers (`toBeInTheDocument`, `toHaveValue`, etc.)
-- Polyfills `window.matchMedia` (jsdom does not implement it; many Radix components query it)
-
----
-
-## Performance Tests
-
-`backend/tests/test_performance.py` contains `TestPerformance` with two strategies:
-
-**Query count budgets** — via the `query_counter` fixture (SQLAlchemy `before_cursor_execute` event):
-
-```python
-query_counter["count"] = 0
-response = await async_client.get("/api/v1/contacts", ...)
-assert query_counter["count"] <= 3   # N+1 detection
-```
-
-Enforced budgets:
-- `GET /pipelines/{id}/kanban` with 50 deals — max **5 queries**
-- `GET /contacts` with 100 contacts — max **3 queries**
-- `GET /pages` with 50 pages — max **2 queries**
-
-**Latency assertions** — wall-clock timing with `time.perf_counter`:
-
-```python
-started = time.perf_counter()
-response = await async_client.get("/api/v1/deals/{id}/activities?page=1&size=25", ...)
-elapsed_ms = (time.perf_counter() - started) * 1000
-assert elapsed_ms < 100   # must respond in under 100ms
-```
-
-Used for the activity feed with 1000 activities to verify pagination performance.
+**Setup file** (`frontend/src/test/setup.js`):
+- Referenced in `vite.config.js` as `setupFiles: './src/test/setup.js'`
+- This file does not exist on disk — `@testing-library/jest-dom` matchers will not be available and `window.matchMedia` will not be polyfilled, causing Vitest to fail on any test using DOM matchers like `toBeInTheDocument`
 
 ---
 
 ## Test Types
 
-**Backend integration tests (primary):**
-The majority of backend tests are full HTTP integration tests — they exercise the complete request/response cycle through FastAPI routing, service layer, and SQLite. No unit tests mock the database layer.
+**Backend — HTTP integration tests (primary):**
+All three current backend test files are full HTTP integration tests — they exercise the complete request/response cycle through FastAPI routing, service layer, and SQLite. No unit tests mock the database layer.
 
-**Backend permission/security tests:**
-`test_permissions.py` and `test_security.py` are dedicated to confirming that role checks and org scoping are enforced at the API boundary. These are parametrized to cover all defined roles systematically.
+**Backend — ORM/fixture tests:**
+`test_ref_data.py` contains three tests (`test_ref_data_table_exists`, `test_all_categories_seeded`, `test_seed_values`) that directly query the database session without going through HTTP routes. These verify ORM model correctness.
 
-**Backend end-to-end workflow test:**
-`test_integration.py` — `TestSalesWorkflow.test_full_sales_cycle` — is a single long scenario that creates a board, pipeline, automation, deal, tasks, and verifies the automation fires. It is the closest to a true E2E test within the backend suite.
+**Backend — `xfail` placeholder tests:**
+Four tests in `test_ref_data.py` are marked `@pytest.mark.xfail(strict=False)` for routes not yet implemented. They serve as TDD anchors for Phase 2 Wave 2 (REFDATA-11 through REFDATA-14).
 
-**Frontend component tests:**
-Render a page/component with mocked API functions, then use Testing Library queries (`screen.findByText`, `screen.getByRole`, `screen.getByLabelText`) and `waitFor` for async assertions. Tests assert on visible UI output only, not internal component state.
+**Frontend — Component/page tests:**
+Render a component with mocked dependencies, then use Testing Library queries (`screen.getByText`, `screen.getByRole`, `screen.getByLabelText`) and `waitFor` for async assertions. Tests assert on visible UI output only — not internal component state.
 
 ---
 
 ## What Is Not Tested
 
-- **Alembic migrations**: Schema correctness is tested implicitly through `Base.metadata.create_all` in SQLite; no tests run actual migrations
-- **Frontend E2E**: No Playwright or Cypress; browser-level flows are untested
-- **Frontend coverage**: No coverage threshold configured for Vitest
-- **Mobile (`mobile/`)**: Zero tests; no test framework installed
-- **Celery workers** (`backend/workers/`): Only `automation_runner` is tested indirectly via the integration test; `email_sync`, `linkedin_sync`, and `ai_enrichment` tasks are untested
-- **Storage backends** (`backend/storage/`): `check_storage` is always mocked away; `LocalStorage` and `S3Storage` have no direct unit tests
-- **Analytics service** (`backend/services/analytics_service.py`): No dedicated test file; covered only if a route test exercises it
+**Broad gaps from test suite reduction:**
+The following test files existed previously and have been removed. These areas have no backend test coverage:
+- Auth endpoints (`/api/v1/auth/login`, `/api/v1/auth/refresh`, user CRUD)
+- CRM core CRUD (contacts, companies, pipelines, deals general CRUD)
+- RBAC permission matrix (role-based access across all endpoints)
+- Security (JWT expiry, token blacklist, cross-org rejection, SQL injection)
+- Boards, board columns, pages, automations
+- LinkedIn sync routes and AI lead scoring
+- Full sales workflow integration test
+- Query count budgets and latency assertions (performance tests)
+- Health check and metrics endpoints
+
+**Additional gaps:**
+- **Alembic migrations**: Schema correctness tested implicitly via `Base.metadata.create_all` in SQLite; no tests run actual migrations
+- **Frontend E2E**: No Playwright or Cypress; browser-level flows untested
+- **Frontend coverage**: No coverage threshold configured for Vitest; `frontend/src/test/setup.js` and `test-utils.jsx` are missing (tests will fail to run)
+- **Celery workers** (`backend/workers/`): No test coverage for `email_sync`, `linkedin_sync`, `ai_enrichment`, or `automation_runner`
+- **Storage backends** (`backend/storage/`): `check_storage` always mocked away; `LocalStorage` and `S3Storage` have no direct tests
+- **Counterparties/Funding routes**: `backend/api/routes/counterparties.py` and `backend/api/routes/funding.py` have no test files
+- **Admin ref-data API routes**: Covered only by `xfail` placeholders in `test_ref_data.py`
 
 ---
 
-*Testing analysis: 2026-03-26*
+*Testing analysis: 2026-04-06*
