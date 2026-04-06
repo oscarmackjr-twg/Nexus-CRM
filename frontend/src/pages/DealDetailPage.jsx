@@ -11,6 +11,7 @@ import { getUsers } from '@/api/users';
 import { getCompanies } from '@/api/companies';
 import { getContacts } from '@/api/contacts';
 import { getBoards, getBoard } from '@/api/boards';
+import { FieldRow } from '@/components/FieldRow';
 import { RefSelect } from '@/components/RefSelect';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ function DealScoreCard({ dealId }) {
   const score = scoreQuery.data?.ai_score;
   return (
     <Card>
-      <CardHeader><CardTitle>AI Insights</CardTitle></CardHeader>
+      <CardHeader className="border-b border-gray-200 pb-3"><CardTitle>AI Insights</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
           <div className="flex h-24 w-24 items-center justify-center rounded-full border-8 border-primary/15 text-xl font-semibold">
@@ -972,7 +973,7 @@ export default function DealDetailPage() {
       </div>
 
       <Tabs defaultValue="profile">
-        <TabsList>
+        <TabsList className="detail-tabs">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="counterparties">Counterparties</TabsTrigger>
           <TabsTrigger value="funding">Funding</TabsTrigger>
@@ -988,7 +989,7 @@ export default function DealDetailPage() {
 
           {/* Card 1: Deal Identity */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle className="text-base font-semibold">Deal Identity</CardTitle>
               {editingCard !== 'identity' && (
                 <Button variant="ghost" size="icon" aria-label="Edit Deal Identity" onClick={() => openCard('identity')}>
@@ -1101,40 +1102,32 @@ export default function DealDetailPage() {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Transaction Type</p>
-                    <p className="text-sm">{fmt(deal.transaction_type_label)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Fund</p>
-                    <p className="text-sm">{deal.fund_name || 'No fund assigned'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Platform or Add-on</p>
-                    <p className="text-sm">
-                      {deal.platform_or_addon === 'platform' ? 'Platform Company' : deal.platform_or_addon === 'addon' ? 'Add-on' : '—'}
-                    </p>
-                  </div>
+                  <FieldRow label="Transaction Type" value={deal.transaction_type_label} />
+                  <FieldRow label="Fund" value={deal.fund_name || 'No fund assigned'} />
+                  <FieldRow
+                    label="Platform or Add-on"
+                    value={
+                      deal.platform_or_addon === 'platform'
+                        ? 'Platform Company'
+                        : deal.platform_or_addon === 'addon'
+                          ? 'Add-on'
+                          : null
+                    }
+                  />
                   {deal.platform_or_addon === 'addon' && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Platform Company</p>
-                      {deal.platform_company_id ? (
-                        <Link className="text-sm underline" to={`/companies/${deal.platform_company_id}`}>
-                          {deal.platform_company_name}
-                        </Link>
-                      ) : (
-                        <p className="text-sm">—</p>
-                      )}
-                    </div>
+                    <FieldRow
+                      label="Platform Company"
+                      value={
+                        deal.platform_company_id ? (
+                          <Link className="text-sm underline" to={`/companies/${deal.platform_company_id}`}>
+                            {deal.platform_company_name}
+                          </Link>
+                        ) : null
+                      }
+                    />
                   )}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Description</p>
-                    <p className="text-sm">{fmt(deal.description)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Legacy ID</p>
-                    <p className="text-sm">{fmt(deal.legacy_id)}</p>
-                  </div>
+                  <FieldRow label="Description" value={deal.description} />
+                  <FieldRow label="Legacy ID" value={deal.legacy_id} />
                 </div>
               )}
             </CardContent>
@@ -1142,7 +1135,7 @@ export default function DealDetailPage() {
 
           {/* Card 2: Financials */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle className="text-base font-semibold">Financials</CardTitle>
               {editingCard !== 'financials' && (
                 <Button variant="ghost" size="icon" aria-label="Edit Financials" onClick={() => openCard('financials')}>
@@ -1236,10 +1229,7 @@ export default function DealDetailPage() {
                       { label: 'Enterprise Value', amt: deal.enterprise_value_amount, cur: deal.enterprise_value_currency },
                       { label: 'Equity Investment', amt: deal.equity_investment_amount, cur: deal.equity_investment_currency },
                     ].map(({ label, amt, cur }) => (
-                      <div key={label}>
-                        <p className="text-sm text-muted-foreground">{label}</p>
-                        <p className="text-sm">{fmtAmount(amt, cur)}</p>
-                      </div>
+                      <FieldRow key={label} label={label} value={fmtAmount(amt, cur)} />
                     ))}
                   </div>
                   <p className="text-xs font-medium text-muted-foreground">Bid Amounts</p>
@@ -1248,10 +1238,7 @@ export default function DealDetailPage() {
                       { label: 'IOI Bid', amt: deal.ioi_bid_amount, cur: deal.ioi_bid_currency },
                       { label: 'LOI Bid', amt: deal.loi_bid_amount, cur: deal.loi_bid_currency },
                     ].map(({ label, amt, cur }) => (
-                      <div key={label}>
-                        <p className="text-sm text-muted-foreground">{label}</p>
-                        <p className="text-sm">{fmtAmount(amt, cur)}</p>
-                      </div>
+                      <FieldRow key={label} label={label} value={fmtAmount(amt, cur)} />
                     ))}
                   </div>
                 </div>
@@ -1261,7 +1248,7 @@ export default function DealDetailPage() {
 
           {/* Card 3: Process Milestones */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle className="text-base font-semibold">Process Milestones</CardTitle>
               {editingCard !== 'milestones' && (
                 <Button variant="ghost" size="icon" aria-label="Edit Process Milestones" onClick={() => openCard('milestones')}>
@@ -1322,12 +1309,8 @@ export default function DealDetailPage() {
                     { label: 'LOI Submitted', val: deal.loi_submitted_date },
                     { label: 'Live Diligence', val: deal.live_diligence_date },
                     { label: 'Portfolio Company', val: deal.portfolio_company_date },
-                    { label: '', val: null },
-                  ].map(({ label, val }, i) => (
-                    <div key={i}>
-                      <p className="text-sm text-muted-foreground">{label}</p>
-                      {label && <p className="text-sm">{fmtDate(val)}</p>}
-                    </div>
+                  ].filter(({ label }) => label).map(({ label, val }) => (
+                    <FieldRow key={label} label={label} value={fmtDate(val)} />
                   ))}
                 </div>
               )}
@@ -1336,7 +1319,7 @@ export default function DealDetailPage() {
 
           {/* Card 4: Source & Team */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle className="text-base font-semibold">Source &amp; Team</CardTitle>
               {editingCard !== 'sourceTeam' && (
                 <Button variant="ghost" size="icon" aria-label="Edit Source and Team" onClick={() => openCard('sourceTeam')}>
@@ -1459,40 +1442,31 @@ export default function DealDetailPage() {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Deal Team</p>
-                    {(deal.deal_team || []).length > 0 ? (
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {deal.deal_team.map((u) => (
-                          <Badge key={u.id} variant="secondary">{u.name}</Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm">No team members assigned</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Originator</p>
-                    <p className="text-sm">{fmt(deal.originator_name)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Source Type</p>
-                    <p className="text-sm">{fmt(deal.source_type_label)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Source Company</p>
-                    {deal.source_company_id ? (
-                      <Link className="text-sm underline" to={`/companies/${deal.source_company_id}`}>
-                        {deal.source_company_name}
-                      </Link>
-                    ) : (
-                      <p className="text-sm">—</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Source Individual</p>
-                    <p className="text-sm">{fmt(deal.source_individual_name)}</p>
-                  </div>
+                  <FieldRow
+                    label="Deal Team"
+                    value={
+                      (deal.deal_team || []).length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {deal.deal_team.map((u) => (
+                            <Badge key={u.id} variant="secondary">{u.name}</Badge>
+                          ))}
+                        </div>
+                      ) : null
+                    }
+                  />
+                  <FieldRow label="Originator" value={deal.originator_name} />
+                  <FieldRow label="Source Type" value={deal.source_type_label} />
+                  <FieldRow
+                    label="Source Company"
+                    value={
+                      deal.source_company_id ? (
+                        <Link className="text-sm underline" to={`/companies/${deal.source_company_id}`}>
+                          {deal.source_company_name}
+                        </Link>
+                      ) : null
+                    }
+                  />
+                  <FieldRow label="Source Individual" value={deal.source_individual_name} />
                 </div>
               )}
             </CardContent>
@@ -1500,7 +1474,7 @@ export default function DealDetailPage() {
 
           {/* Card 5: Passed / Dead */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 pb-3">
               <CardTitle className="text-base font-semibold">Passed / Dead</CardTitle>
               {editingCard !== 'passedDead' && (
                 <Button variant="ghost" size="icon" aria-label="Edit Passed Dead" onClick={() => openCard('passedDead')}>
@@ -1577,28 +1551,22 @@ export default function DealDetailPage() {
                   {!deal.passed_dead_date && !(deal.passed_dead_reasons?.length) && !deal.passed_dead_commentary ? (
                     <p className="text-sm text-muted-foreground">No passed/dead information recorded</p>
                   ) : (
-                    <>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Passed / Dead Date</p>
-                        <p className="text-sm">{fmtDate(deal.passed_dead_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Reasons</p>
-                        {(deal.passed_dead_reasons || []).length > 0 ? (
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {deal.passed_dead_reasons.map((r) => (
-                              <Badge key={r} variant="secondary">{r}</Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm">—</p>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Commentary</p>
-                        <p className="text-sm">{fmt(deal.passed_dead_commentary)}</p>
-                      </div>
-                    </>
+                    <div className="space-y-3">
+                      <FieldRow label="Passed / Dead Date" value={fmtDate(deal.passed_dead_date)} />
+                      <FieldRow
+                        label="Reasons"
+                        value={
+                          (deal.passed_dead_reasons || []).length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {deal.passed_dead_reasons.map((r) => (
+                                <Badge key={r} variant="secondary">{r}</Badge>
+                              ))}
+                            </div>
+                          ) : null
+                        }
+                      />
+                      <FieldRow label="Commentary" value={deal.passed_dead_commentary} />
+                    </div>
                   )}
                 </div>
               )}
@@ -1625,7 +1593,7 @@ export default function DealDetailPage() {
         {/* ============================================================ */}
         <TabsContent value="activity" className="pt-6">
           <Card>
-            <CardHeader><CardTitle>Activity timeline</CardTitle></CardHeader>
+            <CardHeader className="border-b border-gray-200 pb-3"><CardTitle>Activity timeline</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 {['call', 'email', 'meeting', 'note', 'linkedin_message'].map((type) => (
@@ -1676,7 +1644,7 @@ export default function DealDetailPage() {
         {/* ============================================================ */}
         <TabsContent value="tasks" className="pt-6">
           <Card>
-            <CardHeader><CardTitle>Tasks</CardTitle></CardHeader>
+            <CardHeader className="border-b border-gray-200 pb-3"><CardTitle>Tasks</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {(tasksQuery.data || []).length > 0 ? (
                 (tasksQuery.data || []).map((task) => (
