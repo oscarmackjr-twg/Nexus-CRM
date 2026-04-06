@@ -1,81 +1,83 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCompanies } from '@/api/companies';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { DataGrid } from '@/components/DataGrid';
 
 export default function CompaniesPage() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['companies', page],
-    queryFn: () => getCompanies({ page, size: 25 }),
+  const [size, setSize] = useState(25);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['companies', { page, size }],
+    queryFn: () => getCompanies({ page, size }),
+    placeholderData: (prev) => prev,
   });
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Loading…</div>;
-  if (isError) return <div className="p-6 text-red-600">Failed to load companies.</div>;
+  const columns = [
+    {
+      key: 'name',
+      label: 'NAME',
+      render: (row) => (
+        <Link
+          to={`/companies/${row.id}`}
+          className="font-medium text-[#1a3868] hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {row.name}
+        </Link>
+      ),
+    },
+    { key: 'company_type_label', label: 'TYPE' },
+    { key: 'tier_label', label: 'TIER' },
+    { key: 'sector_label', label: 'SECTOR' },
+    { key: 'industry', label: 'INDUSTRY' },
+    {
+      key: 'linked_contacts_count',
+      label: 'CONTACTS',
+      render: (row) => row.linked_contacts_count ?? 0,
+    },
+    {
+      key: 'open_deals_count',
+      label: 'DEALS',
+      render: (row) => row.open_deals_count ?? 0,
+    },
+    { key: 'owner_name', label: 'OWNER' },
+  ];
 
-  const { items = [], total = 0, pages = 1 } = data || {};
+  const handleSort = (key, dir) => {
+    setSortKey(key);
+    setSortDir(dir);
+  };
+
+  const handleSizeChange = (newSize) => {
+    setSize(newSize);
+    setPage(1);
+  };
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Companies</h1>
-        <span className="text-sm text-muted-foreground">{total} total</span>
-      </div>
-
-      <div className="rounded-lg border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">Name</th>
-              <th className="text-left px-4 py-3 font-medium">Industry</th>
-              <th className="text-left px-4 py-3 font-medium">Size</th>
-              <th className="text-left px-4 py-3 font-medium">Revenue</th>
-              <th className="text-left px-4 py-3 font-medium">Owner</th>
-              <th className="text-left px-4 py-3 font-medium">Created</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {items.map((c) => (
-              <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3">
-                  <Link to={`/companies/${c.id}`} className="font-medium text-primary hover:underline">
-                    {c.name}
-                  </Link>
-                  {c.domain && (
-                    <div className="text-xs text-muted-foreground">{c.domain}</div>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{c.industry || '—'}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.size_range || '—'}</td>
-                <td className="px-4 py-3">{formatCurrency(c.annual_revenue)}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.owner_name || '—'}</td>
-                <td className="px-4 py-3 text-muted-foreground">{formatDate(c.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {pages > 1 && (
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Previous
-          </button>
-          <span className="text-sm text-muted-foreground">Page {page} of {pages}</span>
-          <button
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
-            disabled={page === pages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </button>
-        </div>
-      )}
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Companies</h1>
+      <DataGrid
+        columns={columns}
+        data={data?.items}
+        total={data?.total ?? 0}
+        page={data?.page ?? page}
+        pages={data?.pages ?? 1}
+        size={size}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onSizeChange={handleSizeChange}
+        onRowClick={(row) => navigate(`/companies/${row.id}`)}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={handleSort}
+        emptyHeading="No companies yet"
+        emptyBody="Companies you add will appear here."
+      />
     </div>
   );
 }
