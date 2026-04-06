@@ -1,43 +1,26 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-28T00:37:56.012Z",
-  "phase": "04",
-  "phase_name": "deal-model-expansion-fund-entity",
-  "phase_dir": ".planning/phases/04-deal-model-expansion-fund-entity",
-  "plan": 4,
-  "task": 2,
-  "total_tasks": 2,
+  "timestamp": "2026-04-06T22:21:03.416Z",
+  "phase": "14",
+  "phase_name": "aws-compute-cdn-https",
+  "phase_dir": ".planning/phases/14-aws-compute-cdn-https",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
   "status": "paused",
-  "completed_tasks": [
-    {"id": 1, "name": "Fund API module + DealDetailPage full rewrite with tabs and Profile cards", "status": "done", "commit": "37bac69"},
-    {"id": 2, "name": "Visual verification of Deal detail screen", "status": "pending_human", "progress": "Awaiting user to run make dev and visually verify 13-step checklist"}
-  ],
+  "completed_tasks": [],
   "remaining_tasks": [
-    {"id": 2, "name": "Task 2: Visual verification — run make dev, navigate to deal, verify 4 tabs + 5 cards + edit flows", "status": "checkpoint:human-verify"}
+    {"id": 1, "name": "14-01: ACM certificates (ap-southeast-1 + us-east-1) + ALB with HTTPS redirect", "status": "not_started"},
+    {"id": 2, "name": "14-02: ECS Fargate cluster + API/Worker/Migration task definitions + services", "status": "not_started"},
+    {"id": 3, "name": "14-03: S3 frontend bucket (OAC) + CloudFront distribution (S3+ALB origins, SPA routing)", "status": "not_started"}
   ],
-  "blockers": [
-    {
-      "description": "Phase 4 execution is paused at human-verify checkpoint for plan 04-04 — visual UI verification required before phase can be marked complete",
-      "type": "human_action",
-      "workaround": "Type 'approved' after verifying, or describe issues to trigger gap closure"
-    }
-  ],
-  "human_actions_pending": [
-    {
-      "action": "Visual verification of DealDetailPage: run make dev, log in as admin@demo.local / password123, navigate to Pipeline → open a deal → verify 4-tab layout (Profile, Activity, AI Insights, Tasks), 5 Profile cards, per-card editing, fund modal, deal team chips",
-      "context": "Plan 04-04 Task 1 (code) is complete and committed. Task 2 is a blocking checkpoint requiring human eye on the live UI before phase verification runs.",
-      "blocking": true
-    }
-  ],
+  "blockers": [],
+  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Fixed models.py String(36) FK columns to use Uuid() type", "rationale": "PostgreSQL columns are uuid type after migration 74fa6d3 but ORM still sent varchar bindings — caused DatatypeMismatchError on any INSERT touching nullable FK fields (Fund, Company, Contact, Deal, DealTeamMember)", "phase": "04"},
-    {"decision": "Seed data omits ref_data FK fields (transaction_type_id, source_type_id, fundraise_status_id)", "rationale": "These fields are optional; seeding them requires UUID values from ref_data which varies per environment. Core deal data (EBITDA, revenue, dates, company/contact links) is sufficient for demo.", "phase": "04"}
+    {"decision": "Phase 10 (detail-page-polish) completed and verified this session", "rationale": "FieldRow component, .detail-tabs CSS, CardHeader border separators applied across Contact, Company, Deal detail pages. Verification: 4/4 must-haves passed.", "phase": "10"},
+    {"decision": "Local app rebuilt and redeployed via docker-compose up --build -d", "rationale": "Pick up Phase 10 UI changes in running local environment", "phase": "10"}
   ],
-  "uncommitted_files": [
-    "backend/models.py — String(36) FK columns changed to Uuid() for 14 fields across Fund, Company, Contact, Deal, DealTeamMember, ContactCoveragePerson",
-    "backend/seed_data.py — added Fund, 4 companies, 6 contacts, 6 deals with PE fields",
-    "frontend/src/pages/DealDetailPage.jsx — Phase 4 rewrite (was already staged)"
-  ],
-  "next_action": "Resume /gsd:execute-phase 4 — the orchestrator will present the pending checkpoint for plan 04-04 Task 2 (visual verification). Run make dev, verify UI, type 'approved' to proceed to phase verification.",
-  "context_notes": "All 4 plans have SUMMARY.md. The only remaining work is: (1) user approves visual checkpoint, (2) regression gate runs, (3) gsd-verifier creates VERIFICATION.md, (4) phase marked complete. The models.py Uuid() fix is uncommitted and critical — must be committed before the backend restarts cold (Docker hot-reloads picked it up already)."
+  "uncommitted_files": [".claude/settings.local.json"],
+  "next_action": "Run /gsd:execute-phase 14 — all 3 plans ready, wave-based execution (Wave 1 → 2 → 3). No discussion or planning needed.",
+  "context_notes": "Phase 10 was completed this session (detail page polish). Phase 14 is the next item: Terraform for ACM, ALB, ECS Fargate, CloudFront, S3. Plans exist and are ready to execute — this is a /clear and /gsd:execute-phase 14 situation. Local app running on localhost:5173 (frontend) and localhost:8000 (backend). Milestone v1.1 has Phases 11 and 12 (Contact/Company/Deal data completeness) still planned but Phase 14 was sequenced ahead for infra work."
 }
