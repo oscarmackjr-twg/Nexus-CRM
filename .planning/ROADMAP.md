@@ -81,7 +81,11 @@ Plans:
   2. Column headers are uppercase, `text-xs`, `text-gray-500`, `tracking-wide`, with a bottom border and sort indicator arrows
   3. Hovering a row highlights it with `bg-gray-50`; row action buttons (View/Edit) are only visible on hover
   4. The pagination bar shows page count, previous/next buttons, and a records-per-page selector in consistent TWG style
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 09-01-PLAN.md — deals.js API module + shared DataGrid component + Pagination component
+- [ ] 09-02-PLAN.md — ContactsPage + CompaniesPage list views + /contacts and /companies routes
+- [ ] 09-03-PLAN.md — DealsPage list view + Deals sidebar nav link + /deals route
 **UI hint**: yes
 
 ### Phase 10: Detail Page Polish
@@ -143,12 +147,16 @@ Plans:
 **Requirements**: INFRA-05, INFRA-06, INFRA-08
 **Success Criteria** (what must be TRUE):
   1. ECS Fargate cluster has running task definitions for the API service, Celery worker service, and a one-shot migration runner; all secrets are injected via the `secrets[]` block (not `environment[]`) — no credentials appear in CloudWatch logs or the console
-  2. `GET https://crm.twgasia.com/api/v1/health` returns HTTP 200 with DB connectivity confirmed; ALB health checks and ECS container health checks both pass
+  2. `GET https://crm.oscarmackjr.com/api/v1/health` returns HTTP 200 with DB connectivity confirmed; ALB health checks and ECS container health checks both pass
   3. The React SPA loads from the CloudFront URL; `/api/*` requests route through to the ALB; direct S3 access is blocked (origin access control enforced)
   4. ACM certificate is issued and attached to both the ALB HTTPS listener and the CloudFront distribution; all HTTP traffic redirects to HTTPS
-  5. Route 53 A alias record for `crm.twgasia.com` resolves to the CloudFront distribution; no browser certificate warning appears
+  5. Route 53 A alias record for `crm.oscarmackjr.com` resolves to the CloudFront distribution; no browser certificate warning appears
   6. `lifecycle { ignore_changes = [task_definition] }` is set on all ECS service resources in Terraform — a `terraform apply` with no image changes does not trigger a rolling restart
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 14-01-PLAN.md — ACM module (dual-region) + ALB module + environment wiring (provider alias, Route 53 data source)
+- [ ] 14-02-PLAN.md — ECS module (cluster, 3 task defs, 2 services, log groups) + environment wiring + Phase 15 outputs
+- [ ] 14-03-PLAN.md — CloudFront module (S3 + OAC + distribution + Route 53 alias) + IAM update + Phase 15 outputs
 
 ### Phase 15: CI/CD Pipeline
 **Goal**: Every merge to `main` automatically builds, migrates, and deploys to staging; production deploys require a manual approval gate; the app never runs Alembic at container startup
@@ -188,11 +196,11 @@ Plans:
 | 6. Admin Reference Data UI | v1.0 | 3/3 | Complete | 2026-03-28 |
 | 7. Brand Foundation | v1.1 | 1/1 | Complete   | 2026-03-29 |
 | 8. Login, Banner & Sidebar | v1.1 | 2/2 | Complete   | 2026-03-29 |
-| 9. Data Grids | v1.1 | 0/? | Not started | - |
+| 9. Data Grids | v1.1 | 0/3 | Not started | - |
 | 10. Detail Page Polish | v1.1 | 0/? | Not started | - |
 | 11. Contact & Company Data Completeness | v1.1 | 0/? | Not started | - |
 | 12. Deal & Fund Data Completeness | v1.1 | 0/? | Not started | - |
 | 13. AWS Core Infrastructure | v1.2 | 3/3 | Complete    | 2026-03-30 |
-| 14. AWS Compute, CDN & HTTPS | v1.2 | 0/? | Not started | - |
+| 14. AWS Compute, CDN & HTTPS | v1.2 | 0/3 | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
