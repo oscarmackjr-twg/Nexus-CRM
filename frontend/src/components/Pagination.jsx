@@ -4,7 +4,7 @@ export function Pagination({ page, pages, total, size, onPageChange, onSizeChang
   return (
     <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 text-sm text-gray-600 bg-white">
       <span className="text-sm text-gray-500">
-        {total} records \u00B7 Page {page} of {pages}
+        {total} records · Page {page} of {pages}
       </span>
       <div className="flex items-center gap-3">
         <select
