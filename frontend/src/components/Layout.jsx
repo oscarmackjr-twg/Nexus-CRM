@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   BarChart3,
   BookOpen,
+  Briefcase,
   Building2,
   Home,
   KanbanSquare,
@@ -29,6 +30,7 @@ const navGroups = [
     items: [
       { name: 'Contacts', href: '/contacts', icon: Users },
       { name: 'Companies', href: '/companies', icon: Building2 },
+      { name: 'Deals', href: '/deals', icon: Briefcase },
       { name: 'Pipelines', href: '/pipelines', icon: KanbanSquare },
       { name: 'Boards', href: '/boards', icon: Workflow },
     ]
