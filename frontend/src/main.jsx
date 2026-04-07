@@ -13,6 +13,8 @@ import ContactDetailPage from '@/pages/ContactDetailPage';
 import CompanyDetailPage from '@/pages/CompanyDetailPage';
 import DealDetailPage from '@/pages/DealDetailPage';
 import AdminPage from '@/pages/AdminPage';
+import AdminUsersPage from '@/pages/AdminUsersPage';
+import AdminGroupsPage from '@/pages/AdminGroupsPage';
 import ContactsPage from '@/pages/ContactsPage';
 import CompaniesPage from '@/pages/CompaniesPage';
 import DealsPage from '@/pages/DealsPage';
@@ -41,6 +43,8 @@ createRoot(document.getElementById('root')).render(
             <Route path="deals" element={<DealsPage />} />
             <Route path="deals/:id" element={<DealDetailPage />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
+            <Route path="admin/groups" element={<AdminGroupsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

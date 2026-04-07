@@ -11,10 +11,12 @@ import {
   Settings,
   Sparkles,
   Users,
+  UsersRound,
   Workflow,
   Zap
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { ROLE_LABELS } from '@/lib/roles';
 import { cn } from '@/lib/utils';
 import AIQueryBar from './AIQueryBar';
 import StagingBanner from './StagingBanner';
@@ -48,7 +50,9 @@ const navGroups = [
   {
     label: 'ADMIN',
     items: [
-      { name: 'Admin', href: '/admin', icon: Settings },
+      { name: 'Reference Data', href: '/admin', icon: Settings },
+      { name: 'Users', href: '/admin/users', icon: Users },
+      { name: 'Groups', href: '/admin/groups', icon: UsersRound },
       { name: 'Team Settings', href: '/settings/team', icon: Settings },
     ]
   }
@@ -122,7 +126,7 @@ export default function Layout() {
           {/* User footer per D-13 */}
           <div className="px-5 py-4 border-t border-gray-200 mt-auto">
             <p className="text-xs text-[#475569] truncate">{user?.full_name || user?.username}</p>
-            <p className="text-xs text-[#94a3b8] capitalize mb-3">{user?.role}</p>
+            <p className="text-xs text-[#94a3b8] capitalize mb-3">{ROLE_LABELS[user?.role] || user?.role}</p>
             <button
               onClick={() => logout()}
               className="text-xs text-[#475569] hover:text-[#1a3868] font-medium"
