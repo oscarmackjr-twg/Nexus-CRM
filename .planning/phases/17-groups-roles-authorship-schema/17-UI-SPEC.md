@@ -55,9 +55,10 @@ Exceptions: None for this phase. Existing `p-6` (24px) pattern from `AdminPage.j
 | Body | 14px (text-sm) | 400 (regular) | 1.5 |
 | Label | 12px (text-xs) | 400 (regular) | 1.4 |
 | Column header | 12px (text-xs) | 600 (semibold) | 1.0 |
+| Dialog title | 16px (text-base) | 600 (semibold) | 1.2 |
 | Page heading / Card title | 20px (text-xl) | 600 (semibold) | 1.2 |
 
-> Source: RESEARCH.md confirms DataGrid uses `text-sm` throughout; column headers use `text-xs` + `tracking-wide` (GRID-04). AdminPage.jsx `CardTitle` maps to text-xl semibold per shadcn Card defaults. Body weight 400 and heading weight 600 are the two declared weights — no third weight.
+> Source: RESEARCH.md confirms DataGrid uses `text-sm` throughout; column headers use `text-xs` + `tracking-wide` (GRID-04). AdminPage.jsx `CardTitle` maps to text-xl semibold per shadcn Card defaults. `DialogTitle` uses `font-semibold` at 16px per shadcn Dialog defaults. Body weight 400 and heading weight 600 are the two declared weights — no third weight.
 
 ---
 
@@ -72,7 +73,7 @@ Exceptions: None for this phase. Existing `p-6` (24px) pattern from `AdminPage.j
 | Muted | `hsl(220 9% 46%)` — `--muted-foreground` | Column headers, field labels, secondary meta text (group member count, role badge label) |
 
 Accent reserved for:
-- Primary "Save" / "Add" button fill in create/edit dialogs
+- Primary "Add User" / "Add Group" / "Update User" / "Create Group" / "Rename Group" button fill in create/edit dialogs
 - Active state of sidebar nav items ("Users", "Groups" links — navy `border-l-4` + navy text)
 - Active tab underline on any tabbed views
 - Focus rings on all interactive elements (`--ring: 217 60% 25%`)
@@ -92,7 +93,7 @@ All components used in this phase are already installed. No new npm installs req
 | `Pagination` | `@/components/Pagination` | Paginated user/group lists |
 | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` | `@/components/ui/dialog` | Create user modal, Edit user modal, Create group modal, Rename group modal |
 | `Table`, `TableHeader`, `TableHead`, `TableBody`, `TableRow`, `TableCell` | `@/components/ui/table` | Fallback if DataGrid not used; Group members sub-list |
-| `Button` | `@/components/ui/button` | "Add User", "Add Group", "Save", "Cancel", "Deactivate" actions |
+| `Button` | `@/components/ui/button` | "Add User", "Add Group", "Update User", "Create Group", "Rename Group", "Deactivate" actions |
 | `Input` | `@/components/ui/input` | Group name field in create/rename dialog |
 | `Label` | `@/components/ui/label` | Form field labels in dialogs |
 | `Select` (shadcn) | `@/components/ui/select` | Role dropdown in user edit modal; Group dropdown in user edit modal |
@@ -109,11 +110,13 @@ All components used in this phase are already installed. No new npm installs req
 
 ### `/admin/users` — User Management Page
 
+Focal point: the `Add User` accent-filled button in CardHeader.
+
 ```
 <Card>
   <CardHeader>
     <CardTitle>User Management</CardTitle>
-    <Button variant="default">Add User</Button>   ← accent fill
+    <Button variant="default">Add User</Button>   ← accent fill; primary focal point
   </CardHeader>
   <CardContent p-6>
     <DataGrid
@@ -131,7 +134,7 @@ All components used in this phase are already installed. No new npm installs req
 - Group — 14px regular (group name or "—" if unassigned)
 - Role — `<Badge>` with role label (see Role Badge spec below)
 - Status — Active / Inactive badge
-- Actions — Pencil icon (edit) and X icon (deactivate), visible on row hover only
+- Actions — Pencil icon (`aria-label="Edit user"`) and X icon (`aria-label="Deactivate user"`), visible on row hover only
 
 **Role Badge variants:**
 
@@ -144,13 +147,15 @@ All components used in this phase are already installed. No new npm installs req
 
 ### `/admin/groups` — Group Management Page
 
+Focal point: the `Add Group` accent-filled button in CardHeader.
+
 ```
 <Card>
   <CardHeader>
     <CardTitle>Group Management</CardTitle>
     <div class="flex gap-2">
       <Switch label="Show inactive" />
-      <Button variant="default">Add Group</Button>
+      <Button variant="default">Add Group</Button>   ← accent fill; primary focal point
     </div>
   </CardHeader>
   <CardContent p-6>
@@ -167,7 +172,7 @@ All components used in this phase are already installed. No new npm installs req
 - Group Name — 14px regular
 - Members — 14px regular, number (0 if empty)
 - Status — Active / Inactive badge
-- Actions — Pencil icon (rename), X icon (deactivate), visible on row hover only
+- Actions — Pencil icon (`aria-label="Rename group"`) and X icon (`aria-label="Deactivate group"`), visible on row hover only
 
 ### Sidebar Additions (Layout.jsx ADMIN section)
 
@@ -186,16 +191,16 @@ Nav style: identical to all existing nav items — active state navy `border-l-4
 
 All modals follow the established `AdminPage.jsx` Dialog pattern:
 - Dialog opens centered, max-width `sm` (`max-w-sm`)
-- `DialogHeader` with `DialogTitle` (font-semibold 16px)
+- `DialogHeader` with `DialogTitle` (16px semibold, line-height 1.2)
 - Form fields: `Label` above `Input` or `Select`, `gap-4` vertical spacing
-- Footer: `Button variant="outline"` (Cancel) + `Button variant="default"` (Save) — right-aligned, `gap-2` between
+- Footer: `Button variant="outline"` (dismissal) + `Button variant="default"` (confirm action) — right-aligned, `gap-2` between
 
 **User Edit Modal fields:**
 1. Name (read-only `Input`, disabled — display only)
 2. Email (read-only `Input`, disabled — display only)
 3. Role — `Select` with 4 options: Regular User, Supervisor, Principal, Admin
 4. Group — `Select` populated from `/admin/groups` list (active groups only)
-5. Footer: Cancel + Save
+5. Footer: `Discard Changes` (outline) + `Update User` (default accent)
 
 **Create User Modal fields:**
 1. Name — `Input` required
@@ -203,15 +208,15 @@ All modals follow the established `AdminPage.jsx` Dialog pattern:
 3. Password — `Input type="password"` required
 4. Role — `Select`, defaults to "Regular User"
 5. Group — `Select` (active groups only), optional
-6. Footer: Cancel + Add User
+6. Footer: `Never Mind` (outline) + `Add User` (default accent)
 
 **Create Group Modal fields:**
 1. Group Name — `Input` required
-2. Footer: Cancel + Create Group
+2. Footer: `Never Mind` (outline) + `Create Group` (default accent)
 
 **Rename Group Modal fields:**
 1. Group Name — `Input` pre-filled with current name
-2. Footer: Cancel + Save
+2. Footer: `Discard` (outline) + `Rename Group` (default accent)
 
 ### Loading State
 
@@ -250,9 +255,12 @@ Display friendly label in all UI surfaces — never raw snake_case values.
 | Groups page title | Group Management |
 | Primary CTA — add user | Add User |
 | Primary CTA — add group | Add Group |
-| Primary CTA — save changes | Save |
+| Primary CTA — save changes (user edit modal) | Update User |
 | Primary CTA — create group | Create Group |
-| Primary CTA — rename group | Save |
+| Primary CTA — rename group | Rename Group |
+| Secondary CTA — dismiss user edit modal | Discard Changes |
+| Secondary CTA — dismiss create modals (user, group) | Never Mind |
+| Secondary CTA — dismiss rename group modal | Discard |
 | User list empty state heading | No users found |
 | User list empty state body | Add your first user to get started. |
 | Group list empty state heading | No groups found |
@@ -270,8 +278,8 @@ Display friendly label in all UI surfaces — never raw snake_case values.
 
 | Action | Trigger | Confirmation Pattern |
 |--------|---------|---------------------|
-| Deactivate group | X icon on group row (hover-visible) | Inline `window.confirm()` dialog — consistent with low-ceremony admin pattern. Copy: "Deactivate '{group name}'? Users in this group will lose their group assignment." |
-| Deactivate user | X icon on user row (hover-visible) | Inline `window.confirm()` dialog. Copy: "Deactivate {user name}? They will no longer be able to log in." |
+| Deactivate group | X icon on group row (`aria-label="Deactivate group"`, hover-visible) | Inline `window.confirm()` dialog — consistent with low-ceremony admin pattern. Copy: "Deactivate '{group name}'? Users in this group will lose their group assignment." |
+| Deactivate user | X icon on user row (`aria-label="Deactivate user"`, hover-visible) | Inline `window.confirm()` dialog. Copy: "Deactivate {user name}? They will no longer be able to log in." |
 
 > Rationale: `window.confirm()` matches the effort level of the existing admin actions (no shadcn AlertDialog installed). If shadcn AlertDialog is added in a future phase, migrate at that time.
 
