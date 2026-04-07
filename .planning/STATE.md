@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
 status: Executing Phase 17
-stopped_at: Completed 17-02-PLAN.md
-last_updated: "2026-04-07T18:23:28.635Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-04-07T18:47:52.525Z"
 progress:
   total_phases: 13
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 40
-  completed_plans: 36
+  completed_plans: 37
 ---
 
 # Project State
@@ -47,7 +47,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | 14 | AWS Compute, CDN & HTTPS | Not started |
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
-| 17 | Groups, Roles & Authorship Schema | Not started |
+| 17 | Groups, Roles & Authorship Schema | Done (3/3 plans complete) |
 | 18 | Access Enforcement | Not started |
 | 19 | Call & Note Entities | Not started |
 | 20 | Modification History | Not started |
@@ -129,6 +129,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - 17-01: entrypoint.sh fixed to pass $@ args through — enables `docker-compose run --rm backend pytest` to work correctly
 - 17-01: Authorship columns nullable with ondelete=SET NULL — NULL means pre-Phase-17 record (no backfill per D-09)
 - 17-01: require_role('admin') replaces require_org_admin() in route guards; is_admin() and is_manager_plus() updated to new role strings
+- 17-03: ROLE_LABELS extracted to shared lib/roles.js — avoids duplication across AdminUsersPage, future profile views, sidebar footer
+- 17-03: Sidebar role display uses ROLE_LABELS for friendly label (Admin, Supervisor, etc.) — improves UX for renamed role strings from Plan 01
 
 ## Notes
 
@@ -173,11 +175,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | Phase 10-detail-page-polish P02 | 3min | 3 tasks | 1 files |
 | Phase 17-groups-roles-authorship-schema P01 | 35 | 2 tasks | 13 files |
 | Phase 17-groups-roles-authorship-schema P02 | 45 | 2 tasks | 16 files |
+| Phase 17-groups-roles-authorship-schema P03 | 60 | 3 tasks | 7 files |
 
 ## Session Continuity
 
-Last session: 2026-04-07T18:23:28.630Z
-Stopped at: Completed 17-02-PLAN.md
+Last session: 2026-04-07T18:47:52.517Z
+Stopped at: Completed 17-03-PLAN.md
 
 ---
 *Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*

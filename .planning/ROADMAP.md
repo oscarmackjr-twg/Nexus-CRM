@@ -41,7 +41,7 @@
 
 ### v1.3 Access Control & Audit Trails
 
-- [ ] **Phase 17: Groups, Roles & Authorship Schema** — group and role data model, authorship fields on all entities, admin UI for user and group management
+- [x] **Phase 17: Groups, Roles & Authorship Schema** — group and role data model, authorship fields on all entities, admin UI for user and group management (completed 2026-04-07)
 - [ ] **Phase 18: Access Enforcement** — group-scoped read/write/delete rules applied to Contacts, Companies, Deals, Calls, and Notes; 403 on out-of-scope requests
 - [ ] **Phase 19: Call & Note Entities** — Call and Note as first-class models with CRUD APIs and group-scoped list/detail UIs
 - [ ] **Phase 20: Modification History** — per-table _history shadow tables, admin history viewer, and record restore capability
@@ -202,11 +202,11 @@ Plans:
   4. All major entities (Contact, Company, Deal, Fund, DealCounterparty, DealFunding) have `created_by`, `created_at`, `updated_by`, and `updated_at` columns populated correctly on insert and update — verified via direct DB inspection after a seed-data run
   5. The Admin User Management screen lists all users with their group and role; Admin can add a new user and edit an existing user's role and group assignment
   6. The Admin Group Management screen lists all groups with member counts; Admin can create a group, rename it, and view and change its members
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 17-01-PLAN.md — Alembic migration + ORM model updates + role string rename across codebase
 - [x] 17-02-PLAN.md — Admin groups + users API, Pydantic schemas, authorship injection in 6 services
-- [ ] 17-03-PLAN.md — Frontend admin pages, sidebar nav entries, route registration
+- [x] 17-03-PLAN.md — Frontend admin pages, sidebar nav entries, route registration
 **UI hint**: yes
 
 ### Phase 18: Access Enforcement
@@ -284,7 +284,7 @@ Plans:
 | 14. AWS Compute, CDN & HTTPS | v1.2 | 0/3 | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
-| 17. Groups, Roles & Authorship Schema | v1.3 | 2/3 | In Progress|  |
+| 17. Groups, Roles & Authorship Schema | v1.3 | 3/3 | Complete   | 2026-04-07 |
 | 18. Access Enforcement | v1.3 | 0/? | Not started | - |
 | 19. Call & Note Entities | v1.3 | 0/? | Not started | - |
 | 20. Modification History | v1.3 | 0/? | Not started | - |
