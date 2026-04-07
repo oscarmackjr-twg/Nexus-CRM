@@ -151,3 +151,74 @@
 | FAILOVER-03 | Phase 16 | TBD |
 | FAILOVER-04 | Phase 16 | TBD |
 | FAILOVER-05 | Phase 16 | TBD |
+
+---
+
+## v1.3 Access Control & Audit Trails
+
+**Defined:** 2026-04-06 | **Status:** In Progress
+
+### Groups & Role Model
+
+- [ ] **GROUP-01**: Admin can create, rename, and deactivate groups
+- [ ] **GROUP-02**: Admin can assign any user to exactly one group (moving a user to a new group removes them from their current group)
+- [ ] **GROUP-03**: Admin can grant a user the Supervisor role within their group
+- [ ] **GROUP-04**: Admin can grant a user the Principal role (cross-group visibility and reports access)
+- [ ] **GROUP-05**: Admin can grant a user the Admin role (user & group management capability)
+- [ ] **GROUP-06**: A user's effective role (Regular User / Supervisor / Principal / Admin) is visible in their profile and in the admin user list
+
+### Access Control
+
+- [ ] **ACCESS-01**: Contacts and Companies are readable by all authenticated users regardless of group
+- [ ] **ACCESS-02**: Calls, Notes, and Deals are readable only by members of the same group, Supervisors of that group, Principals, and Admins
+- [ ] **ACCESS-03**: A Regular User can create, edit, and delete their own Calls, Notes, and Deals
+- [ ] **ACCESS-04**: A Supervisor can read and edit (but not delete) any Call, Note, or Deal belonging to members of their group
+- [ ] **ACCESS-05**: A Principal can read all Calls, Notes, and Deals across all groups
+- [ ] **ACCESS-06**: An Admin has full CRUD access to all objects across all groups
+- [ ] **ACCESS-07**: API endpoints enforce group-scoping — requests for out-of-scope records return 403, not 404
+
+### Call Entity
+
+- [ ] **CALL-01**: User can create a Call record linked to a Contact and/or Company, with date, duration, direction (inbound/outbound), and notes fields
+- [ ] **CALL-02**: User can edit and delete their own Call records
+- [ ] **CALL-03**: Calls list view shows all calls visible to the current user (group-scoped), sortable by date
+- [ ] **CALL-04**: Call detail view shows all fields including created_by, created_at, updated_by, updated_at
+
+### Note Entity
+
+- [ ] **NOTE-01**: User can create a Note linked to a Contact, Company, and/or Deal, with a title and body
+- [ ] **NOTE-02**: User can edit and delete their own Note records
+- [ ] **NOTE-03**: Notes list view shows all notes visible to the current user (group-scoped), sortable by date
+- [ ] **NOTE-04**: Note detail view shows all fields including created_by, created_at, updated_by, updated_at
+
+### Authorship Tracking
+
+- [ ] **AUDIT-01**: All objects (Contact, Company, Deal, Call, Note, Fund, DealCounterparty, DealFunding) store `created_by` (user FK) and `created_at` (timestamp) — set on insert, never updated
+- [ ] **AUDIT-02**: All objects store `updated_by` (user FK) and `updated_at` (timestamp) — updated on every write
+- [ ] **AUDIT-03**: Detail views for all objects display created by / created date and last modified by / modified date
+
+### Modification History
+
+- [ ] **HIST-01**: Every write to a major entity (Contact, Company, Deal, Call, Note) appends a snapshot row to a corresponding `_history` table capturing the full object state, user, and timestamp
+- [ ] **HIST-02**: Admin can view the change history for any individual record — who changed it, when, and what the previous values were
+- [ ] **HIST-03**: Admin can restore a record to any prior version from the history view
+- [ ] **HIST-04**: History entries are immutable — no user can delete or alter them
+
+### Principal Reports
+
+- [ ] **REPORT-01**: Principal can view an Activity by Group report — count of Calls and Notes logged per group over a selected date range, with drill-down to individual records
+- [ ] **REPORT-02**: Principal can view a Deal Pipeline by Group report — deal count by stage, total deal value, and win/loss counts per group
+- [ ] **REPORT-03**: Principal can view a User Activity report — per-user count of Calls logged, Notes written, and Deals touched over a selected date range
+
+### Admin UI
+
+- [ ] **ADMIN-10**: Admin has a User Management screen: list all users, see their group and role, add new users, edit role/group assignment
+- [ ] **ADMIN-11**: Admin has a Group Management screen: list all groups with member count, create group, rename group, view and change members
+
+## Out of Scope (v1.3)
+
+- Row-level security at database layer (PostgreSQL RLS) — access enforced in application service layer
+- Field-level encryption for audit history — data stored plaintext in history tables
+- Real-time notifications for permission changes — applied on next request
+- Audit log for Contacts and Companies (group-scoped entities only get history; global entities get authorship fields but not full history by default)
+- Fine-grained field-level permissions — role-based object-level access only
