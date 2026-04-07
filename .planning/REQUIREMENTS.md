@@ -171,10 +171,10 @@
 ### Groups & Role Model
 
 - [x] **GROUP-01**: Admin can create, rename, and deactivate groups
-- [ ] **GROUP-02**: Admin can assign any user to exactly one group (moving a user to a new group removes them from their current group)
-- [ ] **GROUP-03**: Admin can grant a user the Supervisor role within their group
-- [ ] **GROUP-04**: Admin can grant a user the Principal role (cross-group visibility and reports access)
-- [ ] **GROUP-05**: Admin can grant a user the Admin role (user & group management capability)
+- [x] **GROUP-02**: Admin can assign any user to exactly one group (moving a user to a new group removes them from their current group)
+- [x] **GROUP-03**: Admin can grant a user the Supervisor role within their group
+- [x] **GROUP-04**: Admin can grant a user the Principal role (cross-group visibility and reports access)
+- [x] **GROUP-05**: Admin can grant a user the Admin role (user & group management capability)
 - [x] **GROUP-06**: A user's effective role (Regular User / Supervisor / Principal / Admin) is visible in their profile and in the admin user list
 
 ### Access Control
@@ -222,8 +222,8 @@
 
 ### Admin UI
 
-- [ ] **ADMIN-10**: Admin has a User Management screen: list all users, see their group and role, add new users, edit role/group assignment
-- [ ] **ADMIN-11**: Admin has a Group Management screen: list all groups with member count, create group, rename group, view and change members
+- [x] **ADMIN-10**: Admin has a User Management screen: list all users, see their group and role, add new users, edit role/group assignment
+- [x] **ADMIN-11**: Admin has a Group Management screen: list all groups with member count, create group, rename group, view and change members
 
 ## Out of Scope (v1.3)
 
