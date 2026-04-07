@@ -85,6 +85,6 @@ async def get_current_user(
 
 
 async def require_org_admin(current_user=Depends(get_current_user)):
-    if current_user.role not in ("admin", "owner"):
+    if current_user.role not in ("admin",):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current_user

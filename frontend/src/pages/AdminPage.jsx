@@ -25,7 +25,7 @@ export default function AdminPage() {
   const usersQuery = useQuery({
     queryKey: ['admin', 'users'],
     queryFn: () => getUsers({ size: 100 }).then((data) => data.items || data),
-    enabled: ['org_admin', 'super_admin'].includes(user?.role),
+    enabled: user?.role === 'admin',
   });
 
   // Reference Data tab state
@@ -63,7 +63,7 @@ export default function AdminPage() {
     onError: (err) => toast.error(err.response?.data?.detail || 'Failed to update item'),
   });
 
-  if (!['org_admin', 'super_admin'].includes(user?.role)) {
+  if (user?.role !== 'admin') {
     return (
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
@@ -143,7 +143,7 @@ export default function AdminPage() {
               <Card>
                 <CardHeader><CardTitle>Org snapshot</CardTitle></CardHeader>
                 <CardContent className="flex gap-3">
-                  {['org_admin', 'team_manager', 'rep', 'viewer'].map((role) => (
+                  {['admin', 'supervisor', 'principal', 'regular_user'].map((role) => (
                     <Badge key={role}>
                       {role}: {(usersQuery.data || []).filter((m) => m.role === role).length}
                     </Badge>

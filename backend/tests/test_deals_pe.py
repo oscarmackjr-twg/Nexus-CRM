@@ -29,7 +29,7 @@ async def pe_seed(db_session):
         username="pe-manager",
         hashed_password=hash_password("secret123"),
         full_name="PE Manager",
-        role="team_manager",
+        role="supervisor",
         team_id=team.id,
         is_active=True,
     )
@@ -39,7 +39,7 @@ async def pe_seed(db_session):
         username="pe-member",
         hashed_password=hash_password("secret123"),
         full_name="PE Member",
-        role="rep",
+        role="regular_user",
         team_id=team.id,
         is_active=True,
     )

@@ -37,7 +37,7 @@ async def seed() -> None:
                 username="demo-admin",
                 hashed_password=hash_password("password123"),
                 full_name="Demo Admin",
-                role="org_admin",
+                role="admin",
             )
             session.add(admin)
             await session.flush()

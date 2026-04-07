@@ -10,4 +10,8 @@ if [ "${RUN_SEED_DATA:-false}" = "true" ]; then
   python -m backend.seed_data
 fi
 
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+
 exec uvicorn backend.api.main:app --host 0.0.0.0 --port 8000

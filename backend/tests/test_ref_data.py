@@ -82,7 +82,7 @@ async def test_get_ref_data_by_category(async_client, seed_ref_data, seeded_org)
 @pytest.mark.xfail(strict=False, reason="Plan 02-02 implements the routes")
 @pytest.mark.asyncio
 async def test_create_ref_data_auth(async_client, seed_ref_data, seeded_org):
-    """REFDATA-12: POST /api/v1/admin/ref-data with org_admin auth returns 201."""
+    """REFDATA-12: POST /api/v1/admin/ref-data with admin auth returns 201."""
     from backend.tests.conftest import auth_header
 
     user = seeded_org["admin"]
@@ -103,7 +103,7 @@ async def test_create_ref_data_auth(async_client, seed_ref_data, seeded_org):
 @pytest.mark.xfail(strict=False, reason="Plan 02-02 implements the routes")
 @pytest.mark.asyncio
 async def test_patch_ref_data(async_client, seed_ref_data, seeded_org):
-    """REFDATA-13: PATCH /api/v1/admin/ref-data/{id} with org_admin auth returns 200."""
+    """REFDATA-13: PATCH /api/v1/admin/ref-data/{id} with admin auth returns 200."""
     from backend.tests.conftest import auth_header
 
     user = seeded_org["admin"]

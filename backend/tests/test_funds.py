@@ -31,7 +31,7 @@ async def fund_seed(db_session):
         username="fundadmin",
         hashed_password=hash_password("secret123"),
         full_name="Fund Admin",
-        role="org_admin",
+        role="admin",
         team_id=team.id,
         is_active=True,
     )

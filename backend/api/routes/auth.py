@@ -18,10 +18,10 @@ from backend.auth.security import (
     encrypt_linkedin_token,
     get_current_user,
     hash_password,
-    require_org_admin,
     verify_password,
     verify_token,
 )
+from backend.api.dependencies import require_role
 from backend.config import settings
 from backend.database import get_db_session
 from backend.models import Organization, Team, User
@@ -129,7 +129,7 @@ async def _assert_unique_user_fields(
 
 
 def _ensure_same_org(actor: User, org_id: UUID) -> None:
-    if actor.role != "super_admin" and actor.org_id != org_id:
+    if actor.role != "admin" and actor.org_id != org_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
@@ -167,7 +167,7 @@ async def register(
         org = Organization(name=payload.full_name or payload.username, slug=slug, plan="free")
         db.add(org)
         await db.flush()
-        role = "org_admin"
+        role = "admin"
     else:
         org = await db.scalar(select(Organization).where(Organization.id == payload.org_id))
         if org is None:
@@ -293,7 +293,7 @@ async def list_users(
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     payload: UserCreate,
-    current_user: User = Depends(require_org_admin),
+    current_user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db_session),
 ) -> UserResponse:
     await _assert_unique_user_fields(db, str(payload.email), payload.username)
@@ -328,7 +328,7 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     _ensure_same_org(current_user, user.org_id)
 
-    is_admin = current_user.role in {"super_admin", "org_admin"}
+    is_admin = current_user.role in {"admin"}
     is_self = current_user.id == user.id
     if not is_admin and not is_self:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
@@ -368,7 +368,7 @@ async def update_user(
 @router.delete("/users/{user_id}")
 async def deactivate_user(
     user_id: UUID,
-    current_user: User = Depends(require_org_admin),
+    current_user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db_session),
 ) -> dict[str, str]:
     user = await db.scalar(select(User).where(User.id == user_id))

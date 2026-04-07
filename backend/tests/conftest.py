@@ -172,14 +172,14 @@ async def seeded_org(db_session):
 
     users = {}
     for email, username, role, team in [
-        ("super@example.com", "super", "super_admin", alpha),
-        ("admin@example.com", "admin", "org_admin", alpha),
-        ("alpha-manager@example.com", "alpha-manager", "team_manager", alpha),
-        ("alpha-rep@example.com", "alpha-rep", "rep", alpha),
-        ("alpha-peer@example.com", "alpha-peer", "rep", alpha),
-        ("beta-manager@example.com", "beta-manager", "team_manager", beta),
-        ("beta-rep@example.com", "beta-rep", "rep", beta),
-        ("viewer@example.com", "viewer", "viewer", alpha),
+        ("super@example.com", "super", "admin", alpha),
+        ("admin@example.com", "admin", "admin", alpha),
+        ("alpha-manager@example.com", "alpha-manager", "supervisor", alpha),
+        ("alpha-rep@example.com", "alpha-rep", "regular_user", alpha),
+        ("alpha-peer@example.com", "alpha-peer", "regular_user", alpha),
+        ("beta-manager@example.com", "beta-manager", "supervisor", beta),
+        ("beta-rep@example.com", "beta-rep", "regular_user", beta),
+        ("viewer@example.com", "viewer", "regular_user", alpha),
     ]:
         user = User(
             org_id=org.id,

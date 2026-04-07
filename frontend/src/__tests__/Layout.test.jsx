@@ -7,7 +7,7 @@ const mockLogout = vi.fn();
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: { full_name: 'Oscar Mack', username: 'oscar', role: 'org_admin' },
+    user: { full_name: 'Oscar Mack', username: 'oscar', role: 'admin' },
     logout: mockLogout,
     isAuthenticated: true
   })
@@ -58,7 +58,7 @@ describe('Layout sidebar', () => {
   it('renders user footer with name, role, and sign out (NAV-05)', () => {
     renderWithProviders(<Layout />, { route: '/', path: '/*' });
     expect(screen.getByText('Oscar Mack')).toBeInTheDocument();
-    expect(screen.getByText('org_admin')).toBeInTheDocument();
+    expect(screen.getByText('admin')).toBeInTheDocument();
     expect(screen.getByText('Sign out')).toBeInTheDocument();
   });
 

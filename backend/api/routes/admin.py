@@ -28,7 +28,7 @@ async def list_ref_data(
 @router.post("/", response_model=RefDataResponse, status_code=status.HTTP_201_CREATED)
 async def create_ref_data(
     payload: RefDataCreate,
-    current_user: User = Depends(require_role("org_admin", "super_admin")),
+    current_user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ) -> RefDataResponse:
     return await RefDataService(db, current_user).create(payload)
@@ -38,7 +38,7 @@ async def create_ref_data(
 async def update_ref_data(
     item_id: UUID,
     payload: RefDataUpdate,
-    current_user: User = Depends(require_role("org_admin", "super_admin")),
+    current_user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ) -> RefDataResponse:
     return await RefDataService(db, current_user).update(item_id, payload)

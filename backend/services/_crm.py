@@ -110,11 +110,11 @@ def merge_custom_fields(existing: dict, updates: dict) -> dict:
 
 
 def is_admin(user) -> bool:
-    return getattr(user, "role", None) in ("org_admin", "super_admin", "admin")
+    return getattr(user, "role", None) in ("admin",)
 
 
 def is_manager_plus(user) -> bool:
-    return getattr(user, "role", None) in ("manager", "org_admin", "super_admin", "admin")
+    return getattr(user, "role", None) in ("supervisor", "admin")
 
 
 def ensure_owner_or_admin(owner_id: UUID, user) -> None:
