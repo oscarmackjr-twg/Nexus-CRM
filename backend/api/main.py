@@ -16,7 +16,7 @@ from backend.api.middleware import (
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
-from backend.api.routes import admin, ai_query, analytics, auth, automations, boards, companies, contacts, counterparties, deals, funding, funds, linkedin, orgs, pages, pipelines, tasks, teams, webhooks
+from backend.api.routes import admin, admin_groups, admin_users, ai_query, analytics, auth, automations, boards, companies, contacts, counterparties, deals, funding, funds, linkedin, orgs, pages, pipelines, tasks, teams, webhooks
 from backend.config import settings
 from backend.database import Base, get_engine, get_session_maker
 from backend.utils.graceful_shutdown import install_signal_handlers
@@ -76,6 +76,8 @@ if Limiter is not None and get_remote_address is not None:
 
 for router in [
     admin.router,
+    admin_groups.router,
+    admin_users.router,
     auth.router,
     orgs.router,
     teams.router,

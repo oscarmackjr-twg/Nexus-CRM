@@ -131,8 +131,6 @@ def fake_redis(monkeypatch) -> FakeRedis:
     client = FakeRedis()
     monkeypatch.setattr("backend.api.main.redis_async.from_url", lambda *args, **kwargs: client)
     monkeypatch.setattr("backend.api.routes.auth.redis_async.from_url", lambda *args, **kwargs: client)
-    monkeypatch.setattr("backend.api.routes.ai_query.redis_async.from_url", lambda *args, **kwargs: client)
-    monkeypatch.setattr("backend.services.ai_service.redis_async.from_url", lambda *args, **kwargs: client)
     return client
 
 
