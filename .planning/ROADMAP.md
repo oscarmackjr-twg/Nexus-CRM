@@ -284,7 +284,7 @@ Plans:
 | 14. AWS Compute, CDN & HTTPS | v1.2 | 0/3 | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
-| 17. Groups, Roles & Authorship Schema | v1.3 | 3/3 | Complete   | 2026-04-07 |
+| 17. Groups, Roles & Authorship Schema | v1.3 | 3/3 | Complete    | 2026-04-07 |
 | 18. Access Enforcement | v1.3 | 0/? | Not started | - |
 | 19. Call & Note Entities | v1.3 | 0/? | Not started | - |
 | 20. Modification History | v1.3 | 0/? | Not started | - |
