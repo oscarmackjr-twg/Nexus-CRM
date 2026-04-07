@@ -170,12 +170,12 @@
 
 ### Groups & Role Model
 
-- [ ] **GROUP-01**: Admin can create, rename, and deactivate groups
+- [x] **GROUP-01**: Admin can create, rename, and deactivate groups
 - [ ] **GROUP-02**: Admin can assign any user to exactly one group (moving a user to a new group removes them from their current group)
 - [ ] **GROUP-03**: Admin can grant a user the Supervisor role within their group
 - [ ] **GROUP-04**: Admin can grant a user the Principal role (cross-group visibility and reports access)
 - [ ] **GROUP-05**: Admin can grant a user the Admin role (user & group management capability)
-- [ ] **GROUP-06**: A user's effective role (Regular User / Supervisor / Principal / Admin) is visible in their profile and in the admin user list
+- [x] **GROUP-06**: A user's effective role (Regular User / Supervisor / Principal / Admin) is visible in their profile and in the admin user list
 
 ### Access Control
 
@@ -203,8 +203,8 @@
 
 ### Authorship Tracking
 
-- [ ] **AUDIT-01**: All objects (Contact, Company, Deal, Call, Note, Fund, DealCounterparty, DealFunding) store `created_by` (user FK) and `created_at` (timestamp) — set on insert, never updated
-- [ ] **AUDIT-02**: All objects store `updated_by` (user FK) and `updated_at` (timestamp) — updated on every write
+- [x] **AUDIT-01**: All objects (Contact, Company, Deal, Call, Note, Fund, DealCounterparty, DealFunding) store `created_by` (user FK) and `created_at` (timestamp) — set on insert, never updated
+- [x] **AUDIT-02**: All objects store `updated_by` (user FK) and `updated_at` (timestamp) — updated on every write
 - [ ] **AUDIT-03**: Detail views for all objects display created by / created date and last modified by / modified date
 
 ### Modification History

@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: Access Control & Audit Trails
-status: Roadmap defined
-stopped_at: ""
-last_updated: "2026-04-06"
+milestone: v1.1
+milestone_name: UI Professionalism
+status: Executing Phase 17
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-04-07T17:49:15.698Z"
 progress:
-  total_phases: 17
+  total_phases: 13
   completed_phases: 11
-  total_plans: 37
-  completed_plans: 34
+  total_plans: 40
+  completed_plans: 35
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-06)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Milestone v1.3 — roadmap defined, ready to plan Phase 17
+**Current focus:** Phase 17 — groups-roles-authorship-schema
 
 ## Current Status
 
@@ -125,6 +125,10 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - v1.3-arch: Phase 17 (schema + admin UI) must complete before Phase 18 (enforcement) — group FK columns must exist before service-layer checks reference them
 - v1.3-arch: Call and Note entities are built independently of access enforcement patterns (Phase 19 depends on Phase 17 for authorship columns, Phase 18 for enforcement template)
 - v1.3-arch: AUDIT-03 (display created_by/updated_by in detail views) lands in Phase 20 alongside history — both require authorship data to be fully populated and visible
+- 17-01: Role rename: admin (was super_admin/org_admin), supervisor (was team_manager), regular_user (was rep/member/viewer), principal (new) — data migration in 0012
+- 17-01: entrypoint.sh fixed to pass $@ args through — enables `docker-compose run --rm backend pytest` to work correctly
+- 17-01: Authorship columns nullable with ondelete=SET NULL — NULL means pre-Phase-17 record (no backfill per D-09)
+- 17-01: require_role('admin') replaces require_org_admin() in route guards; is_admin() and is_manager_plus() updated to new role strings
 
 ## Notes
 
@@ -167,11 +171,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | Phase 09-data-grids P03 | 3min | 2 tasks | 4 files |
 | Phase 10-detail-page-polish P01 | 8 | 4 tasks | 4 files |
 | Phase 10-detail-page-polish P02 | 3min | 3 tasks | 1 files |
+| Phase 17-groups-roles-authorship-schema P01 | 35 | 2 tasks | 13 files |
 
 ## Session Continuity
 
-Last session: 2026-04-06
-Stopped at: v1.3 roadmap created (Phases 17-21)
+Last session: 2026-04-07T17:49:15.691Z
+Stopped at: Completed 17-01-PLAN.md
 
 ---
 *Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*
