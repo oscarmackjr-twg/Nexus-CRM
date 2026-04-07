@@ -202,7 +202,11 @@ Plans:
   4. All major entities (Contact, Company, Deal, Fund, DealCounterparty, DealFunding) have `created_by`, `created_at`, `updated_by`, and `updated_at` columns populated correctly on insert and update — verified via direct DB inspection after a seed-data run
   5. The Admin User Management screen lists all users with their group and role; Admin can add a new user and edit an existing user's role and group assignment
   6. The Admin Group Management screen lists all groups with member counts; Admin can create a group, rename it, and view and change its members
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 17-01-PLAN.md — Alembic migration + ORM model updates + role string rename across codebase
+- [ ] 17-02-PLAN.md — Admin groups + users API, Pydantic schemas, authorship injection in 6 services
+- [ ] 17-03-PLAN.md — Frontend admin pages, sidebar nav entries, route registration
 **UI hint**: yes
 
 ### Phase 18: Access Enforcement
