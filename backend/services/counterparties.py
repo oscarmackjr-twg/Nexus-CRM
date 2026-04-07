@@ -120,6 +120,8 @@ class DealCounterpartyService:
         cp = DealCounterparty(
             org_id=self.current_user.org_id,
             deal_id=deal_id,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
             **data.model_dump(exclude_unset=False),
         )
         self.db.add(cp)
@@ -150,6 +152,7 @@ class DealCounterpartyService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Counterparty not found")
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(cp, field, value)
+        cp.updated_by = self.current_user.id
         await self.db.commit()
         # Re-query with joined labels
         result = await self.db.execute(

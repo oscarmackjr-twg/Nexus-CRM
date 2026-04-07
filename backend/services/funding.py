@@ -113,6 +113,8 @@ class DealFundingService:
         entry = DealFunding(
             org_id=self.current_user.org_id,
             deal_id=deal_id,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
             **data.model_dump(exclude_unset=True),
         )
         self.db.add(entry)
@@ -142,6 +144,7 @@ class DealFundingService:
 
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(entry, k, v)
+        entry.updated_by = self.current_user.id
         await self.db.flush()
 
         stmt = self._base_stmt(deal_id).where(DealFunding.id == funding_id)

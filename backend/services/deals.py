@@ -325,8 +325,10 @@ class DealService:
     async def create_deal(self, data: DealCreate) -> DealResponse:
         if self.current_user.team_id is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current user is not assigned to a team")
-        await ensure_contact_in_org(self.db, self.current_user.org_id, data.contact_id)
-        await ensure_company_in_org(self.db, self.current_user.org_id, data.company_id)
+        if data.contact_id is not None:
+            await ensure_contact_in_org(self.db, data.contact_id, self.current_user.org_id)
+        if data.company_id is not None:
+            await ensure_company_in_org(self.db, data.company_id, self.current_user.org_id)
         pipeline, stage = await self._get_pipeline_and_stage(data.pipeline_id, data.stage_id)
         if pipeline.team_id is not None and pipeline.team_id != self.current_user.team_id and not is_manager_plus(self.current_user):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
@@ -358,6 +360,8 @@ class DealService:
             tags=data.tags,
             is_private=data.is_private,
             custom_fields=data.custom_fields,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
         )
         self.db.add(deal)
         await self.db.flush()
@@ -382,9 +386,9 @@ class DealService:
         if data.owner_id is not None and not is_manager_plus(self.current_user):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         if data.contact_id is not None:
-            await ensure_contact_in_org(self.db, self.current_user.org_id, data.contact_id)
+            await ensure_contact_in_org(self.db, data.contact_id, self.current_user.org_id)
         if data.company_id is not None:
-            await ensure_company_in_org(self.db, self.current_user.org_id, data.company_id)
+            await ensure_company_in_org(self.db, data.company_id, self.current_user.org_id)
 
         # Core fields
         for field in ["name", "value", "currency", "probability", "expected_close_date", "actual_close_date", "status", "contact_id", "company_id", "is_private"]:
@@ -427,6 +431,7 @@ class DealService:
         # Deal team — set if provided
         if data.deal_team_ids is not None:
             await self._set_deal_team(deal.id, data.deal_team_ids)
+        deal.updated_by = self.current_user.id
         await self.db.commit()
         return await self.get_deal(deal.id)
 

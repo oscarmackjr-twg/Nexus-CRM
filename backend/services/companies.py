@@ -188,6 +188,8 @@ class CompanyService:
             owner_id=self.current_user.id,
             tags=data.tags,
             custom_fields=data.custom_fields,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
         )
         # PE Blueprint fields
         for field in [
@@ -249,6 +251,7 @@ class CompanyService:
             company.sub_sector_preferences = data.sub_sector_preferences
         if data.transaction_types is not None:
             company.transaction_types = data.transaction_types
+        company.updated_by = self.current_user.id
         await self.db.commit()
         return await self.get_company(company.id)
 

@@ -22,7 +22,7 @@ async def list_funds(
     return await FundService(db, current_user).list_funds()
 
 
-@router.post("", response_model=FundResponse)
+@router.post("", response_model=FundResponse, status_code=201)
 async def create_fund(
     payload: FundCreate,
     current_user: User = Depends(get_current_user),

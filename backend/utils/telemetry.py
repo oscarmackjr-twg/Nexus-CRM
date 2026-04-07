@@ -19,7 +19,7 @@ class _Counter:
         self.name = name
         self._value = 0
 
-    def inc(self, amount: int = 1) -> None:
+    def inc(self, amount: int = 1, **labels) -> None:
         self._value += amount
 
     def __call__(self, *args, **kwargs):

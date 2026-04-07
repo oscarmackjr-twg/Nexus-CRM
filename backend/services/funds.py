@@ -35,7 +35,12 @@ class FundService:
         ]
 
     async def create_fund(self, payload: FundCreate) -> FundResponse:
-        fund = Fund(org_id=self.current_user.org_id, **payload.model_dump(exclude_unset=True))
+        fund = Fund(
+            org_id=self.current_user.org_id,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
+            **payload.model_dump(exclude_unset=True),
+        )
         self.db.add(fund)
         await self.db.flush()
         await self.db.refresh(fund)
@@ -50,6 +55,7 @@ class FundService:
             raise HTTPException(status_code=404, detail="Fund not found")
         for k, v in payload.model_dump(exclude_unset=True).items():
             setattr(fund, k, v)
+        fund.updated_by = self.current_user.id
         await self.db.flush()
         await self.db.refresh(fund)
         return (await self.list_funds_by_ids([fund.id]))[0]

@@ -176,7 +176,8 @@ class ContactService:
         return self._contact_response(row, related_deal_count=related_deal_count, recent_activity=recent_activity, coverage_persons=coverage)
 
     async def create_contact(self, data: ContactCreate) -> ContactResponse:
-        await ensure_company_in_org(self.db, self.current_user.org_id, data.company_id)
+        if data.company_id is not None:
+            await ensure_company_in_org(self.db, data.company_id, self.current_user.org_id)
         contact = Contact(
             org_id=self.current_user.org_id,
             first_name=data.first_name,
@@ -189,6 +190,8 @@ class ContactService:
             lifecycle_stage=data.lifecycle_stage,
             tags=data.tags,
             custom_fields=data.custom_fields,
+            created_by=self.current_user.id,
+            updated_by=self.current_user.id,
             # PE Blueprint fields
             business_phone=data.business_phone,
             mobile_phone=data.mobile_phone,
@@ -227,7 +230,7 @@ class ContactService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         ensure_owner_or_admin(contact.owner_id, self.current_user)
         if data.company_id is not None:
-            await ensure_company_in_org(self.db, self.current_user.org_id, data.company_id)
+            await ensure_company_in_org(self.db, data.company_id, self.current_user.org_id)
         for field in ["first_name", "last_name", "phone", "title", "lead_score", "lifecycle_stage", "company_id"]:
             value = getattr(data, field)
             if value is not None:
@@ -273,6 +276,7 @@ class ContactService:
                 self.db.add(ContactCoveragePerson(
                     contact_id=str(contact.id), user_id=str(user_id)
                 ))
+        contact.updated_by = self.current_user.id
         await self.db.commit()
         return await self.get_contact(contact.id)
 
