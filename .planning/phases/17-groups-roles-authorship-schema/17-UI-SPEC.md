@@ -1,10 +1,11 @@
 ---
 phase: 17
 slug: groups-roles-authorship-schema
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-06
+reviewed_at: 2026-04-06
 ---
 
 # Phase 17 — UI Design Contract
