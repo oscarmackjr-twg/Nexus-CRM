@@ -1,6 +1,7 @@
 # Nexus CRM — PE Deal Management Platform
 
 ## Current Milestone: v1.3 Access Control & Audit Trails
+*Phase 17 complete (2026-04-07) — groups/roles/authorship schema, admin UI for user & group management*
 
 **Goal:** Introduce group-based access scoping, per-object authorship tracking, full modification history, and Principal-level aggregate reports across all CRM data.
 
