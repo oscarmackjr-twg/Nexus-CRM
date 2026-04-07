@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Access Control & Audit Trails
-status: Defining requirements
+status: Roadmap defined
 stopped_at: ""
-last_updated: "2026-04-06T22:21:03.416Z"
+last_updated: "2026-04-06"
 progress:
-  total_phases: 12
+  total_phases: 17
   completed_phases: 11
   total_plans: 37
   completed_plans: 34
@@ -19,13 +19,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-06)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Milestone v1.3 — defining requirements
+**Current focus:** Milestone v1.3 — roadmap defined, ready to plan Phase 17
 
 ## Current Status
 
-**Milestone:** v1.3 — Access Control & Audit Trails (defining requirements)
-**Active phase:** Not started (defining requirements)
-**Last action:** 2026-04-06 — Milestone v1.3 started: group-based access control, Call/Note entities, audit history, Principal reports
+**Milestone:** v1.3 — Access Control & Audit Trails (roadmap defined — 5 phases, 30 requirements)
+**Active phase:** Not started (Phase 17 is next)
+**Last action:** 2026-04-06 — v1.3 roadmap created: Phases 17-21 covering 30 requirements
 
 ## Phase Completion
 
@@ -47,12 +47,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | 14 | AWS Compute, CDN & HTTPS | Not started |
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
+| 17 | Groups, Roles & Authorship Schema | Not started |
+| 18 | Access Enforcement | Not started |
+| 19 | Call & Note Entities | Not started |
+| 20 | Modification History | Not started |
+| 21 | Principal Reports | Not started |
 
 ## Key Files
 
 - `.planning/PROJECT.md` — project goals and requirements
-- `.planning/REQUIREMENTS.md` — 27 v1.1 requirements (Phases 7-12) + 20 v1.2 requirements (Phases 13-16)
-- `.planning/ROADMAP.md` — phase breakdown with success criteria (Phases 7-16)
+- `.planning/REQUIREMENTS.md` — 27 v1.1 requirements (Phases 7-12) + 20 v1.2 requirements (Phases 13-16) + 30 v1.3 requirements (Phases 17-21)
+- `.planning/ROADMAP.md` — phase breakdown with success criteria (Phases 7-21)
 - `.planning/research/SUMMARY.md` — v1.2 stack, pitfalls, build order, confidence assessment
 - `.planning/research/` — 4 domain research documents (stack, features, architecture, pitfalls)
 - `.planning/codebase/` — 7 codebase map documents
@@ -116,6 +121,10 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - 10-01: FieldRow uses named export matching Phase 9 DataGrid pattern; em-dash logic safe for zero values (financial fields); empty arrays also render as em-dash
 - 10-01: ContactDetailPage and CompanyDetailPage FieldRow import added but not yet used — inline-edit Label+Input patterns preserved; FieldRow migration deferred to Phase 11
 - 10-01: .detail-tabs CSS uses > button selector with data-state=active attribute; margin-bottom: -1px ensures active tab border overlaps container border cleanly
+- v1.3-arch: Access enforcement lives in the application service layer (not PostgreSQL RLS) — out-of-scope record requests return 403, not 404
+- v1.3-arch: Phase 17 (schema + admin UI) must complete before Phase 18 (enforcement) — group FK columns must exist before service-layer checks reference them
+- v1.3-arch: Call and Note entities are built independently of access enforcement patterns (Phase 19 depends on Phase 17 for authorship columns, Phase 18 for enforcement template)
+- v1.3-arch: AUDIT-03 (display created_by/updated_by in detail views) lands in Phase 20 alongside history — both require authorship data to be fully populated and visible
 
 ## Notes
 
@@ -128,6 +137,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - Phase 8 (Login, Banner & Sidebar) is complete and verified.
 - v1.2 roadmap defined: Phases 13-16 covering 20 requirements (7 INFRA → Phase 13, 3 INFRA → Phase 14, 5 DEPLOY → Phase 15, 5 FAILOVER → Phase 16).
 - v1.1 Phases 9-12 are still pending — v1.2 planning does not block v1.1 completion.
+- v1.3 roadmap defined: Phases 17-21 covering 30 requirements (GROUP/AUDIT/ADMIN → Phase 17, ACCESS → Phase 18, CALL/NOTE → Phase 19, HIST/AUDIT-03 → Phase 20, REPORT → Phase 21).
 
 ## Performance Metrics
 
@@ -160,8 +170,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:06:50.619Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-04-06
+Stopped at: v1.3 roadmap created (Phases 17-21)
 
 ---
-*Last updated: 2026-03-30 — Phase 13 Plan 01 complete: Terraform bootstrap + environment structure*
+*Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*

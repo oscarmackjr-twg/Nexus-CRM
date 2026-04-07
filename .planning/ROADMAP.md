@@ -5,6 +5,7 @@
 - ✅ **v1.0 PE CRM Foundation** — Phases 1-6 (shipped 2026-03-28) — [archive](.planning/milestones/v1.0-ROADMAP.md)
 - 📋 **v1.1 UI Professionalism** — Phases 7-12 (in progress)
 - 📋 **v1.2 Cloud Deployment** — Phases 13-16 (planned)
+- 📋 **v1.3 Access Control & Audit Trails** — Phases 17-21 (planned)
 
 ---
 
@@ -27,7 +28,7 @@
 - [x] **Phase 7: Brand Foundation** — TWG color palette, Gotham font, CSS variable consolidation (completed 2026-03-29)
 - [x] **Phase 8: Login, Banner & Sidebar** — branded login page, staging banner, white sidebar redesign (completed 2026-03-29)
 - [ ] **Phase 9: Data Grids** — compact Salesforce-style list views for Contacts, Companies, Deals
-- [x] **Phase 10: Detail Page Polish** — section card headers, field layout, empty values, tab bar (completed 2026-04-06)
+- [x] **Phase 10: Detail Page Polish** — section card headers, field layout, empty values, tab bar (completed 2026-04-06)
 - [ ] **Phase 11: Contact & Company Data Completeness** — API label resolution + detail/list UI for Contact and Company PE fields
 - [ ] **Phase 12: Deal & Fund Data Completeness** — Deal detail/edit UI for all PE expansion fields, Fund selector on Deal form
 
@@ -37,6 +38,14 @@
 - [ ] **Phase 14: AWS Compute, CDN & HTTPS** — ECS Fargate cluster + task definitions, ALB, CloudFront + S3 frontend, ACM cert, Route 53 DNS
 - [ ] **Phase 15: CI/CD Pipeline** — GitHub Actions build → migration → deploy pipeline, multi-environment support, entrypoint cleanup
 - [ ] **Phase 16: Azure Warm Failover** — Azure PostgreSQL, ACR, ACI standby containers, pg_dump schedule, failover runbook
+
+### v1.3 Access Control & Audit Trails
+
+- [ ] **Phase 17: Groups, Roles & Authorship Schema** — group and role data model, authorship fields on all entities, admin UI for user and group management
+- [ ] **Phase 18: Access Enforcement** — group-scoped read/write/delete rules applied to Contacts, Companies, Deals, Calls, and Notes; 403 on out-of-scope requests
+- [ ] **Phase 19: Call & Note Entities** — Call and Note as first-class models with CRUD APIs and group-scoped list/detail UIs
+- [ ] **Phase 20: Modification History** — per-table _history shadow tables, admin history viewer, and record restore capability
+- [ ] **Phase 21: Principal Reports** — Activity by Group, Deal Pipeline by Group, and User Activity aggregate reports for Principals
 
 ---
 
@@ -182,6 +191,73 @@ Plans:
   5. Failover runbook is documented and has been executed once against the staging environment — an operator can follow it to stop AWS writes, confirm restore is current, start ACI containers, and update DNS to the Azure endpoint within 30 minutes
 **Plans**: TBD
 
+### Phase 17: Groups, Roles & Authorship Schema
+**Goal**: The four-role model and group membership structure exist in the database, all entities carry authorship fields, and admins can manage users and groups through a dedicated UI
+**Depends on**: Nothing (first phase of v1.3; builds on existing RBAC infrastructure)
+**Requirements**: GROUP-01, GROUP-02, GROUP-03, GROUP-04, GROUP-05, GROUP-06, AUDIT-01, AUDIT-02, ADMIN-10, ADMIN-11
+**Success Criteria** (what must be TRUE):
+  1. Admin can create, rename, and deactivate a group; the group appears (or disappears from active views) immediately after the action
+  2. Admin can assign a user to a group, grant them Supervisor or Principal role, and the effective role (Regular User / Supervisor / Principal / Admin) is visible in the admin user list and the user's own profile
+  3. Moving a user to a different group in the admin UI removes them from their prior group — no user belongs to two groups simultaneously
+  4. All major entities (Contact, Company, Deal, Fund, DealCounterparty, DealFunding) have `created_by`, `created_at`, `updated_by`, and `updated_at` columns populated correctly on insert and update — verified via direct DB inspection after a seed-data run
+  5. The Admin User Management screen lists all users with their group and role; Admin can add a new user and edit an existing user's role and group assignment
+  6. The Admin Group Management screen lists all groups with member counts; Admin can create a group, rename it, and view and change its members
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 18: Access Enforcement
+**Goal**: Every API endpoint enforces group-scoped visibility and role-based write permissions — out-of-scope record requests return 403, not 404
+**Depends on**: Phase 17 (group and role schema must exist)
+**Requirements**: ACCESS-01, ACCESS-02, ACCESS-03, ACCESS-04, ACCESS-05, ACCESS-06, ACCESS-07
+**Success Criteria** (what must be TRUE):
+  1. A Regular User can read all Contacts and Companies regardless of group; their own Deals (once Calls and Notes exist) are visible only to their group members, their Supervisor, Principals, and Admins
+  2. A Regular User can create, edit, and delete their own Deals; attempting to edit or delete a Deal owned by a member of a different group returns 403
+  3. A Supervisor can read and edit any Deal belonging to a member of their group but receives 403 when attempting to delete that Deal
+  4. A Principal can read Deals across all groups; a Regular User from a different group receives 403 for the same request
+  5. An Admin can perform full CRUD on any Deal across any group with no 403 responses
+  6. Any authenticated request for an out-of-scope record returns HTTP 403 (not 404) — the record's existence is not leaked to unauthorized callers
+**Plans**: TBD
+
+### Phase 19: Call & Note Entities
+**Goal**: Users can log Calls and Notes as first-class CRM records linked to Contacts, Companies, and Deals — with group-scoped visibility enforced from day one
+**Depends on**: Phase 17 (group membership and authorship fields), Phase 18 (access enforcement patterns established)
+**Requirements**: CALL-01, CALL-02, CALL-03, CALL-04, NOTE-01, NOTE-02, NOTE-03, NOTE-04
+**Success Criteria** (what must be TRUE):
+  1. User can create a Call record linked to a Contact and/or Company, specifying date, duration, direction (inbound/outbound), and notes; the record saves and appears in the Calls list
+  2. User can edit and delete their own Call records; attempting to edit or delete another user's Call (from a different group) returns 403
+  3. The Calls list view shows all Calls visible to the current user (group-scoped), is sortable by date, and includes created_by and created_at in the detail view
+  4. User can create a Note linked to a Contact, Company, and/or Deal, with a title and body; the record saves and appears in the Notes list
+  5. User can edit and delete their own Note records; Supervisor can edit (but not delete) Notes belonging to their group members
+  6. The Notes list view shows all Notes visible to the current user (group-scoped), is sortable by date, and includes created_by, created_at, updated_by, and updated_at in the detail view
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 20: Modification History
+**Goal**: Every write to a major entity appends an immutable snapshot to a shadow history table — admins can view the full change log for any record and restore it to a prior version
+**Depends on**: Phase 17 (authorship fields on all entities), Phase 19 (Call and Note entities must exist before their history tables are meaningful)
+**Requirements**: HIST-01, HIST-02, HIST-03, HIST-04, AUDIT-03
+**Success Criteria** (what must be TRUE):
+  1. Every write to Contact, Company, Deal, Call, or Note produces a new row in the corresponding `_history` table capturing the full object state, the acting user, and a timestamp — verified by making two sequential edits and confirming two history rows exist
+  2. Admin can navigate to any individual record and view its complete change history — who changed it, when, and what the previous field values were
+  3. Admin can restore a record to any prior version from the history view; the restored values appear immediately on the record detail page
+  4. History entries cannot be deleted or modified by any user role — no DELETE or UPDATE endpoint exists for `_history` tables, and direct DB modification is the only path (documented as out of scope)
+  5. All object detail views (Contact, Company, Deal, Call, Note) display created by / created date and last modified by / modified date visible to any user with read access to that record
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 21: Principal Reports
+**Goal**: Principals can view aggregate reports across all groups — activity volumes, deal pipeline health by group, and per-user activity counts — all scoped to a selected date range
+**Depends on**: Phase 18 (access enforcement, so report endpoints respect Principal role), Phase 19 (Call and Note entities must exist to populate activity reports), Phase 20 (history tables complete the data set)
+**Requirements**: REPORT-01, REPORT-02, REPORT-03
+**Success Criteria** (what must be TRUE):
+  1. A Principal can view an Activity by Group report showing count of Calls and Notes logged per group over a user-selected date range; clicking a group row drills down to the individual Call and Note records
+  2. A Principal can view a Deal Pipeline by Group report showing deal count by stage, total deal value, and win/loss counts per group for the selected period
+  3. A Principal can view a User Activity report showing per-user counts of Calls logged, Notes written, and Deals touched over the selected date range
+  4. A Regular User or Supervisor attempting to access any report endpoint receives 403
+  5. All three reports render correctly when there is no data for the selected date range (empty state, not an error)
+**Plans**: TBD
+**UI hint**: yes
+
 ---
 
 ## Progress
@@ -204,3 +280,8 @@ Plans:
 | 14. AWS Compute, CDN & HTTPS | v1.2 | 0/3 | Not started | - |
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
+| 17. Groups, Roles & Authorship Schema | v1.3 | 0/? | Not started | - |
+| 18. Access Enforcement | v1.3 | 0/? | Not started | - |
+| 19. Call & Note Entities | v1.3 | 0/? | Not started | - |
+| 20. Modification History | v1.3 | 0/? | Not started | - |
+| 21. Principal Reports | v1.3 | 0/? | Not started | - |

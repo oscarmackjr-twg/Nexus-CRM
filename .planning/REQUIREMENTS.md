@@ -151,6 +151,16 @@
 | FAILOVER-03 | Phase 16 | TBD |
 | FAILOVER-04 | Phase 16 | TBD |
 | FAILOVER-05 | Phase 16 | TBD |
+| GROUP-01 to GROUP-06 | Phase 17 | TBD |
+| AUDIT-01 to AUDIT-02 | Phase 17 | TBD |
+| ADMIN-10 | Phase 17 | TBD |
+| ADMIN-11 | Phase 17 | TBD |
+| ACCESS-01 to ACCESS-07 | Phase 18 | TBD |
+| CALL-01 to CALL-04 | Phase 19 | TBD |
+| NOTE-01 to NOTE-04 | Phase 19 | TBD |
+| HIST-01 to HIST-04 | Phase 20 | TBD |
+| AUDIT-03 | Phase 20 | TBD |
+| REPORT-01 to REPORT-03 | Phase 21 | TBD |
 
 ---
 
