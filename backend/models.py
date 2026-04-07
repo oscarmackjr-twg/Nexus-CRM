@@ -55,6 +55,7 @@ class Team(Base):
     type: Mapped[str] = mapped_column(String(20), nullable=False, default="sales", server_default="sales")
     settings: Mapped[Optional[dict]] = mapped_column(JSONVariant, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="1")
 
     org: Mapped[Organization] = relationship(back_populates="teams")
     parent_team: Mapped[Optional[Team]] = relationship(remote_side=[id], back_populates="sub_teams")
@@ -80,7 +81,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    role: Mapped[str] = mapped_column(String(20), nullable=False, default="rep", server_default="rep")
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="regular_user", server_default="regular_user")
     team_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
     linkedin_member_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     linkedin_access_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -142,6 +143,8 @@ class Contact(Base):
     is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # PE Blueprint fields (Phase 3)
     business_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -198,6 +201,8 @@ class Company(Base):
     is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # PE Blueprint fields (Phase 3) — COMPANY-01 through COMPANY-09
     # COMPANY-01: Identity fields
@@ -311,6 +316,9 @@ class Fund(Base):
     target_fund_size_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     vintage_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     org: Mapped[Organization] = relationship(back_populates="funds")
     deals: Mapped[list["Deal"]] = relationship(back_populates="fund")
@@ -361,6 +369,8 @@ class DealCounterparty(Base):
     position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships — lazy="raise" per convention
     deal: Mapped["Deal"] = relationship(back_populates="counterparties", lazy="raise")
@@ -388,6 +398,8 @@ class DealFunding(Base):
     comments_next_steps: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships — lazy="raise" per convention
     deal: Mapped["Deal"] = relationship(back_populates="funding_entries", lazy="raise")
@@ -427,6 +439,8 @@ class Deal(Base):
     is_private: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_by: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # PE Blueprint fields (Phase 4) — DEAL-01 through DEAL-09
     # DEAL-01: Identity fields
