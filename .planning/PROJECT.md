@@ -1,6 +1,21 @@
 # Nexus CRM — PE Deal Management Platform
 
-## Current Milestone: v1.2 Cloud Deployment
+## Current Milestone: v1.3 Access Control & Audit Trails
+
+**Goal:** Introduce group-based access scoping, per-object authorship tracking, full modification history, and Principal-level aggregate reports across all CRM data.
+
+**Target features:**
+- Four-role model (Regular User / Supervisor / Principal / Admin) mapped from existing RBAC roles
+- Group-based access: users belong to exactly one group; Calls, Notes, and Deals are group-scoped; Contacts and Companies remain system-wide
+- Call and Note as new first-class entities with group-scoped visibility and CRUD
+- Supervisor rights: full read + edit (not delete) of group members' Calls, Notes, and Deals
+- Principal rights: cross-group read access to all CRM data + aggregate reports
+- Admin role: user management, group creation, member/supervisor/principal assignment
+- `created_by` + `created_at` and `updated_by` + `updated_at` on all objects
+- Per-table `_history` shadow tables for full version preservation and recovery
+- Principal reports: activity by group, deal pipeline by group, user activity
+
+## Previous Milestone: v1.2 Cloud Deployment (in progress — Phases 13-16)
 
 **Goal:** Deploy Nexus CRM to AWS (primary) with a warm Azure failover using Terraform IaC and GitHub Actions CI/CD.
 
@@ -13,7 +28,7 @@
 - Alembic migration step baked into deploy pipeline (runs before app containers start)
 - Multi-environment support (staging + prod)
 
-## Previous Milestone: v1.1 UI Professionalism (in progress — Phases 7-12)
+## v1.1 UI Professionalism (in progress — Phases 7-12)
 
 **Goal:** Apply the TWG Global brand identity across all screens for a professional enterprise CRM appearance.
 
@@ -93,6 +108,9 @@ Deal teams can track every counterparty touchpoint across every live deal — wh
 - Analytics stub endpoints (pipeline-velocity, forecast, leaderboard) — remain stubs
 - Screen redesign / information architecture restructuring — UI is polish only
 - Multi-currency conversion — amounts stored with currency code, no FX conversion
+- Row-level security at database layer (PostgreSQL RLS) — access enforced in application service layer
+- Field-level encryption for audit history — data stored plaintext in history tables
+- Real-time notifications for permission changes — applied on next request
 
 ## Context
 
@@ -141,4 +159,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 — Phase 9 complete: Compact data grids on Contacts, Companies, Deals list views — DataGrid+Pagination components, status filter bar, Deals sidebar nav link*
+*Last updated: 2026-04-06 — Milestone v1.3 started: Access Control & Audit Trails — group-based scoping, Call/Note entities, modification history, Principal reports*

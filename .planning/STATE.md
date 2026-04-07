@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: UI Professionalism
-status: Ready to plan
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-04-06T22:10:57.609Z"
+milestone: v1.3
+milestone_name: Access Control & Audit Trails
+status: Defining requirements
+stopped_at: ""
+last_updated: "2026-04-06T22:21:03.416Z"
 progress:
   total_phases: 12
   completed_phases: 11
@@ -16,16 +16,16 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-03-29)
+See: `.planning/PROJECT.md` (updated 2026-04-06)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 10 — detail-page-polish
+**Current focus:** Milestone v1.3 — defining requirements
 
 ## Current Status
 
-**Milestone:** v1.1 — UI Professionalism (in progress — Phases 7-12)
-**Active phase:** Phase 10 — detail-page-polish (Plan 1 of 2 complete)
-**Last action:** 2026-04-06 — Plan 10-01 complete: FieldRow component, .detail-tabs CSS, ContactDetailPage + CompanyDetailPage CardHeader borders and tab styling
+**Milestone:** v1.3 — Access Control & Audit Trails (defining requirements)
+**Active phase:** Not started (defining requirements)
+**Last action:** 2026-04-06 — Milestone v1.3 started: group-based access control, Call/Note entities, audit history, Principal reports
 
 ## Phase Completion
 
