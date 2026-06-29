@@ -181,11 +181,11 @@
 
 - [x] **ACCESS-01**: Contacts and Companies are readable by all authenticated users regardless of group
 - [x] **ACCESS-02**: Calls, Notes, and Deals are readable only by members of the same group, Supervisors of that group, Principals, and Admins
-- [ ] **ACCESS-03**: A Regular User can create, edit, and delete their own Calls, Notes, and Deals
-- [ ] **ACCESS-04**: A Supervisor can read and edit (but not delete) any Call, Note, or Deal belonging to members of their group
+- [x] **ACCESS-03**: A Regular User can create, edit, and delete their own Calls, Notes, and Deals
+- [x] **ACCESS-04**: A Supervisor can read and edit (but not delete) any Call, Note, or Deal belonging to members of their group
 - [x] **ACCESS-05**: A Principal can read all Calls, Notes, and Deals across all groups
-- [ ] **ACCESS-06**: An Admin has full CRUD access to all objects across all groups
-- [ ] **ACCESS-07**: API endpoints enforce group-scoping — requests for out-of-scope records return 403, not 404
+- [x] **ACCESS-06**: An Admin has full CRUD access to all objects across all groups
+- [x] **ACCESS-07**: API endpoints enforce group-scoping — requests for out-of-scope records return 403, not 404
 
 ### Call Entity
 

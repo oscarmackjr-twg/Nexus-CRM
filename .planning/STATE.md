@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
 status: Milestone complete
-stopped_at: Phase 18 context gathered
-last_updated: "2026-06-29T20:14:39.261Z"
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-06-29T20:37:37.825Z"
 progress:
   total_phases: 14
   completed_phases: 12
   total_plans: 43
-  completed_plans: 38
-  percent: 88
+  completed_plans: 39
+  percent: 91
 ---
 
 # Project State
@@ -49,7 +49,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
 | 17 | Groups, Roles & Authorship Schema | Done (3/3 plans complete) |
-| 18 | Access Enforcement | In progress (1/3 plans complete) |
+| 18 | Access Enforcement | In progress (2/3 plans complete) |
 | 19 | Call & Note Entities | Not started |
 | 20 | Modification History | Not started |
 | 21 | Principal Reports | Not started |
@@ -136,6 +136,10 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - 18-01: private_deal_predicate returns Python True (no-op) for oversight roles (supervisor/principal/admin) per D-11; only regular_user gets owner-only filter
 - 18-01: accessible_team_ids kept async with session param for zero call-site disruption (Pitfall 6 — delegation-only body)
 - 18-01: clean_db fixture disposes engine pool after each test — fixes pre-existing asyncpg cross-event-loop reuse bug in STRICT mode
+- 18-02: require_deal_readable replaces _get_deal_or_404 body entirely — single source for 403/404 split on all deal actions
+- 18-02: update_deal/move_stage use can_write_deal (not is_manager_plus) — supervisor cross-team edit closed (Bugs 4/6)
+- 18-02: owner_id guard uses is_admin (not is_manager_plus) — only admin can reassign owner_id (D-13)
+- 18-02: _get_pipeline_and_stage: visible_team_ids=None means all-visible (admin/principal) not no-visibility — principal can now create deals
 
 ## Notes
 
@@ -182,11 +186,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | Phase 17-groups-roles-authorship-schema P02 | 45 | 2 tasks | 16 files |
 | Phase 17-groups-roles-authorship-schema P03 | 60 | 3 tasks | 7 files |
 | 18-access-enforcement | 01 | 19min | 3 | 4 |
+| 18-access-enforcement | 02 | 15min | 3 | 2 |
 
 ## Session Continuity
 
-Last session: 2026-06-29T20:13:20Z
-Stopped at: Completed 18-01-PLAN.md
+Last session: 2026-06-29T20:37:37.788Z
+Stopped at: Completed 18-02-PLAN.md
 
 ---
 *Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*

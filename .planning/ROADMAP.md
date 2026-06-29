@@ -221,13 +221,13 @@ Plans:
   4. A Principal can read Deals across all groups; a Regular User from a different group receives 403 for the same request
   5. An Admin can perform full CRUD on any Deal across any group with no 403 responses
   6. Any authenticated request for an out-of-scope record returns HTTP 403 (not 404) — the record's existence is not leaked to unauthorized callers
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
 **Wave 1**
 - [x] 18-01-PLAN.md — Authz module (backend/auth/access.py) + list scoping rewrite + test foundation (principal fixture)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 18-02-PLAN.md — Action guards on DealService CRUD (403-not-404, role write/delete matrix, owner_id admin-only)
+- [x] 18-02-PLAN.md — Action guards on DealService CRUD (403-not-404, role write/delete matrix, owner_id admin-only)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 18-03-PLAN.md — Deal-child entity guards (counterparties/funding) + frontend 403/404 messaging
@@ -295,7 +295,7 @@ Plans:
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
 | 17. Groups, Roles & Authorship Schema | v1.3 | 3/3 | Complete    | 2026-04-07 |
-| 18. Access Enforcement | v1.3 | 1/3 | In Progress|  |
+| 18. Access Enforcement | v1.3 | 2/3 | In Progress|  |
 | 19. Call & Note Entities | v1.3 | 0/? | Not started | - |
 | 20. Modification History | v1.3 | 0/? | Not started | - |
 | 21. Principal Reports | v1.3 | 0/? | Not started | - |
