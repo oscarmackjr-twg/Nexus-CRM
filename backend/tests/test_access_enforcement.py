@@ -223,3 +223,115 @@ async def test_activities_cross_team_returns_403(async_client, seeded_org, deal_
         headers=auth_header(alpha_rep),
     )
     assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+# ── Write/delete guard matrix (ACCESS-03, ACCESS-04, ACCESS-06, D-07, D-08, D-13) ─
+
+@pytest.mark.asyncio
+async def test_regular_user_update_own_deal_returns_200(async_client, seeded_org, deal_fixtures):
+    """Regular User updating own deal returns 200 (ACCESS-03)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]  # owner of alpha_deal
+    resp = await async_client.put(
+        f"/api/v1/deals/{alpha_deal_id}",
+        headers=auth_header(alpha_rep),
+        json={"name": "Updated Alpha Deal"},
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_regular_user_update_team_member_deal_returns_403(async_client, seeded_org, deal_fixtures):
+    """Regular User updating a same-team member's deal (not own) returns 403 (ACCESS-03)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_peer = seeded_org["alpha-peer"]  # same team as alpha-rep but NOT the owner
+    resp = await async_client.put(
+        f"/api/v1/deals/{alpha_deal_id}",
+        headers=auth_header(alpha_peer),
+        json={"name": "Peer Tries to Edit"},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_supervisor_update_same_team_deal_returns_200(async_client, seeded_org, deal_fixtures):
+    """Supervisor updating a same-team member's deal returns 200 (ACCESS-04)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]
+    resp = await async_client.put(
+        f"/api/v1/deals/{alpha_deal_id}",
+        headers=auth_header(alpha_manager),
+        json={"name": "Manager Updated Alpha Deal"},
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_supervisor_update_cross_team_deal_returns_403(async_client, seeded_org, deal_fixtures):
+    """Supervisor updating another team's deal returns 403 (Bug 4 fix, ACCESS-04)."""
+    beta_deal_id = str(deal_fixtures["beta_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]
+    resp = await async_client.put(
+        f"/api/v1/deals/{beta_deal_id}",
+        headers=auth_header(alpha_manager),
+        json={"name": "Supervisor Cross-Team Edit"},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_supervisor_move_stage_same_team_returns_200(async_client, seeded_org, deal_fixtures, stages):
+    """Supervisor moving stage on same-team deal returns 200 (ACCESS-04)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]
+    resp = await async_client.post(
+        f"/api/v1/deals/{alpha_deal_id}/move-stage",
+        headers=auth_header(alpha_manager),
+        json={"stage_id": str(stages[1].id), "log_activity": False},
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_supervisor_move_stage_cross_team_returns_403(async_client, seeded_org, deal_fixtures, stages):
+    """Supervisor moving stage on cross-team deal returns 403 (Bug 6 fix, ACCESS-04)."""
+    beta_deal_id = str(deal_fixtures["beta_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]
+    resp = await async_client.post(
+        f"/api/v1/deals/{beta_deal_id}/move-stage",
+        headers=auth_header(alpha_manager),
+        json={"stage_id": str(stages[1].id), "log_activity": False},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_nonadmin_owner_id_change_returns_403(async_client, seeded_org, deal_fixtures):
+    """Non-admin (supervisor) supplying owner_id in update returns 403 (D-13, Bug 5 fix)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]  # supervisor, not admin
+    alpha_peer = seeded_org["alpha-peer"]
+    resp = await async_client.put(
+        f"/api/v1/deals/{alpha_deal_id}",
+        headers=auth_header(alpha_manager),
+        json={"owner_id": str(alpha_peer.id)},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_owner_delete_own_deal_returns_204(async_client, seeded_org, deal_fixtures):
+    """Owner deleting their own deal returns 204 (D-07)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]  # owner of alpha_deal
+    resp = await async_client.delete(f"/api/v1/deals/{alpha_deal_id}", headers=auth_header(alpha_rep))
+    assert resp.status_code == 204, f"Expected 204, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_supervisor_delete_team_member_deal_returns_403(async_client, seeded_org, deal_fixtures):
+    """Supervisor deleting a same-team member's deal returns 403 (D-08, ACCESS-04)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_manager = seeded_org["alpha-manager"]  # NOT the owner (alpha-rep is)
+    resp = await async_client.delete(f"/api/v1/deals/{alpha_deal_id}", headers=auth_header(alpha_manager))
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
