@@ -943,9 +943,12 @@ export default function DealDetailPage() {
 
   // ---- Error state ----
   if (dealQuery.isError) {
+    const status = dealQuery.error?.response?.status;
     return (
       <div className="p-6 text-center text-muted-foreground">
-        Could not load deal. It may have been removed.
+        {status === 403
+          ? "You don't have permission to view this deal."
+          : "Could not load deal. It may have been removed."}
       </div>
     );
   }

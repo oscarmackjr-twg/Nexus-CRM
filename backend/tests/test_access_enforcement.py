@@ -439,3 +439,105 @@ async def test_create_deal_principal_forces_own_team_id(async_client, seeded_org
     assert resp.json()["team_id"] == str(seeded_org["alpha"].id), (
         f"principal deal team_id must equal principal's team (alpha), got {resp.json()['team_id']}"
     )
+
+
+# ── Deal child entity scope tests (D-19, ACCESS-02/07 via child endpoints) ─────
+
+@pytest.mark.asyncio
+async def test_cross_team_counterparties_list_returns_403(async_client, seeded_org, deal_fixtures):
+    """beta-rep GET /counterparties on alpha deal returns 403 — cannot read parent (D-19, ACCESS-02)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    beta_rep = seeded_org["beta-rep"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/counterparties/",
+        headers=auth_header(beta_rep),
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_cross_team_counterparties_create_returns_403(async_client, seeded_org, deal_fixtures):
+    """beta-rep POST /counterparties on alpha deal returns 403 — IDOR side-door closed (D-19, T-18-10)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    beta_rep = seeded_org["beta-rep"]
+    # company_id is required by DealCounterpartyCreate; a dummy UUID is fine —
+    # the 403 is raised by require_deal_writable before any DB insert.
+    resp = await async_client.post(
+        f"/api/v1/deals/{alpha_deal_id}/counterparties/",
+        headers=auth_header(beta_rep),
+        json={"company_id": "00000000-0000-0000-0000-000000000001"},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_cross_team_funding_list_returns_403(async_client, seeded_org, deal_fixtures):
+    """beta-rep GET /funding on alpha deal returns 403 — cannot read parent (D-19, ACCESS-02)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    beta_rep = seeded_org["beta-rep"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/funding/",
+        headers=auth_header(beta_rep),
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_cross_team_funding_create_returns_403(async_client, seeded_org, deal_fixtures):
+    """beta-rep POST /funding on alpha deal returns 403 — IDOR side-door closed (D-19, T-18-11)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    beta_rep = seeded_org["beta-rep"]
+    resp = await async_client.post(
+        f"/api/v1/deals/{alpha_deal_id}/funding/",
+        headers=auth_header(beta_rep),
+        json={},
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_own_team_counterparties_list_returns_200(async_client, seeded_org, deal_fixtures):
+    """alpha-rep GET /counterparties on own team deal returns 200 (D-19 positive path)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/counterparties/",
+        headers=auth_header(alpha_rep),
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_admin_counterparties_list_cross_team_returns_200(async_client, seeded_org, deal_fixtures):
+    """Admin GET /counterparties on any team deal returns 200 (ACCESS-06, D-09)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    admin = seeded_org["admin"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/counterparties/",
+        headers=auth_header(admin),
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_own_team_funding_list_returns_200(async_client, seeded_org, deal_fixtures):
+    """alpha-rep GET /funding on own team deal returns 200 (D-19 positive path)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/funding/",
+        headers=auth_header(alpha_rep),
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_admin_funding_list_cross_team_returns_200(async_client, seeded_org, deal_fixtures):
+    """Admin GET /funding on any team deal returns 200 (ACCESS-06, D-09)."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    admin = seeded_org["admin"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{alpha_deal_id}/funding/",
+        headers=auth_header(admin),
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
