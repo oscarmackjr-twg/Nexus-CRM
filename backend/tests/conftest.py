@@ -124,6 +124,10 @@ async def clean_db():
             await session.execute(delete(table))
         await session.commit()
     yield
+    # Dispose of all idle pool connections after each test so that the next
+    # test's event loop (in pytest-asyncio STRICT mode) gets a fresh asyncpg
+    # connection instead of reusing one bound to the previous loop.
+    await get_engine().dispose()
 
 
 @pytest.fixture
@@ -178,6 +182,7 @@ async def seeded_org(db_session):
         ("beta-manager@example.com", "beta-manager", "supervisor", beta),
         ("beta-rep@example.com", "beta-rep", "regular_user", beta),
         ("viewer@example.com", "viewer", "regular_user", alpha),
+        ("principal@example.com", "principal", "principal", alpha),
     ]:
         user = User(
             org_id=org.id,
