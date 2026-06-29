@@ -162,3 +162,64 @@ async def test_contacts_globally_readable(async_client, seeded_org):
         assert companies_resp.status_code == 200, (
             f"{username} GET /api/v1/companies must return 200, got {companies_resp.status_code}"
         )
+
+
+# ── 403-vs-404 split for GET /api/v1/deals/{id} (ACCESS-07, D-01/D-02) ──────
+
+@pytest.mark.asyncio
+async def test_cross_team_deal_get_returns_403(async_client, seeded_org, deal_fixtures):
+    """GET /api/v1/deals/{id} for an existing out-of-scope deal returns 403, not 404 (D-01/D-02, ACCESS-07)."""
+    beta_deal_id = str(deal_fixtures["beta_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.get(f"/api/v1/deals/{beta_deal_id}", headers=auth_header(alpha_rep))
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_nonexistent_deal_get_returns_404(async_client, seeded_org):
+    """GET /api/v1/deals/{random-uuid} returns 404 when deal does not exist (D-02)."""
+    import uuid
+    fake_id = str(uuid.uuid4())
+    admin = seeded_org["admin"]
+    resp = await async_client.get(f"/api/v1/deals/{fake_id}", headers=auth_header(admin))
+    assert resp.status_code == 404, f"Expected 404, got {resp.status_code}"
+
+
+@pytest.mark.asyncio
+async def test_own_deal_get_returns_200(async_client, seeded_org, deal_fixtures):
+    """GET /api/v1/deals/{id} for own deal returns 200 with response body."""
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.get(f"/api/v1/deals/{alpha_deal_id}", headers=auth_header(alpha_rep))
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+    assert resp.json()["id"] == alpha_deal_id
+
+
+@pytest.mark.asyncio
+async def test_private_deal_regular_user_nonowner_returns_403(async_client, seeded_org, deal_fixtures):
+    """Regular user reading a private deal they don't own (same team) returns 403 (D-11)."""
+    private_deal_id = str(deal_fixtures["alpha_private"].id)
+    alpha_rep = seeded_org["alpha-rep"]  # NOT the owner; alpha-peer owns it
+    resp = await async_client.get(f"/api/v1/deals/{private_deal_id}", headers=auth_header(alpha_rep))
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_private_deal_supervisor_same_team_returns_200(async_client, seeded_org, deal_fixtures):
+    """Supervisor reading a private deal from same team returns 200 (D-11 oversight exemption)."""
+    private_deal_id = str(deal_fixtures["alpha_private"].id)
+    alpha_manager = seeded_org["alpha-manager"]
+    resp = await async_client.get(f"/api/v1/deals/{private_deal_id}", headers=auth_header(alpha_manager))
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_activities_cross_team_returns_403(async_client, seeded_org, deal_fixtures):
+    """GET /api/v1/deals/{id}/activities for out-of-scope deal returns 403 (Bug 9, D-01, D-19)."""
+    beta_deal_id = str(deal_fixtures["beta_deal"].id)
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.get(
+        f"/api/v1/deals/{beta_deal_id}/activities",
+        headers=auth_header(alpha_rep),
+    )
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
