@@ -14,6 +14,7 @@ from backend.schemas.counterparties import (
     DealCounterpartyResponse,
     DealCounterpartyUpdate,
 )
+from backend.auth.access import require_deal_readable, require_deal_writable
 from backend.services._crm import clamp_pagination, count_rows, page_count
 
 # Aliases for multi-join disambiguation
@@ -78,24 +79,13 @@ class DealCounterpartyService:
             updated_at=cp.updated_at,
         )
 
-    async def _get_deal_or_404(self, deal_id: UUID) -> Deal:
-        result = await self.db.execute(
-            select(Deal).where(
-                Deal.id == deal_id,
-                Deal.org_id == self.current_user.org_id,
-            )
-        )
-        deal = result.scalar_one_or_none()
-        if deal is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-        return deal
-
     async def list_for_deal(
         self,
         deal_id: UUID,
         page: int = 1,
         size: int = 50,
     ) -> DealCounterpartyListResponse:
+        await require_deal_readable(self.db, deal_id, self.current_user)
         page, size = clamp_pagination(page, size)
         base = self._base_stmt(deal_id)
         total = await count_rows(self.db, base)
@@ -116,7 +106,7 @@ class DealCounterpartyService:
         )
 
     async def create(self, deal_id: UUID, data: DealCounterpartyCreate) -> DealCounterpartyResponse:
-        await self._get_deal_or_404(deal_id)
+        await require_deal_writable(self.db, deal_id, self.current_user)
         cp = DealCounterparty(
             org_id=self.current_user.org_id,
             deal_id=deal_id,
@@ -140,6 +130,7 @@ class DealCounterpartyService:
         counterparty_id: UUID,
         data: DealCounterpartyUpdate,
     ) -> DealCounterpartyResponse:
+        await require_deal_writable(self.db, deal_id, self.current_user)
         result = await self.db.execute(
             select(DealCounterparty).where(
                 DealCounterparty.id == counterparty_id,
@@ -162,6 +153,7 @@ class DealCounterpartyService:
         return self._counterparty_response(row)
 
     async def delete(self, deal_id: UUID, counterparty_id: UUID) -> None:
+        await require_deal_writable(self.db, deal_id, self.current_user)
         result = await self.db.execute(
             select(DealCounterparty).where(
                 DealCounterparty.id == counterparty_id,

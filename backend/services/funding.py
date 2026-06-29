@@ -4,11 +4,12 @@ import math
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from backend.auth.access import require_deal_readable, require_deal_writable
 from backend.models import Company, Deal, DealFunding, RefData, User
 from backend.schemas.funding import (
     DealFundingCreate,
@@ -25,17 +26,6 @@ class DealFundingService:
     def __init__(self, db: AsyncSession, current_user: User) -> None:
         self.db = db
         self.current_user = current_user
-
-    async def _get_deal_or_404(self, deal_id: UUID) -> Deal:
-        deal = await self.db.scalar(
-            select(Deal).where(
-                Deal.id == deal_id,
-                Deal.org_id == self.current_user.org_id,
-            )
-        )
-        if deal is None:
-            raise HTTPException(status_code=404, detail="Deal not found")
-        return deal
 
     def _base_stmt(self, deal_id: UUID):
         return (
@@ -82,7 +72,7 @@ class DealFundingService:
         page: int = 1,
         size: int = 50,
     ) -> DealFundingListResponse:
-        await self._get_deal_or_404(deal_id)
+        await require_deal_readable(self.db, deal_id, self.current_user)
 
         count_stmt = select(func.count()).select_from(DealFunding).where(
             DealFunding.deal_id == deal_id,
@@ -108,7 +98,7 @@ class DealFundingService:
         )
 
     async def create(self, deal_id: UUID, data: DealFundingCreate) -> DealFundingResponse:
-        await self._get_deal_or_404(deal_id)
+        await require_deal_writable(self.db, deal_id, self.current_user)
 
         entry = DealFunding(
             org_id=self.current_user.org_id,
@@ -130,7 +120,7 @@ class DealFundingService:
         funding_id: UUID,
         data: DealFundingUpdate,
     ) -> DealFundingResponse:
-        await self._get_deal_or_404(deal_id)
+        await require_deal_writable(self.db, deal_id, self.current_user)
 
         entry = await self.db.scalar(
             select(DealFunding).where(
@@ -140,7 +130,7 @@ class DealFundingService:
             )
         )
         if entry is None:
-            raise HTTPException(status_code=404, detail="Funding entry not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Funding entry not found")
 
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(entry, k, v)
@@ -152,7 +142,7 @@ class DealFundingService:
         return self._funding_response(row)
 
     async def delete(self, deal_id: UUID, funding_id: UUID) -> None:
-        await self._get_deal_or_404(deal_id)
+        await require_deal_writable(self.db, deal_id, self.current_user)
 
         entry = await self.db.scalar(
             select(DealFunding).where(
@@ -162,7 +152,7 @@ class DealFundingService:
             )
         )
         if entry is None:
-            raise HTTPException(status_code=404, detail="Funding entry not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Funding entry not found")
 
         await self.db.delete(entry)
         await self.db.flush()
