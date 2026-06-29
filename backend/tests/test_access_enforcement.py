@@ -335,3 +335,107 @@ async def test_supervisor_delete_team_member_deal_returns_403(async_client, seed
     alpha_manager = seeded_org["alpha-manager"]  # NOT the owner (alpha-rep is)
     resp = await async_client.delete(f"/api/v1/deals/{alpha_deal_id}", headers=auth_header(alpha_manager))
     assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
+
+
+# ── Admin full-CRUD + CREATE team_id forcing (ACCESS-06, D-09, D-12) ─────────
+
+@pytest.mark.asyncio
+async def test_admin_update_both_team_deals_returns_200(async_client, seeded_org, deal_fixtures):
+    """Admin updating deals in both alpha and beta teams returns 200 — never 403 (ACCESS-06, D-09)."""
+    admin = seeded_org["admin"]
+
+    resp_alpha = await async_client.put(
+        f"/api/v1/deals/{deal_fixtures['alpha_deal'].id}",
+        headers=auth_header(admin),
+        json={"name": "Admin Updated Alpha"},
+    )
+    assert resp_alpha.status_code == 200, f"Admin update alpha: expected 200, got {resp_alpha.status_code}: {resp_alpha.text}"
+
+    resp_beta = await async_client.put(
+        f"/api/v1/deals/{deal_fixtures['beta_deal'].id}",
+        headers=auth_header(admin),
+        json={"name": "Admin Updated Beta"},
+    )
+    assert resp_beta.status_code == 200, f"Admin update beta: expected 200, got {resp_beta.status_code}: {resp_beta.text}"
+
+
+@pytest.mark.asyncio
+async def test_admin_move_stage_both_team_deals_returns_200(async_client, seeded_org, deal_fixtures, stages):
+    """Admin moving stage on deals in both alpha and beta teams returns 200 (ACCESS-06, D-09)."""
+    admin = seeded_org["admin"]
+
+    resp_alpha = await async_client.post(
+        f"/api/v1/deals/{deal_fixtures['alpha_deal'].id}/move-stage",
+        headers=auth_header(admin),
+        json={"stage_id": str(stages[1].id), "log_activity": False},
+    )
+    assert resp_alpha.status_code == 200, f"Admin move-stage alpha: expected 200, got {resp_alpha.status_code}: {resp_alpha.text}"
+
+    resp_beta = await async_client.post(
+        f"/api/v1/deals/{deal_fixtures['beta_deal'].id}/move-stage",
+        headers=auth_header(admin),
+        json={"stage_id": str(stages[1].id), "log_activity": False},
+    )
+    assert resp_beta.status_code == 200, f"Admin move-stage beta: expected 200, got {resp_beta.status_code}: {resp_beta.text}"
+
+
+@pytest.mark.asyncio
+async def test_admin_delete_cross_team_deal_returns_204(async_client, seeded_org, deal_fixtures):
+    """Admin deleting a cross-team deal returns 204 (ACCESS-06, D-09)."""
+    admin = seeded_org["admin"]
+    beta_deal_id = str(deal_fixtures["beta_deal"].id)
+    resp = await async_client.delete(f"/api/v1/deals/{beta_deal_id}", headers=auth_header(admin))
+    assert resp.status_code == 204, f"Admin delete beta deal: expected 204, got {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.asyncio
+async def test_admin_owner_id_change_returns_200(async_client, seeded_org, deal_fixtures):
+    """Admin reassigning owner_id returns 200 (D-13 — admin-only override)."""
+    admin = seeded_org["admin"]
+    alpha_deal_id = str(deal_fixtures["alpha_deal"].id)
+    alpha_peer = seeded_org["alpha-peer"]  # same alpha team, different user
+    resp = await async_client.put(
+        f"/api/v1/deals/{alpha_deal_id}",
+        headers=auth_header(admin),
+        json={"owner_id": str(alpha_peer.id)},
+    )
+    assert resp.status_code == 200, f"Admin owner_id reassign: expected 200, got {resp.status_code}: {resp.text}"
+    assert resp.json()["owner_id"] == str(alpha_peer.id), "owner_id must be updated to alpha_peer"
+
+
+@pytest.mark.asyncio
+async def test_create_deal_forces_creator_team_id(async_client, seeded_org, pipeline, stages):
+    """Created deal's team_id equals creator's team_id, not any payload value (D-12)."""
+    alpha_rep = seeded_org["alpha-rep"]
+    resp = await async_client.post(
+        "/api/v1/deals",
+        headers=auth_header(alpha_rep),
+        json={
+            "name": "Team ID Forced Deal",
+            "pipeline_id": str(pipeline.id),
+            "stage_id": str(stages[0].id),
+        },
+    )
+    assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
+    assert resp.json()["team_id"] == str(seeded_org["alpha"].id), (
+        f"team_id must equal creator's team (alpha), got {resp.json()['team_id']}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_create_deal_principal_forces_own_team_id(async_client, seeded_org, pipeline, stages):
+    """Principal creating a deal gets team_id == principal's own team_id (D-06/D-12)."""
+    principal = seeded_org["principal"]  # in alpha team
+    resp = await async_client.post(
+        "/api/v1/deals",
+        headers=auth_header(principal),
+        json={
+            "name": "Principal Created Deal",
+            "pipeline_id": str(pipeline.id),
+            "stage_id": str(stages[0].id),
+        },
+    )
+    assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
+    assert resp.json()["team_id"] == str(seeded_org["alpha"].id), (
+        f"principal deal team_id must equal principal's team (alpha), got {resp.json()['team_id']}"
+    )

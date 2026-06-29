@@ -246,9 +246,8 @@ class DealService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Pipeline not found")
         if pipeline.team_id is not None:
             visible_team_ids = await self._visible_team_ids()
-            if not is_admin(self.current_user) and (
-                visible_team_ids is None or pipeline.team_id not in visible_team_ids
-            ):
+            # None means all teams visible (admin / principal) — no restriction needed
+            if visible_team_ids is not None and pipeline.team_id not in visible_team_ids:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         stage = await self.db.scalar(
             select(PipelineStage).where(PipelineStage.id == stage_id, PipelineStage.pipeline_id == pipeline.id)
