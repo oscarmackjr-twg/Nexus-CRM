@@ -4,13 +4,13 @@ milestone: v1.1
 milestone_name: UI Professionalism
 status: Milestone complete
 stopped_at: Phase 18 context gathered
-last_updated: "2026-06-29T19:50:00.600Z"
+last_updated: "2026-06-29T20:14:39.261Z"
 progress:
   total_phases: 14
   completed_phases: 12
   total_plans: 43
-  completed_plans: 37
-  percent: 86
+  completed_plans: 38
+  percent: 88
 ---
 
 # Project State
@@ -20,7 +20,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-06)
 
 **Core value:** Deal teams can track every counterparty touchpoint across every live deal — who signed the NDA, who got the VDR, who gave feedback, what's next — without leaving the CRM.
-**Current focus:** Phase 17 — groups-roles-authorship-schema
+**Current focus:** Phase 18 — access-enforcement
 
 ## Current Status
 
@@ -49,7 +49,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
 | 17 | Groups, Roles & Authorship Schema | Done (3/3 plans complete) |
-| 18 | Access Enforcement | Not started |
+| 18 | Access Enforcement | In progress (1/3 plans complete) |
 | 19 | Call & Note Entities | Not started |
 | 20 | Modification History | Not started |
 | 21 | Principal Reports | Not started |
@@ -132,6 +132,10 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - 17-01: require_role('admin') replaces require_org_admin() in route guards; is_admin() and is_manager_plus() updated to new role strings
 - 17-03: ROLE_LABELS extracted to shared lib/roles.js — avoids duplication across AdminUsersPage, future profile views, sidebar footer
 - 17-03: Sidebar role display uses ROLE_LABELS for friendly label (Admin, Supervisor, etc.) — improves UX for renamed role strings from Plan 01
+- 18-01: visible_deal_team_ids returns None for admin/principal (no team WHERE clause) vs [] for unassigned (sees nothing) — fixes broken all-roles-see-own-team-only behavior
+- 18-01: private_deal_predicate returns Python True (no-op) for oversight roles (supervisor/principal/admin) per D-11; only regular_user gets owner-only filter
+- 18-01: accessible_team_ids kept async with session param for zero call-site disruption (Pitfall 6 — delegation-only body)
+- 18-01: clean_db fixture disposes engine pool after each test — fixes pre-existing asyncpg cross-event-loop reuse bug in STRICT mode
 
 ## Notes
 
@@ -177,11 +181,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | Phase 17-groups-roles-authorship-schema P01 | 35 | 2 tasks | 13 files |
 | Phase 17-groups-roles-authorship-schema P02 | 45 | 2 tasks | 16 files |
 | Phase 17-groups-roles-authorship-schema P03 | 60 | 3 tasks | 7 files |
+| 18-access-enforcement | 01 | 19min | 3 | 4 |
 
 ## Session Continuity
 
-Last session: 2026-06-29T18:37:32.308Z
-Stopped at: Phase 18 context gathered
+Last session: 2026-06-29T20:13:20Z
+Stopped at: Completed 18-01-PLAN.md
 
 ---
 *Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*
