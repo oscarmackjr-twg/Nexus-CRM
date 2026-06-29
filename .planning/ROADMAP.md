@@ -223,8 +223,13 @@ Plans:
   6. Any authenticated request for an out-of-scope record returns HTTP 403 (not 404) — the record's existence is not leaked to unauthorized callers
 **Plans:** 3 plans
 Plans:
+**Wave 1**
 - [ ] 18-01-PLAN.md — Authz module (backend/auth/access.py) + list scoping rewrite + test foundation (principal fixture)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 18-02-PLAN.md — Action guards on DealService CRUD (403-not-404, role write/delete matrix, owner_id admin-only)
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 18-03-PLAN.md — Deal-child entity guards (counterparties/funding) + frontend 403/404 messaging
 
 ### Phase 19: Call & Note Entities

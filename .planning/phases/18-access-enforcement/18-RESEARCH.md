@@ -813,19 +813,22 @@ Given the scope of changes, three plans are appropriate:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Admin team_id override on create (D-12)**
+   - RESOLVED: DealCreate/DealUpdate have NO team_id field (verified) — payload team_id is structurally ignored; admin override not needed this phase.
    - What we know: D-12 locks that non-admins always get creator.team_id forced. Admin "may override — planner's discretion."
    - What's unclear: Does `DealCreate` schema have a `team_id` field? (Not verified; schemas/deals.py not read.)
    - Recommendation: If planner adds admin create override, add `Optional[UUID] = None` to `DealCreate` and only honor it when `is_admin(user)`.
 
 2. **Principal's team_id on create**
+   - RESOLVED: No special case — Principal uses user.team_id like all other non-admin roles.
    - What we know: Principal creates deals, `team_id` should be set to `user.team_id` (same as regular users).
    - What's unclear: D-06 says Principal CRUD on own records only — but "own" means owner_id, not team scoping. So a Principal in team Alpha creating a deal assigns it to Alpha's group.
    - Recommendation: No special case needed; Principal uses `user.team_id` like everyone else.
 
 3. **Supervisor creating a counterparty on a team member's deal**
+   - RESOLVED: require_deal_writable (Plan 03 Task 1) covers this via can_write_deal same-team check — no issue.
    - What we know: Supervisor can write any same-team deal (D-08).
    - What's unclear: `require_deal_writable` uses `can_write_deal` — a supervisor on Alpha editing Alpha-rep's deal → `can_write_deal` returns True (same team). Child create proceeds. This is correct.
    - Recommendation: No open issue; the matrix resolves cleanly.
