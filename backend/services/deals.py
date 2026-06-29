@@ -373,12 +373,10 @@ class DealService:
         return await self.get_deal(deal.id)
 
     async def update_deal(self, deal_id: UUID, data: DealUpdate) -> DealResponse:
-        deal = await self.db.scalar(select(Deal).where(Deal.id == deal_id, Deal.org_id == self.current_user.org_id))
-        if deal is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-        if not (deal.owner_id == self.current_user.id or is_manager_plus(self.current_user)):
+        deal = await require_deal_readable(self.db, deal_id, self.current_user)  # 404/403 split
+        if not can_write_deal(self.current_user, deal):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-        if data.owner_id is not None and not is_manager_plus(self.current_user):
+        if data.owner_id is not None and not is_admin(self.current_user):  # D-13: admin-only
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         if data.contact_id is not None:
             await ensure_contact_in_org(self.db, data.contact_id, self.current_user.org_id)
@@ -431,10 +429,8 @@ class DealService:
         return await self.get_deal(deal.id)
 
     async def move_stage(self, deal_id: UUID, data: DealMoveStage) -> DealResponse:
-        deal = await self.db.scalar(select(Deal).where(Deal.id == deal_id, Deal.org_id == self.current_user.org_id))
-        if deal is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-        if not (deal.owner_id == self.current_user.id or is_manager_plus(self.current_user)):
+        deal = await require_deal_readable(self.db, deal_id, self.current_user)  # 404/403 split
+        if not can_write_deal(self.current_user, deal):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
         old_stage = await self.db.scalar(select(PipelineStage).where(PipelineStage.id == deal.stage_id))
@@ -523,10 +519,8 @@ class DealService:
         return self._activity_response(row)
 
     async def delete_deal(self, deal_id: UUID) -> None:
-        deal = await self.db.scalar(select(Deal).where(Deal.id == deal_id, Deal.org_id == self.current_user.org_id))
-        if deal is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-        if not (is_admin(self.current_user) or deal.owner_id == self.current_user.id):
+        deal = await require_deal_readable(self.db, deal_id, self.current_user)  # 404/403 split
+        if not can_delete_deal(self.current_user, deal):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         await self.db.delete(deal)
         await self.db.commit()
