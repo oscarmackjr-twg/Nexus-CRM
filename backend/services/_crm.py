@@ -36,11 +36,10 @@ def contact_name_expr():
     )
 
 
-async def accessible_team_ids(session: AsyncSession, user) -> list[UUID]:
-    """Return team IDs visible to user — currently returns user's own team only."""
-    if user.team_id:
-        return [user.team_id]
-    return []
+async def accessible_team_ids(session: AsyncSession, user) -> list[UUID] | None:
+    """Delegate to access module. Returns None for admin/principal (no team filter)."""
+    from backend.auth.access import visible_deal_team_ids
+    return visible_deal_team_ids(user)
 
 
 def apply_tag_filter(stmt: Select, tags_col, tags: list[str]) -> Select:
@@ -149,7 +148,6 @@ def utcnow():
 
 
 def private_deal_predicate(user, visible_team_ids=None):
-    """Return a WHERE clause that hides private deals the user doesn't own."""
-    from sqlalchemy import or_
-    from backend.models import Deal
-    return or_(Deal.is_private == False, Deal.owner_id == user.id)  # noqa: E712
+    """Delegate to access module. The visible_team_ids param is kept for signature compat."""
+    from backend.auth.access import private_deal_predicate as _authz_predicate
+    return _authz_predicate(user)
