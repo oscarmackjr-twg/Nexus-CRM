@@ -20,6 +20,12 @@ from backend.schemas.deals import (
     DealUpdate,
 )
 from backend.database import get_engine
+from backend.auth.access import (
+    can_write_deal,
+    can_delete_deal,
+    is_admin,
+    require_deal_readable,
+)
 from backend.services._crm import (
     accessible_team_ids,
     apply_tag_filter,
@@ -30,7 +36,6 @@ from backend.services._crm import (
     ensure_company_in_org,
     ensure_contact_in_org,
     ensure_team_in_org,
-    is_admin,
     is_manager_plus,
     merge_custom_fields,
     page_count,
@@ -227,18 +232,7 @@ class DealService:
         )
 
     async def _get_deal_or_404(self, deal_id: UUID) -> Deal:
-        visible_team_ids = await self._visible_team_ids()
-        stmt = select(Deal).where(Deal.id == deal_id, Deal.org_id == self.current_user.org_id)
-        if visible_team_ids is not None:
-            if not visible_team_ids:
-                stmt = stmt.where(False)
-            else:
-                stmt = stmt.where(Deal.team_id.in_(visible_team_ids))
-        stmt = stmt.where(private_deal_predicate(self.current_user, visible_team_ids))
-        deal = await self.db.scalar(stmt)
-        if deal is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-        return deal
+        return await require_deal_readable(self.db, deal_id, self.current_user)
 
     async def _get_pipeline_and_stage(self, pipeline_id: UUID, stage_id: UUID) -> tuple[Pipeline, PipelineStage]:
         pipeline = await self.db.scalar(
@@ -314,11 +308,12 @@ class DealService:
         )
 
     async def get_deal(self, deal_id: UUID) -> DealResponse:
+        # Step 1: existence check + authz (raises 404 if absent, 403 if forbidden)
+        await require_deal_readable(self.db, deal_id, self.current_user)
+        # Step 2: full join query for response (deal is confirmed readable — no 404 guard needed)
         visible_team_ids = await self._visible_team_ids()
         stmt = self._base_deal_stmt(visible_team_ids).where(Deal.id == deal_id)
         row = (await self.db.execute(stmt)).first()
-        if row is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
         deal_team = await self._load_deal_team(deal_id)
         return self._deal_response(row, deal_team=deal_team)
 
