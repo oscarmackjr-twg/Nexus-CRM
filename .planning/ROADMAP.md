@@ -43,7 +43,7 @@
 
 - [x] **Phase 17: Groups, Roles & Authorship Schema** — group and role data model, authorship fields on all entities, admin UI for user and group management
  (completed 2026-04-07)
-- [ ] **Phase 18: Access Enforcement** — group-scoped read/write/delete rules applied to Contacts, Companies, Deals, Calls, and Notes; 403 on out-of-scope requests
+- [x] **Phase 18: Access Enforcement** — group-scoped read/write/delete rules applied to Contacts, Companies, Deals, Calls, and Notes; 403 on out-of-scope requests (completed 2026-06-29)
 - [ ] **Phase 19: Call & Note Entities** — Call and Note as first-class models with CRUD APIs and group-scoped list/detail UIs
 - [ ] **Phase 20: Modification History** — per-table _history shadow tables, admin history viewer, and record restore capability
 - [ ] **Phase 21: Principal Reports** — Activity by Group, Deal Pipeline by Group, and User Activity aggregate reports for Principals
@@ -221,7 +221,7 @@ Plans:
   4. A Principal can read Deals across all groups; a Regular User from a different group receives 403 for the same request
   5. An Admin can perform full CRUD on any Deal across any group with no 403 responses
   6. Any authenticated request for an out-of-scope record returns HTTP 403 (not 404) — the record's existence is not leaked to unauthorized callers
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 **Wave 1**
 - [x] 18-01-PLAN.md — Authz module (backend/auth/access.py) + list scoping rewrite + test foundation (principal fixture)
@@ -230,7 +230,7 @@ Plans:
 - [x] 18-02-PLAN.md — Action guards on DealService CRUD (403-not-404, role write/delete matrix, owner_id admin-only)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 18-03-PLAN.md — Deal-child entity guards (counterparties/funding) + frontend 403/404 messaging
+- [x] 18-03-PLAN.md — Deal-child entity guards (counterparties/funding) + frontend 403/404 messaging
 
 ### Phase 19: Call & Note Entities
 **Goal**: Users can log Calls and Notes as first-class CRM records linked to Contacts, Companies, and Deals — with group-scoped visibility enforced from day one
@@ -295,7 +295,7 @@ Plans:
 | 15. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 | 16. Azure Warm Failover | v1.2 | 0/? | Not started | - |
 | 17. Groups, Roles & Authorship Schema | v1.3 | 3/3 | Complete    | 2026-04-07 |
-| 18. Access Enforcement | v1.3 | 2/3 | In Progress|  |
+| 18. Access Enforcement | v1.3 | 3/3 | Complete   | 2026-06-29 |
 | 19. Call & Note Entities | v1.3 | 0/? | Not started | - |
 | 20. Modification History | v1.3 | 0/? | Not started | - |
 | 21. Principal Reports | v1.3 | 0/? | Not started | - |

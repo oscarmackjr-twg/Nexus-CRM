@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: UI Professionalism
 status: Milestone complete
-stopped_at: Completed 18-01-PLAN.md
-last_updated: "2026-06-29T20:37:37.825Z"
+stopped_at: Completed 18-02-PLAN.md
+last_updated: "2026-06-29T20:54:01.056Z"
 progress:
   total_phases: 14
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 43
-  completed_plans: 39
-  percent: 91
+  completed_plans: 40
+  percent: 93
 ---
 
 # Project State
@@ -49,7 +49,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | 15 | CI/CD Pipeline | Not started |
 | 16 | Azure Warm Failover | Not started |
 | 17 | Groups, Roles & Authorship Schema | Done (3/3 plans complete) |
-| 18 | Access Enforcement | In progress (2/3 plans complete) |
+| 18 | Access Enforcement | Complete (3/3 plans complete — checkpoint pending human verify) |
 | 19 | Call & Note Entities | Not started |
 | 20 | Modification History | Not started |
 | 21 | Principal Reports | Not started |
@@ -140,6 +140,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 - 18-02: update_deal/move_stage use can_write_deal (not is_manager_plus) — supervisor cross-team edit closed (Bugs 4/6)
 - 18-02: owner_id guard uses is_admin (not is_manager_plus) — only admin can reassign owner_id (D-13)
 - 18-02: _get_pipeline_and_stage: visible_team_ids=None means all-visible (admin/principal) not no-visibility — principal can now create deals
+- 18-03: require_deal_writable for child create/update/delete — read-only parent access does not grant child mutation (Pitfall 7)
+- 18-03: counterparties.py update/delete had no deal gate at all — gates explicitly added; _get_deal_or_404 removed from both child services
 
 ## Notes
 
@@ -187,11 +189,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-06)
 | Phase 17-groups-roles-authorship-schema P03 | 60 | 3 tasks | 7 files |
 | 18-access-enforcement | 01 | 19min | 3 | 4 |
 | 18-access-enforcement | 02 | 15min | 3 | 2 |
+| 18-access-enforcement | 03 | 8min | 2 | 4 |
 
 ## Session Continuity
 
-Last session: 2026-06-29T20:37:37.788Z
-Stopped at: Completed 18-02-PLAN.md
+Last session: 2026-06-29T20:54:01.017Z
+Stopped at: 18-03 Task 3 checkpoint:human-verify — confirm 403 vs 404 messaging in browser
 
 ---
 *Last updated: 2026-04-06 — v1.3 roadmap defined: 5 phases (17-21), 30 requirements mapped*
