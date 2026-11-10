@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   BarChart3,
   BookOpen,
   Briefcase,
   Building2,
+  CircleUserRound,
   Home,
   KanbanSquare,
   Linkedin,
+  LogOut,
   Settings,
   Sparkles,
   Users,
@@ -18,7 +20,6 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { ROLE_LABELS } from '@/lib/roles';
 import { cn } from '@/lib/utils';
-import AIQueryBar from './AIQueryBar';
 import StagingBanner from './StagingBanner';
 import twgLogo from '@/assets/twg-logo.png';
 
@@ -60,21 +61,8 @@ const navGroups = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const [commandOpen, setCommandOpen] = useState(false);
-
   useEffect(() => {
     document.documentElement.classList.remove('dark');
-  }, []);
-
-  useEffect(() => {
-    const handler = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setCommandOpen((open) => !open);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
   }, []);
 
   return (
@@ -124,14 +112,13 @@ export default function Layout() {
           </nav>
 
           {/* User footer per D-13 */}
-          <div className="px-5 py-4 border-t border-gray-200 mt-auto">
-            <p className="text-xs text-[#475569] truncate">{user?.full_name || user?.username}</p>
-            <p className="text-xs text-[#94a3b8] capitalize mb-3">{ROLE_LABELS[user?.role] || user?.role}</p>
-            <button
-              onClick={() => logout()}
-              className="text-xs text-[#475569] hover:text-[#1a3868] font-medium"
-            >
-              Sign out
+          <div className="mt-auto border-t border-gray-200 bg-slate-50 p-3" aria-label="Signed-in user">
+            <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+              <CircleUserRound className="h-5 w-5 shrink-0 text-[#1a3868]" aria-hidden="true" />
+              <div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-800">{user?.full_name || user?.username || 'Signed-in user'}</p><p className="truncate text-xs text-slate-500">{ROLE_LABELS[user?.role] || user?.role || 'Authenticated'}</p></div>
+            </div>
+            <button onClick={() => logout()} className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-[#1a3868] hover:bg-[#eef3fa] hover:text-[#1a3868]">
+              <LogOut className="h-4 w-4" aria-hidden="true" />Sign out
             </button>
           </div>
         </aside>
@@ -143,8 +130,6 @@ export default function Layout() {
           </div>
         </main>
       </div>
-
-      <AIQueryBar open={commandOpen} onOpenChange={setCommandOpen} />
     </div>
   );
 }

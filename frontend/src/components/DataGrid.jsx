@@ -22,6 +22,8 @@ export function DataGrid({
   pages,
   size,
   isLoading,
+  isError,
+  onRetry,
   onPageChange,
   onSizeChange,
   onRowClick,
@@ -96,6 +98,16 @@ export function DataGrid({
                 ))}
               </TableRow>
             ))
+          ) : isError ? (
+            <TableRow>
+              <TableCell colSpan={columns.length + 1} className="py-12 text-center">
+                <div className="text-center py-12 text-gray-400">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">We could not load these records</p>
+                  <p className="text-xs text-gray-500 mb-3">Your current search and filters are still in place. Try again when the service is available.</p>
+                  <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
+                </div>
+              </TableCell>
+            </TableRow>
           ) : !data || data.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columns.length + 1} className="py-12 text-center">

@@ -1,8 +1,13 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ContactsPage from '@/pages/ContactsPage';
 import { renderWithProviders } from './test-utils';
+import { getContacts } from '@/api/contacts';
+import { getCompanies } from '@/api/companies';
+import { getUsers } from '@/api/users';
 
 vi.mock('@/api/contacts', () => ({
+  createContact: vi.fn(),
   getContacts: vi.fn().mockResolvedValue({
     items: [
       {
@@ -24,6 +29,8 @@ vi.mock('@/api/contacts', () => ({
     pages: 1,
   }),
 }));
+vi.mock('@/api/companies', () => ({ createCompany: vi.fn(), getCompanies: vi.fn().mockResolvedValue({ items: [{ id: 'company-1', name: 'Acme' }] }) }));
+vi.mock('@/api/users', () => ({ getUsers: vi.fn().mockResolvedValue({ items: [{ id: 'owner-1', full_name: 'Ada Admin' }] }) }));
 
 describe('ContactsPage', () => {
   it('renders page heading', async () => {
@@ -48,5 +55,25 @@ describe('ContactsPage', () => {
     renderWithProviders(<ContactsPage />, { route: '/contacts', path: '/contacts' });
     await screen.findByText('Alice Smith');
     expect(screen.getByText(/1 records/)).toBeInTheDocument();
+  });
+
+  it('searches contacts after a short debounce', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ContactsPage />, { route: '/contacts', path: '/contacts' });
+    await screen.findByText('Alice Smith');
+    await user.type(screen.getByRole('textbox', { name: 'Search records' }), 'Alice');
+    await waitFor(() => expect(getContacts).toHaveBeenCalledWith(expect.objectContaining({ search: 'Alice' })));
+  });
+
+  it('sends lifecycle, company, and owner filters and stays on page one', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ContactsPage />, { route: '/contacts', path: '/contacts' });
+    await screen.findByText('Alice Smith');
+    await user.selectOptions(screen.getByLabelText('Stage'), 'lead');
+    await user.selectOptions(screen.getByLabelText('Company'), 'company-1');
+    await user.selectOptions(screen.getByLabelText('Owner'), 'owner-1');
+    await waitFor(() => expect(getContacts).toHaveBeenCalledWith(expect.objectContaining({ page: 1, lifecycle_stage: 'lead', company_id: 'company-1', owner_id: 'owner-1' })));
+    expect(getCompanies).toHaveBeenCalledWith({ page: 1, size: 100 });
+    expect(getUsers).toHaveBeenCalledWith({ page: 1, size: 100 });
   });
 });

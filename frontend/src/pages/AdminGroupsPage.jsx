@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pencil, X } from 'lucide-react';
+import { Check, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { adminGroupsApi } from '@/api/adminGroups';
@@ -77,10 +77,16 @@ export default function AdminGroupsPage() {
   function handleDeactivate(group) {
     if (
       window.confirm(
-        `Deactivate "${group.name}"? Users in this group will lose their group assignment. This cannot be undone from the UI.`
+        `Deactivate "${group.name}"? The group can be reactivated later. Review its member assignments before using it again.`
       )
     ) {
       updateMutation.mutate({ id: group.id, data: { is_active: false } });
+    }
+  }
+
+  function handleReactivate(group) {
+    if (window.confirm(`Reactivate "${group.name}"?`)) {
+      updateMutation.mutate({ id: group.id, data: { is_active: true } });
     }
   }
 
@@ -147,6 +153,11 @@ export default function AdminGroupsPage() {
               onClick={(e) => { e.stopPropagation(); handleDeactivate(row); }}
             >
               <X className="h-4 w-4" />
+            </Button>
+          )}
+          {!row.is_active && (
+            <Button variant="ghost" size="icon" aria-label="Reactivate group" onClick={(e) => { e.stopPropagation(); handleReactivate(row); }}>
+              <Check className="h-4 w-4" />
             </Button>
           )}
         </div>

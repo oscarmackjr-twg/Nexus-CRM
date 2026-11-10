@@ -58,7 +58,7 @@ describe('LoginPage', () => {
   it('shows backend status indicator', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
     renderWithProviders(<LoginPage />, { route: '/login', path: '/login' });
-    await waitFor(() => expect(screen.getByText(/Backend: Connected/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Backend connected/i)).toBeInTheDocument());
   });
 
   it('renders staging banner in non-production mode', () => {

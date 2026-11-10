@@ -1,6 +1,7 @@
 import client from './client';
 
 export const getCompanies = async (params) => (await client.get('/companies', { params })).data;
+export const createCompany = async (data) => (await client.post('/companies', data)).data;
 export const getCompany = async (id) => (await client.get(`/companies/${id}`)).data;
 export const getCompanyContacts = async (id) => (await client.get(`/companies/${id}/contacts`)).data;
 export const getCompanyDeals = async (id) => (await client.get(`/companies/${id}/deals`)).data;

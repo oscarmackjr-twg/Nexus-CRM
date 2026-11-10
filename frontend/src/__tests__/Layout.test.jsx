@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Layout from '@/components/Layout';
 import { renderWithProviders } from './test-utils';
@@ -11,10 +11,6 @@ vi.mock('@/hooks/useAuth', () => ({
     logout: mockLogout,
     isAuthenticated: true
   })
-}));
-
-vi.mock('@/components/AIQueryBar', () => ({
-  default: () => null
 }));
 
 vi.mock('@/components/StagingBanner', () => ({
@@ -58,8 +54,9 @@ describe('Layout sidebar', () => {
   it('renders user footer with name, role, and sign out (NAV-05)', () => {
     renderWithProviders(<Layout />, { route: '/', path: '/*' });
     expect(screen.getByText('Oscar Mack')).toBeInTheDocument();
-    expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Sign out')).toBeInTheDocument();
+    expect(screen.getByLabelText('Signed-in user')).toBeInTheDocument();
   });
 
   it('calls logout when Sign out is clicked (NAV-05)', async () => {
@@ -71,5 +68,11 @@ describe('Layout sidebar', () => {
   it('renders staging banner (BANNER-01)', () => {
     renderWithProviders(<Layout />, { route: '/', path: '/*' });
     expect(screen.getByTestId('staging-banner')).toBeInTheDocument();
+  });
+
+  it('does not expose the unfinished command-palette placeholder', () => {
+    renderWithProviders(<Layout />, { route: '/', path: '/*' });
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(screen.queryByText('AI query coming in Phase 14+')).not.toBeInTheDocument();
   });
 });
