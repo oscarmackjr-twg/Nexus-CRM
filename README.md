@@ -103,6 +103,14 @@ npm run test       # Vitest
 
 ## Current Functionality
 
+### Demo functionality tranche
+
+The current implementation contract, API contract, test matrix, and requirements traceability are in [the demo-tranche documentation](docs/demo-tranche/IMPLEMENTATION_CONTRACT.md).
+
+### Visitor Log with Adobe Acrobat Sign
+
+This is a separate, high-risk initiative. Its current authority gate and required approvals are tracked in [the Visitor Log authority register](docs/visitor-log/AUTHORITY_REGISTER.md); no Adobe integration work is authorized yet.
+
 ### Core CRM
 - **Companies** — industry, size, website, country, plus a full PE Blueprint expansion (financials, investment preferences, self-referencing parent company).
 - **Contacts** — lifecycle stages, lead scoring, owner assignment, coverage persons (M2M), PE Blueprint fields, and LinkedIn import.

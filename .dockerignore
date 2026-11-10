@@ -1,0 +1,13 @@
+.git
+.claude
+.planning
+.pytest_cache
+**/__pycache__
+**/*.py[cod]
+frontend/node_modules
+frontend/dist
+frontend;C
+docs
+specs
+*.log
+.coverage

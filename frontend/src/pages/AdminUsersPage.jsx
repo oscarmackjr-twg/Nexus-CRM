@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pencil, X } from 'lucide-react';
+import { Check, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { adminUsersApi } from '@/api/adminUsers';
@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataGrid } from '@/components/DataGrid';
+import { Switch } from '@/components/ui/switch';
 
 const ROLE_BADGE_VARIANT = {
   admin: 'default',
@@ -33,6 +34,7 @@ export default function AdminUsersPage() {
   const [pageSize, setPageSize] = useState(20);
   const [addOpen, setAddOpen] = useState(false);
   const [editUser, setEditUser] = useState(null);
+  const [includeInactive, setIncludeInactive] = useState(false);
 
   // Form state — create
   const [newName, setNewName] = useState('');
@@ -108,6 +110,12 @@ export default function AdminUsersPage() {
     }
   }
 
+  function handleReactivate(u) {
+    if (window.confirm(`Reactivate ${u.full_name || u.email}? They will be able to sign in again.`)) {
+      updateMutation.mutate({ id: u.id, data: { is_active: true } });
+    }
+  }
+
   function handleCreate() {
     if (!newName.trim() || !newEmail.trim() || !newPassword.trim()) {
       toast.error('Name, email, and password are required');
@@ -129,7 +137,7 @@ export default function AdminUsersPage() {
     updateMutation.mutate({ id: editUser.id, data: payload });
   }
 
-  const users = usersQuery.data || [];
+  const users = (usersQuery.data || []).filter((item) => includeInactive || item.is_active);
   const activeGroups = (groupsQuery.data || []).filter((g) => g.is_active);
   const totalUsers = users.length;
   const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize));
@@ -194,6 +202,11 @@ export default function AdminUsersPage() {
               <X className="h-4 w-4" />
             </Button>
           )}
+          {!row.is_active && (
+            <Button variant="ghost" size="icon" aria-label="Reactivate user" onClick={(e) => { e.stopPropagation(); handleReactivate(row); }}>
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -204,7 +217,7 @@ export default function AdminUsersPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>User Management</CardTitle>
-          <Button onClick={() => { resetAddForm(); setAddOpen(true); }}>Add User</Button>
+          <div className="flex items-center gap-3"><div className="flex items-center gap-2"><Switch id="show-inactive-users" checked={includeInactive} onCheckedChange={(checked) => { setIncludeInactive(checked); setPage(1); }} /><Label htmlFor="show-inactive-users" className="text-sm cursor-pointer">Show inactive</Label></div><Button onClick={() => { resetAddForm(); setAddOpen(true); }}>Add User</Button></div>
         </CardHeader>
         <CardContent className="p-6">
           {usersQuery.isLoading ? (

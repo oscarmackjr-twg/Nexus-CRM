@@ -191,7 +191,7 @@ class ActivityResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    deal_id: UUID
+    deal_id: UUID | None = None
     user_id: UUID
     user_name: str
     activity_type: str

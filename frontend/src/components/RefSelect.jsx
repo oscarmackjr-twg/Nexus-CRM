@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import { Select } from '@/components/ui/select';
 import { useRefData } from '@/hooks/useRefData';
 
 export function RefSelect({ category, value, onChange, placeholder, disabled = false, className }) {
@@ -8,23 +7,23 @@ export function RefSelect({ category, value, onChange, placeholder, disabled = f
   if (isLoading) {
     return (
       <div className="opacity-50">
-        <Select disabled className={className}>
+        <select disabled className={className}>
           <option value="">Loading...</option>
-        </Select>
+        </select>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <Select disabled className={cn('border-danger', className)}>
-        <option value="">Failed to load</option>
-      </Select>
+        <select disabled className={cn('border-danger', className)}>
+          <option value="">Failed to load</option>
+        </select>
     );
   }
 
   return (
-    <Select
+    <select
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
@@ -46,6 +45,6 @@ export function RefSelect({ category, value, onChange, placeholder, disabled = f
           </option>
         ))
       )}
-    </Select>
+    </select>
   );
 }

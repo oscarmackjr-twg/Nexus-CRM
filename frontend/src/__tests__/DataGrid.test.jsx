@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DataGrid } from '@/components/DataGrid';
 import { renderWithProviders } from './test-utils';
 
@@ -70,5 +71,14 @@ describe('DataGrid', () => {
     );
     expect(screen.getByText('No contacts yet')).toBeInTheDocument();
     expect(screen.getByText('Contacts you add will appear here.')).toBeInTheDocument();
+  });
+
+  it('distinguishes a request failure and lets the user retry', async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    renderWithProviders(<DataGrid {...defaultProps} data={[]} isError={true} onRetry={onRetry} />);
+    expect(screen.getByText('We could not load these records')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 });

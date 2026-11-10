@@ -1,10 +1,13 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DealsPage from '@/pages/DealsPage';
 import { renderWithProviders } from './test-utils';
 import { getDeals } from '@/api/deals';
+import { getPipelines } from '@/api/pipelines';
+import { getUsers } from '@/api/users';
 
 vi.mock('@/api/deals', () => ({
+  createDeal: vi.fn(),
   getDeals: vi.fn().mockResolvedValue({
     items: [
       {
@@ -26,6 +29,8 @@ vi.mock('@/api/deals', () => ({
     pages: 1,
   }),
 }));
+vi.mock('@/api/pipelines', () => ({ getPipelines: vi.fn().mockResolvedValue([{ id: 'pipeline-1', name: 'Sales', stages: [{ id: 'stage-1', name: 'Qualified' }] }]) }));
+vi.mock('@/api/users', () => ({ getUsers: vi.fn().mockResolvedValue({ items: [{ id: 'owner-1', full_name: 'Ada Admin' }] }) }));
 
 describe('DealsPage', () => {
   it('renders page heading', async () => {
@@ -66,5 +71,26 @@ describe('DealsPage', () => {
     renderWithProviders(<DealsPage />, { route: '/deals', path: '/deals' });
     await screen.findByText('Project Alpha');
     expect(screen.getByText(/1 records/)).toBeInTheDocument();
+  });
+
+  it('searches deals after a short debounce', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<DealsPage />, { route: '/deals', path: '/deals' });
+    await screen.findByText('Project Alpha');
+    await user.type(screen.getByRole('textbox', { name: 'Search records' }), 'Alpha');
+    await waitFor(() => expect(getDeals).toHaveBeenCalledWith(expect.objectContaining({ search: 'Alpha' })));
+  });
+
+  it('sends pipeline, dependent stage, owner, and status filters on page one', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<DealsPage />, { route: '/deals', path: '/deals' });
+    await screen.findByText('Project Alpha');
+    await user.selectOptions(screen.getByLabelText('Pipeline'), 'pipeline-1');
+    await user.selectOptions(screen.getByLabelText('Stage'), 'stage-1');
+    await user.selectOptions(screen.getByLabelText('Owner'), 'owner-1');
+    await user.click(screen.getByText('Open'));
+    await waitFor(() => expect(getDeals).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pipeline_id: 'pipeline-1', stage_id: 'stage-1', owner_id: 'owner-1', status: 'open' })));
+    expect(getPipelines).toHaveBeenCalled();
+    expect(getUsers).toHaveBeenCalledWith({ page: 1, size: 100 });
   });
 });

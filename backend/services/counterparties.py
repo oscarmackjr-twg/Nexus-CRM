@@ -15,7 +15,7 @@ from backend.schemas.counterparties import (
     DealCounterpartyUpdate,
 )
 from backend.auth.access import require_deal_readable, require_deal_writable
-from backend.services._crm import clamp_pagination, count_rows, page_count
+from backend.services._crm import clamp_pagination, count_rows, ensure_company_in_org, page_count
 
 # Aliases for multi-join disambiguation
 TierRef = aliased(RefData)
@@ -107,6 +107,9 @@ class DealCounterpartyService:
 
     async def create(self, deal_id: UUID, data: DealCounterpartyCreate) -> DealCounterpartyResponse:
         await require_deal_writable(self.db, deal_id, self.current_user)
+        # Validate at the API boundary so an unknown or cross-organization company
+        # produces a useful 400 response instead of leaking a database FK error.
+        await ensure_company_in_org(self.db, data.company_id, self.current_user.org_id)
         cp = DealCounterparty(
             org_id=self.current_user.org_id,
             deal_id=deal_id,

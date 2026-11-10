@@ -59,7 +59,7 @@ export default function LoginPage() {
           <form className="mt-8 space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
-                <label htmlFor="username" className="sr-only">Username</label>
+                <label htmlFor="username" className="sr-only">Email</label>
                 <input
                   id="username"
                   type="text"

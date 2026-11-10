@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -116,6 +116,21 @@ async def update_user(
     user = (await db.execute(stmt)).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    removes_active_admin = user.role == "admin" and user.is_active and (
+        payload.is_active is False or (payload.role is not None and payload.role != "admin")
+    )
+    if removes_active_admin:
+        remaining_active_admins = await db.scalar(
+            select(func.count()).select_from(User).where(
+                User.org_id == current_user.org_id,
+                User.role == "admin",
+                User.is_active.is_(True),
+                User.id != user.id,
+            )
+        )
+        if remaining_active_admins == 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot remove the last active administrator")
 
     if payload.role is not None:
         if payload.role not in VALID_ROLES:
