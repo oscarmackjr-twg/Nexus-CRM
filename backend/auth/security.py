@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
@@ -40,7 +39,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def create_refresh_token(payload: dict | None = None) -> str:
-    return secrets.token_urlsafe(64)
+    """Create a signed refresh token usable by the refresh and logout routes."""
+    to_encode = (payload or {}).copy()
+    to_encode.update({
+        "type": "refresh",
+        "exp": datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+    })
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 def verify_token(token: str) -> dict:

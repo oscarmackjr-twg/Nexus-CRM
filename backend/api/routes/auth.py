@@ -154,24 +154,30 @@ async def register(
     payload: UserCreate,
     db: AsyncSession = Depends(get_db_session),
 ) -> Token:
+    # Public self-registration may only create a new organization, whose first
+    # user becomes its admin. Adding a user to an existing organization is an
+    # admin action (POST /api/v1/users). Accepting org_id here let anonymous
+    # callers join any organization with a self-chosen role, including admin.
+    # The same 403 is returned whether or not the org exists, so this endpoint
+    # does not reveal which organization IDs are valid.
+    if payload.org_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Joining an existing organization requires an organization admin to create the account",
+        )
+
     await _assert_unique_user_fields(db, str(payload.email), payload.username)
 
-    role = payload.role.value
-    if payload.org_id is None:
-        base_slug = _slugify(payload.username or str(payload.email).split("@")[0])
-        slug = base_slug
-        suffix = 1
-        while await db.scalar(select(Organization).where(Organization.slug == slug)) is not None:
-            suffix += 1
-            slug = f"{base_slug}-{suffix}"
-        org = Organization(name=payload.full_name or payload.username, slug=slug, plan="free")
-        db.add(org)
-        await db.flush()
-        role = "admin"
-    else:
-        org = await db.scalar(select(Organization).where(Organization.id == payload.org_id))
-        if org is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+    base_slug = _slugify(payload.username or str(payload.email).split("@")[0])
+    slug = base_slug
+    suffix = 1
+    while await db.scalar(select(Organization).where(Organization.slug == slug)) is not None:
+        suffix += 1
+        slug = f"{base_slug}-{suffix}"
+    org = Organization(name=payload.full_name or payload.username, slug=slug, plan="free")
+    db.add(org)
+    await db.flush()
+    role = "admin"
 
     team = await _get_team_in_org(db, org.id, payload.team_id)
     if payload.team_id is not None and team is None:
@@ -330,6 +336,8 @@ async def update_user(
 
     is_admin = current_user.role in {"admin"}
     is_self = current_user.id == user.id
+    if is_self and payload.is_active is False:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot deactivate yourself")
     if not is_admin and not is_self:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     if not is_admin and (payload.role is not None or payload.team_id is not None or payload.is_active is not None):

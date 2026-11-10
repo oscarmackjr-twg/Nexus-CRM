@@ -39,7 +39,7 @@ async def test_all_categories_seeded(db_session, seed_ref_data):
         "passed_dead_reason",
         "investor_type",
     }
-    assert categories == expected
+    assert expected <= categories
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import Optional
 from uuid import UUID
 
@@ -20,12 +21,22 @@ class LogoutRequest(BaseModel):
     refresh_token: str
 
 
+class UserRole(str, Enum):
+    admin = "admin"
+    supervisor = "supervisor"
+    principal = "principal"
+    regular_user = "regular_user"
+
+
 class UserCreate(BaseModel):
-    email: str
+    email: EmailStr
     username: str
     password: str
     full_name: Optional[str] = None
-    org_name: str
+    org_name: Optional[str] = None
+    org_id: Optional[UUID] = None
+    team_id: Optional[UUID] = None
+    role: UserRole = UserRole.regular_user
 
 
 class UserResponse(BaseModel):
@@ -43,5 +54,10 @@ class UserResponse(BaseModel):
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
+    username: Optional[str] = None
     avatar_url: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[UserRole] = None
+    team_id: Optional[UUID] = None
+    is_active: Optional[bool] = None
